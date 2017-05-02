@@ -8,10 +8,8 @@ import (
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
-	netmail "net/mail"
 	"google.golang.org/appengine/log"
 	"html/template"
-	"google.golang.org/appengine/mail"
 )
 
 //Reads a static file and outputs it as a string.
@@ -218,16 +216,11 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 //sends an email with the specified message and sender
 type SendMailPage struct {
 	mage.Page
-	Sender string
-	Recipients []string
-	Message string
+	Mailer
 }
 
-func NewSendMailPage(from string, to []string, message string) {
-	p := SendMailPage{};
-	p.Sender = from;
-	p.Recipients = to;
-	p.Message = message;
+type Mailer interface {
+	ValidateAndSend(ctx context.Context, inputs mage.RequestInputs) error
 }
 
 func (page *SendMailPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
@@ -240,69 +233,22 @@ func (page *SendMailPage) Process(ctx context.Context, out *mage.RequestOutput) 
 		return mage.Redirect{Status:http.StatusMethodNotAllowed};
 	}
 
-	renderer := mage.JSONRenderer{};
-	out.Renderer = &renderer;
-
-	_, cok := inputs["cname"];
-
-	if !cok {
-		renderer.Data = struct {
-			Field string
-		} {"cname"}
-		return mage.Redirect{Status:http.StatusBadRequest};
-	}
-
-	cname := inputs["cname"].Value();
-
-	_, cok = inputs["cemail"];
-
-	if !cok {
-		renderer.Data = struct {
-			Field string
-		} {"cemail"}
-		return mage.Redirect{Status:http.StatusBadRequest};
-	}
-
-	cemail := inputs["cemail"].Value();
-	_, err := netmail.ParseAddress(cemail);
+	err := page.Mailer.ValidateAndSend(ctx, inputs);
 
 	if err != nil {
-		renderer.Data = struct {
-			Field string
-		} {"cemail"}
-		return mage.Redirect{Status:http.StatusBadRequest};
-	}
-
-	subj := fmt.Sprintf("Nuovo contatto da %s", cname);
-
-	cmsg := "";
-
-	if imsg, cok := inputs["cmessage"]; cok {
-		cmsg = imsg.Value();
-	}
-
-	cphone := "";
-	if iphone, cok := inputs["cphone"];cok {
-		cphone = iphone.Value();
-	}
-
-	msg := mail.Message{
-		Sender: page.Sender,
-		To: page.Recipients,
-		ReplyTo: cemail,
-		Subject: subj,
-		Body: fmt.Sprintf(page.Message, cname, cemail, cphone, cmsg),
-	};
-
-	err = mail.Send(ctx, &msg);
-	if err != nil {
-		log.Errorf(ctx, "Couldn't send email message from sender %s to recipient %s: %v", page.Sender, cemail, err);
+		//if we have a field error we handle it returning a 404
+		if fe, isField := err.(FieldError); isField {
+			renderer := mage.JSONRenderer{};
+			renderer.Data = fe;
+			out.Renderer = &renderer;
+			return mage.Redirect{Status:http.StatusBadRequest};
+		}
+		//else is a generic error, we return a 500
+		log.Errorf(ctx, "%s", err);
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
-	renderer.Data = struct {
 
-	}{};
 	return mage.Redirect{Status:http.StatusOK};
 }
 
