@@ -46,6 +46,28 @@ func (page *StaticPage) OnDestroy(ctx context.Context) {
 
 }
 
+/**
+returns a 404 page with the given template
+ */
+type FourOFourPage struct {
+	StaticPage
+}
+
+func (page *FourOFourPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
+	if (page.FileName != "") {
+		redir := page.StaticPage.Process(ctx, out);
+		out.AddHeader("Content-type", "text/html; charset=utf-8");
+		switch redir.Status {
+		case http.StatusOK:
+			return mage.Redirect{Status:http.StatusNotFound};
+		case http.StatusInternalServerError:
+			return redir;
+		}
+	}
+
+	return mage.Redirect{Status:http.StatusNotFound};
+}
+
 //Reads a template and mixes it with a base template (useful for headers/footers)
 //Base is the name of the base template if any
 type TemplatedPage struct {
