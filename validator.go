@@ -6,26 +6,45 @@ import (
 
 type Validator interface {
 	Validate(value string) error
+	ValidateArray(values []string) bool
 	ErrorMessage() string
 }
 
 type FieldError struct {
-	Field string
-	Message string
+	Field        string
+	FieldForUser string
+	Message      string
 }
 
 func (e FieldError) Error() string {
-	return e.Message;
+	if (len(e.FieldForUser) > 0 ) {
+		return "Field: " + e.FieldForUser + ", Message: " + e.Message;
+	} else {
+		return "Field: " + e.Field + ", Message: " + e.Message;
+	}
 }
 
 type Field struct {
-	Name string
-	validators []Validator
-	Required bool
-	Valid bool
+	Name         string
+	NameForUser  string
+	validators   []Validator
+	Required     bool
+	Valid        bool
 	ErrorMissing string
-	value string
-	hasValue bool
+	value        string
+	values       []string
+	hasValue     bool
+	isArray      bool
+}
+
+func NewFieldArray(name string, in mage.RequestInputs) *Field {
+	f := NewField(name, in);
+	f.isArray = true;
+	if (f.hasValue) {
+		f.values = in[f.Name].Values();
+	}
+
+	return f;
 }
 
 func NewField(name string, in mage.RequestInputs) *Field {
@@ -48,16 +67,28 @@ func (field *Field) Validate() error {
 
 	field.Valid = false;
 	if field.Required {
-		if !field.hasValue || field.value == "" {
-			return FieldError{Field:field.Name, Message:field.ErrorMissing};
+		if (!field.isArray) {
+			if !field.hasValue || field.value == "" {
+				return FieldError{Field:field.Name, Message:field.ErrorMissing, FieldForUser:field.NameForUser};
+			}
+		} else {
+			if !field.hasValue || field.values[0] == "" {
+				return FieldError{Field:field.Name, Message:field.ErrorMissing, FieldForUser:field.NameForUser};
+			}
 		}
 
 	}
-
-
-	for _, v := range field.validators {
-		if v.Validate(field.value) != nil {
-			return FieldError{Field:field.Name, Message:v.ErrorMessage()};
+	if (!field.isArray) {
+		for _, v := range field.validators {
+			if v.Validate(field.value) != nil {
+				return FieldError{Field:field.Name, Message:v.ErrorMessage(), FieldForUser:field.NameForUser};
+			}
+		}
+	} else {
+		for _, v := range field.validators {
+			if !v.ValidateArray(field.values) {
+				return FieldError{Field:field.Name, Message:v.ErrorMessage(), FieldForUser:field.NameForUser};
+			}
 		}
 	}
 

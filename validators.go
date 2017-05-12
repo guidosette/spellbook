@@ -19,9 +19,63 @@ func (validator EmailValidator) Validate(value string) error {
 	return err;
 }
 
+func (validator EmailValidator) ValidateArray(value []string) bool {
+	return true;
+}
+
 func (validator EmailValidator) ErrorMessage() string {
 	return validator.Message;
 }
+
+
+//Validates the len of an array
+type ArrayLenValidator struct {
+	MinLenArray int
+	MaxLenArray int
+}
+
+func (v ArrayLenValidator) Validate(value string) error {
+	return nil;
+}
+
+func (v ArrayLenValidator) ValidateArray(values []string) bool {
+
+	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
+		return true;
+	}
+
+	l := len(values);
+
+	if v.MaxLenArray < 0 {
+		return l >= v.MinLenArray
+	}
+
+	if v.MinLenArray < 0 {
+		return l <= v.MaxLenArray;
+	}
+
+	return l >= v.MinLenArray && l <= v.MaxLenArray;
+
+}
+
+func (v ArrayLenValidator) ErrorMessage() string {
+	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
+		return "";
+	}
+
+	if v.MaxLenArray < 0 {
+		return fmt.Sprintf("Seleziona almeno %d opzione.", v.MinLenArray)
+	}
+
+	if v.MinLenArray < 0 {
+		return fmt.Sprintf("Seleziona al massimo %d opzioni.", v.MaxLenArray)
+	}
+
+	return fmt.Sprintf("Seleziona da %d a %d opzioni.", v.MinLenArray, v.MaxLenArray)
+}
+
+
+
 
 
 //Validates the len of a string
