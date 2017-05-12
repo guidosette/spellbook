@@ -46,6 +46,20 @@ func (page *StaticPage) OnDestroy(ctx context.Context) {
 
 }
 
+
+type StatusPage struct {
+	Redirect mage.Redirect
+}
+
+func (page *StatusPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
+	return page.Redirect;
+}
+
+func (page *StatusPage) OnDestroy(ctx context.Context) {
+
+}
+
+
 /**
 returns a 404 page with static page
  */
@@ -94,9 +108,9 @@ func (page *FourOFourTemplatePage) Process(ctx context.Context, out *mage.Reques
 //Reads a template and mixes it with a base template (useful for headers/footers)
 //Base is the name of the base template if any
 type TemplatedPage struct {
-	Url string
+	Url      string
 	FileName string
-	Bases []string
+	Bases    []string
 	mage.Page
 }
 
@@ -107,7 +121,6 @@ func NewTemplatedPage(url string, filename string, bases ...string) TemplatedPag
 	page.Bases = bases;
 	return page;
 }
-
 
 func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
 	fname := fmt.Sprintf("%s.html", page.FileName);
@@ -242,10 +255,10 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	renderer.TemplateName = "base";
 	renderer.Template = tpl;
 	renderer.Data = struct {
-		Url string
+		Url      string
 		Language string
-		Globals interface{}
-		Content interface{}
+		Globals  interface{}
+		Content  interface{}
 	}{
 		page.Url,
 		lang,
@@ -292,7 +305,6 @@ func (page *SendMailPage) Process(ctx context.Context, out *mage.RequestOutput) 
 		log.Errorf(ctx, "%s", err);
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
-
 
 	return mage.Redirect{Status:http.StatusOK};
 }
