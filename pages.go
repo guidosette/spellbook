@@ -111,7 +111,12 @@ type TemplatedPage struct {
 	Url      string
 	FileName string
 	Bases    []string
+	DataHandler TemplateDataHandler
 	mage.Page
+}
+
+type TemplateDataHandler interface {
+	AssignData(ctx context.Context) interface{}
 }
 
 func NewTemplatedPage(url string, filename string, bases ...string) TemplatedPage {
@@ -145,6 +150,15 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	renderer := mage.TemplateRenderer{};
 	renderer.TemplateName = "base";
 	renderer.Template = tpl;
+	if page.DataHandler != nil {
+		renderer.Data = page.DataHandler.AssignData(ctx);
+	}
+
+
+
+
+
+
 
 	out.Renderer = &renderer;
 
@@ -249,20 +263,28 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
-	data := contents[lang];
+	content := contents[lang];
 
 	renderer := mage.TemplateRenderer{};
 	renderer.TemplateName = "base";
 	renderer.Template = tpl;
+
+	var data interface{}
+	if page.DataHandler != nil {
+		data = page.DataHandler.AssignData(ctx);
+	}
+
 	renderer.Data = struct {
 		Url      string
 		Language string
 		Globals  interface{}
 		Content  interface{}
+		Data     interface{}
 	}{
 		page.Url,
 		lang,
 		globals,
+		content,
 		data,
 	};
 
