@@ -110,6 +110,7 @@ func (page *FourOFourTemplatePage) Process(ctx context.Context, out *mage.Reques
 type TemplatedPage struct {
 	Url      string
 	FileName string
+	BaseName string
 	Bases    []string
 	DataHandler TemplateDataHandler
 	mage.Page
@@ -148,7 +149,12 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	}
 
 	renderer := mage.TemplateRenderer{};
-	renderer.TemplateName = "base";
+	if page.BaseName == "" {
+		renderer.TemplateName = "base";
+	} else {
+		renderer.TemplateName = page.BaseName;
+	}
+
 	renderer.Template = tpl;
 	if page.DataHandler != nil {
 		renderer.Data = page.DataHandler.AssignData(ctx);
@@ -266,7 +272,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	content := contents[lang];
 
 	renderer := mage.TemplateRenderer{};
-	renderer.TemplateName = "base";
+	if page.BaseName == "" {
+		renderer.TemplateName = "base";
+	} else {
+		renderer.TemplateName = page.BaseName;
+	}
+
 	renderer.Template = tpl;
 
 	var data interface{}
