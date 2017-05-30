@@ -178,6 +178,8 @@ func (page *TemplatedPage) OnDestroy(ctx context.Context) {
 //Has a TemplatedPage. Attaches to each templated page a corresponding json file that specifies translations
 type LocalizedPage struct {
 	TemplatedPage
+	JsonBaseFile string
+	JsonFile string
 	Locale string
 }
 
@@ -219,7 +221,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	}
 
 	//get the base language file
-	lbasename := fmt.Sprintf("i18n/%s", "base.json");
+	lbasename := page.JsonBaseFile;
+
+	if lbasename == "" {
+		lbasename = fmt.Sprintf("i18n/%s", "base.json");
+	}
+
 	jbase, err := ioutil.ReadFile(lbasename);
 
 	if err != nil {
@@ -247,7 +254,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	globals := base[lang];
 
 	//---- get the specific language json file
-	lfname := fmt.Sprintf("i18n/%s.%s", page.FileName, "json")
+	lfname := page.JsonFile;
+
+	if lfname == "" {
+		lfname = fmt.Sprintf("i18n/%s.%s", page.FileName, "json")
+	}
+
 	//now that we have the locale, read the json language file and get the corresponding values
 	jlang, err := ioutil.ReadFile(lfname)
 
