@@ -104,6 +104,28 @@ func (page *FourOFourTemplatePage) Process(ctx context.Context, out *mage.Reques
 	return mage.Redirect{Status:http.StatusNotFound};
 }
 
+/**
+returns a 404 page with the given localized template
+ */
+type FourOFourLocalizedPage struct {
+	LocalizedPage
+}
+
+func (page *FourOFourLocalizedPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
+	if (page.FileName != "") {
+		redir := page.LocalizedPage.Process(ctx, out);
+		out.AddHeader("Content-type", "text/html; charset=utf-8");
+		switch redir.Status {
+		case http.StatusOK:
+			return mage.Redirect{Status:http.StatusNotFound};
+		case http.StatusInternalServerError:
+			return redir;
+		}
+	}
+
+	return mage.Redirect{Status:http.StatusNotFound};
+}
+
 
 //Reads a template and mixes it with a base template (useful for headers/footers)
 //Base is the name of the base template if any
