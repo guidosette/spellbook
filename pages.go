@@ -85,45 +85,47 @@ func (page *FourOFourPage) Process(ctx context.Context, out *mage.RequestOutput)
 /**
 returns a 404 page with the given template
  */
-type FourOFourTemplatePage struct {
+type StatusTemplatedPage struct {
 	TemplatedPage
+	Status int
 }
 
-func (page *FourOFourTemplatePage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
+func (page *StatusTemplatedPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
 	if (page.FileName != "") {
 		redir := page.TemplatedPage.Process(ctx, out);
 		out.AddHeader("Content-type", "text/html; charset=utf-8");
 		switch redir.Status {
 		case http.StatusOK:
-			return mage.Redirect{Status:http.StatusNotFound};
+			return mage.Redirect{Status:page.Status};
 		case http.StatusInternalServerError:
 			return redir;
 		}
 	}
 
-	return mage.Redirect{Status:http.StatusNotFound};
+	return mage.Redirect{Status:page.Status};
 }
 
 /**
 returns a 404 page with the given localized template
  */
-type FourOFourLocalizedPage struct {
+type LocalizedStatusPage struct {
 	LocalizedPage
+	Status int
 }
 
-func (page *FourOFourLocalizedPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
+func (page *LocalizedStatusPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
 	if (page.FileName != "") {
 		redir := page.LocalizedPage.Process(ctx, out);
 		out.AddHeader("Content-type", "text/html; charset=utf-8");
 		switch redir.Status {
 		case http.StatusOK:
-			return mage.Redirect{Status:http.StatusNotFound};
+			return mage.Redirect{Status:page.Status};
 		case http.StatusInternalServerError:
 			return redir;
 		}
 	}
 
-	return mage.Redirect{Status:http.StatusNotFound};
+	return mage.Redirect{Status:page.Status};
 }
 
 
