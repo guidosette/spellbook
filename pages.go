@@ -268,7 +268,6 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 
 	_, bok := base[lang];
 
-	log.Debugf(ctx, "Lang: %s in base: %+v", lang, base)
 	if !bok {
 		log.Errorf(ctx, "Base language file %s doesn't support language %s", lbasename, lang);
 		//we get the default value if the user provides an invalid lang
