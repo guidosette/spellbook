@@ -84,27 +84,46 @@ type LenValidator struct {
 	MaxLen int
 }
 
-func (v *LenValidator) Validate(value string) bool {
+func (v LenValidator) Validate(value string) error {
 
+	validate := false;
 	if v.MaxLen < 0 && v.MinLen < 0 {
-		return true;
+		validate = true;
 	}
 
 	l := len(value);
 
 	if v.MaxLen < 0 {
-		return l >= v.MinLen
+		validate = l >= v.MinLen
+		if (!validate) {
+			return errors.New(v.ErrorMessage());
+		} else {
+			return nil;
+		}
 	}
 
 	if v.MinLen < 0 {
-		return l <= v.MaxLen;
+		validate = l <= v.MaxLen;
+		if (!validate) {
+			return errors.New(v.ErrorMessage());
+		} else {
+			return nil;
+		}
 	}
 
-	return l >= v.MinLen && l <= v.MaxLen;
-
+	validate = l >= v.MinLen && l <= v.MaxLen;
+	if (!validate) {
+		return errors.New(v.ErrorMessage());
+	} else {
+		return nil;
+	}
 }
 
-func (v *LenValidator) ErrorMessage() string {
+func (v LenValidator) ValidateArray(values []string) bool {
+	return true;
+}
+
+func (v LenValidator) ErrorMessage() string {
 	if v.MaxLen < 0 && v.MinLen < 0 {
 		return "";
 	}
@@ -123,12 +142,12 @@ func (v *LenValidator) ErrorMessage() string {
 
 //validates against the content of a substring
 type SubstrValidator struct {
-	Against []string
+	Against    []string
 	//negative values ignore the position
 	//positive values Against must start at the position specified
-	Position int
+	Position   int
 	IgnoreCase bool
-	Mode SubstrMode
+	Mode       SubstrMode
 }
 
 type SubstrMode int;
