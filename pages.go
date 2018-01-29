@@ -12,6 +12,11 @@ import (
 	"html/template"
 )
 
+
+const (
+	LANGUAGE_COOKIE_KEY        string = "PAGE_LANG_CURRENT_ID"
+)
+
 //Reads a static file and outputs it as a string.
 //It is usually used to print static html pages.
 //If a template is needed use TemplatedPage instead
@@ -238,11 +243,22 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		lang = inputs["X-AppEngine-Country"].Value();
 	}
 
+	_, lok = inputs[LANGUAGE_COOKIE_KEY];
+	if lok {
+		lang = inputs[LANGUAGE_COOKIE_KEY].Value()
+	}
+
 	_, lok = inputs["lang"];
 
 	if lok {
 		lang = inputs["lang"].Value();
 	}
+
+	lcookie := http.Cookie{};
+	lcookie.Name = LANGUAGE_COOKIE_KEY;
+	lcookie.Value = lang;
+	lcookie.Path = "/";
+	out.AddCookie(lcookie);
 
 	//get the base language file
 	lbasename := page.JsonBaseFile;
