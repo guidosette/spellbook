@@ -189,12 +189,6 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		renderer.Data = page.DataHandler.AssignData(ctx);
 	}
 
-
-
-
-
-
-
 	out.Renderer = &renderer;
 
 	return mage.Redirect{Status:http.StatusOK}
