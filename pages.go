@@ -143,10 +143,15 @@ type TemplatedPage struct {
 	Bases    []string
 	DataHandler TemplateDataHandler
 	mage.Page
+	FuncHandler TemplateFuncHandler
 }
 
 type TemplateDataHandler interface {
 	AssignData(ctx context.Context) interface{}
+}
+
+type TemplateFuncHandler interface {
+	AssignFuncMap(ctx context.Context) template.FuncMap
 }
 
 func NewTemplatedPage(url string, filename string, bases ...string) TemplatedPage {
@@ -170,7 +175,12 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	files = append(files, page.Bases...);
 	files = append(files, fname);
 
-	tpl, err := template.ParseFiles(files...);
+	var tpl *template.Template;
+	if page.FuncHandler != nil {
+		tpl = template.New("").Funcs(page.FuncHandler.AssignFuncMap(ctx))
+	}
+
+	tpl, err = tpl.ParseFiles(files...);
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err);
@@ -219,7 +229,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	files = append(files, page.Bases...);
 	files = append(files, fname);
 
-	tpl, err := template.ParseFiles(files...);
+	var tpl *template.Template
+	if page.FuncHandler != nil {
+		tpl = template.New("").Funcs(page.FuncHandler.AssignFuncMap(ctx))
+	}
+
+	tpl, err = tpl.ParseFiles(files...)
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err);
