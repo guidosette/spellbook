@@ -175,12 +175,7 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	files = append(files, page.Bases...);
 	files = append(files, fname);
 
-	var tpl *template.Template;
-	if page.FuncHandler != nil {
-		tpl = template.New("").Funcs(page.FuncHandler.AssignFuncMap(ctx))
-	}
-
-	tpl, err = tpl.ParseFiles(files...);
+	tpl, err := template.ParseFiles(files...)
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err);
@@ -225,16 +220,11 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		return mage.Redirect{Status:http.StatusNotFound}
 	}
 
-	files := make([]string, 0, 0);
-	files = append(files, page.Bases...);
-	files = append(files, fname);
+	files := make([]string, 0, 0)
+	files = append(files, page.Bases...)
+	files = append(files, fname)
 
-	var tpl *template.Template
-	if page.FuncHandler != nil {
-		tpl = template.New("").Funcs(page.FuncHandler.AssignFuncMap(ctx))
-	}
-
-	tpl, err = tpl.ParseFiles(files...)
+	tpl, err := template.ParseFiles(files...)
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err);
@@ -263,14 +253,23 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		lang = inputs["lang"].Value();
 	}
 
-	lcookie := http.Cookie{};
-	lcookie.Name = LANGUAGE_COOKIE_KEY;
-	lcookie.Value = lang;
-	lcookie.Path = "/";
-	out.AddCookie(lcookie);
+	lcookie := http.Cookie{}
+	lcookie.Name = LANGUAGE_COOKIE_KEY
+	lcookie.Value = lang
+	lcookie.Path = "/"
+	out.AddCookie(lcookie)
+
+	//create the link creator function
+	funcMap := template.FuncMap{
+		"LocalizedUrl": func(url string) string {
+			return fmt.Sprintf("%s?lang=%s", url, lang)
+		},
+	}
+
+	tpl = tpl.Funcs(funcMap)
 
 	//get the base language file
-	lbasename := page.JsonBaseFile;
+	lbasename := page.JsonBaseFile
 
 	if lbasename == "" {
 		lbasename = fmt.Sprintf("i18n/%s", "base.json");
@@ -291,15 +290,15 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
-	_, bok := base[lang];
+	_, bok := base[lang]
 
 	if !bok {
 		log.Errorf(ctx, "Base language file %s doesn't support language %s", lbasename, lang);
 		//we get the default value if the user provides an invalid lang
-		lang = page.Locale;
+		lang = page.Locale
 	}
 
-	globals := base[lang];
+	globals := base[lang]
 
 	//---- get the specific language json file
 	lfname := page.JsonFile;
@@ -340,7 +339,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		renderer.TemplateName = page.BaseName;
 	}
 
-	renderer.Template = tpl;
+	renderer.Template = tpl
 
 	var data interface{}
 	if page.DataHandler != nil {
