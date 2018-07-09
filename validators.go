@@ -41,7 +41,7 @@ func (v ArrayLenValidator) Validate(value string) error {
 func (v ArrayLenValidator) ValidateArray(values []string) bool {
 
 	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
-		return true;
+		return true
 	}
 
 	l := len(values);
@@ -51,10 +51,10 @@ func (v ArrayLenValidator) ValidateArray(values []string) bool {
 	}
 
 	if v.MinLenArray < 0 {
-		return l <= v.MaxLenArray;
+		return l <= v.MaxLenArray
 	}
 
-	return l >= v.MinLenArray && l <= v.MaxLenArray;
+	return l >= v.MinLenArray && l <= v.MaxLenArray
 
 }
 

@@ -189,12 +189,12 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		renderer.TemplateName = page.BaseName;
 	}
 
-	renderer.Template = tpl;
+	renderer.Template = tpl
 	if page.DataHandler != nil {
 		renderer.Data = page.DataHandler.AssignData(ctx);
 	}
 
-	out.Renderer = &renderer;
+	out.Renderer = &renderer
 
 	return mage.Redirect{Status:http.StatusOK}
 }
@@ -212,23 +212,12 @@ type LocalizedPage struct {
 }
 
 func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput) mage.Redirect {
-	fname := fmt.Sprintf("%s.html", page.FileName);
+	fname := fmt.Sprintf("%s.html", page.FileName)
 	_, err := os.Stat(fname);
 
 	if os.IsNotExist(err) {
-		log.Debugf(ctx, "Can't find file %s", fname);
+		log.Debugf(ctx, "Can't find file %s", fname)
 		return mage.Redirect{Status:http.StatusNotFound}
-	}
-
-	files := make([]string, 0, 0)
-	files = append(files, page.Bases...)
-	files = append(files, fname)
-
-	tpl, err := template.ParseFiles(files...)
-
-	if err != nil {
-		log.Errorf(ctx, "Cant' parse template files: %v", err);
-		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
 	//get the language hint
@@ -264,22 +253,35 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		"LocalizedUrl": func(url string) string {
 			return fmt.Sprintf("%s?lang=%s", url, lang)
 		},
+		"ToJson": func(data interface{}) template.HTML {
+			j, _ := json.Marshal(data)
+			return template.HTML(j)
+		},
 	}
 
-	tpl = tpl.Funcs(funcMap)
+	files := make([]string, 0, 0)
+	files = append(files, page.Bases...)
+	files = append(files, fname)
+
+	tpl, err := template.New("").Funcs(funcMap).ParseFiles(files...)
+
+	if err != nil {
+		log.Errorf(ctx, "Cant' parse template files: %v", err)
+		return mage.Redirect{Status:http.StatusInternalServerError}
+	}
 
 	//get the base language file
 	lbasename := page.JsonBaseFile
 
 	if lbasename == "" {
-		lbasename = fmt.Sprintf("i18n/%s", "base.json");
+		lbasename = fmt.Sprintf("i18n/%s", "base.json")
 	}
 
 	jbase, err := ioutil.ReadFile(lbasename);
 
 	if err != nil {
 		log.Errorf(ctx, "Error reading base language file %s: %v", lbasename, err);
-		return mage.Redirect{Status:http.StatusInternalServerError};
+		return mage.Redirect{Status:http.StatusInternalServerError}
 	}
 
 	var base map[string]interface{};
@@ -287,13 +289,13 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 
 	if err != nil {
 		log.Errorf(ctx, "Invalid json for base file %s: %v", lbasename, err);
-		return mage.Redirect{Status:http.StatusInternalServerError};
+		return mage.Redirect{Status:http.StatusInternalServerError}
 	}
 
 	_, bok := base[lang]
 
 	if !bok {
-		log.Errorf(ctx, "Base language file %s doesn't support language %s", lbasename, lang);
+		log.Errorf(ctx, "Base language file %s doesn't support language %s", lbasename, lang)
 		//we get the default value if the user provides an invalid lang
 		lang = page.Locale
 	}
@@ -301,7 +303,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	globals := base[lang]
 
 	//---- get the specific language json file
-	lfname := page.JsonFile;
+	lfname := page.JsonFile
 
 	if lfname == "" {
 		lfname = fmt.Sprintf("i18n/%s.%s", page.FileName, "json")
@@ -311,39 +313,39 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 	jlang, err := ioutil.ReadFile(lfname)
 
 	if err != nil {
-		log.Errorf(ctx, "Error retrieving language file %s: %v", lfname, err);
+		log.Errorf(ctx, "Error retrieving language file %s: %v", lfname, err)
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
-	var contents map[string]interface{};
-	err = json.Unmarshal(jlang, &contents);
+	var contents map[string]interface{}
+	err = json.Unmarshal(jlang, &contents)
 
 	if err != nil {
-		log.Errorf(ctx, "Invalid json for file %s: %v", lfname, err);
+		log.Errorf(ctx, "Invalid json for file %s: %v", lfname, err)
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
 	_, dok := contents[lang];
 
 	if !dok {
-		log.Errorf(ctx, "File %s doesn't support language %s", lfname, lang);
+		log.Errorf(ctx, "File %s doesn't support language %s", lfname, lang)
 		return mage.Redirect{Status:http.StatusInternalServerError};
 	}
 
-	content := contents[lang];
+	content := contents[lang]
 
-	renderer := mage.TemplateRenderer{};
+	renderer := mage.TemplateRenderer{}
 	if page.BaseName == "" {
-		renderer.TemplateName = "base";
+		renderer.TemplateName = "base"
 	} else {
-		renderer.TemplateName = page.BaseName;
+		renderer.TemplateName = page.BaseName
 	}
 
 	renderer.Template = tpl
 
 	var data interface{}
 	if page.DataHandler != nil {
-		data = page.DataHandler.AssignData(ctx);
+		data = page.DataHandler.AssignData(ctx)
 	}
 
 	renderer.Data = struct {
@@ -358,9 +360,9 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.RequestOutput)
 		globals,
 		content,
 		data,
-	};
+	}
 
-	out.Renderer = &renderer;
+	out.Renderer = &renderer
 
 	return mage.Redirect{Status:http.StatusOK}
 }
