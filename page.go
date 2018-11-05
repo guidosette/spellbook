@@ -9,27 +9,12 @@ type Website struct {
 	mage.Application
 }
 
-type user struct {
-	mage.Authenticable;
+func (w *Website) AuthenticatorForPath(token string) error {
+	return nil
 }
 
-func (u *user) Authenticate(ctx context.Context, token string) error {
-	return nil;
+func (app Website) OnStart(ctx context.Context) context.Context {
+	return ctx
 }
 
-func (app Website) OnCreate(ctx context.Context) context.Context {
-	return ctx;
-}
-
-func (app Website) NewUser(ctx context.Context) mage.Authenticable {
-	return nil;
-}
-
-func (app Website) AuthenticatorForPath(path string) mage.Authenticator {
-	return nil;
-}
-
-func (app Website) OnDestroy(ctx context.Context) {
-
-}
-
+func (app Website) AfterResponse(ctx context.Context) {}

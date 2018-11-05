@@ -1,10 +1,10 @@
 package page
 
 import (
-	"net/mail"
-	"fmt"
-	"strings"
 	"errors"
+	"fmt"
+	"net/mail"
+	"strings"
 )
 
 //structs implementing "Validator"
@@ -15,18 +15,17 @@ type EmailValidator struct {
 }
 
 func (validator EmailValidator) Validate(value string) error {
-	_, err := mail.ParseAddress(value);
-	return err;
+	_, err := mail.ParseAddress(value)
+	return err
 }
 
 func (validator EmailValidator) ValidateArray(value []string) bool {
-	return true;
+	return true
 }
 
 func (validator EmailValidator) ErrorMessage() string {
-	return validator.Message;
+	return validator.Message
 }
-
 
 //Validates the len of an array
 type ArrayLenValidator struct {
@@ -35,7 +34,7 @@ type ArrayLenValidator struct {
 }
 
 func (v ArrayLenValidator) Validate(value string) error {
-	return nil;
+	return nil
 }
 
 func (v ArrayLenValidator) ValidateArray(values []string) bool {
@@ -44,7 +43,7 @@ func (v ArrayLenValidator) ValidateArray(values []string) bool {
 		return true
 	}
 
-	l := len(values);
+	l := len(values)
 
 	if v.MaxLenArray < 0 {
 		return l >= v.MinLenArray
@@ -60,7 +59,7 @@ func (v ArrayLenValidator) ValidateArray(values []string) bool {
 
 func (v ArrayLenValidator) ErrorMessage() string {
 	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
-		return "";
+		return ""
 	}
 
 	if v.MaxLenArray < 0 {
@@ -74,10 +73,6 @@ func (v ArrayLenValidator) ErrorMessage() string {
 	return fmt.Sprintf("Seleziona da %d a %d opzioni.", v.MinLenArray, v.MaxLenArray)
 }
 
-
-
-
-
 //Validates the len of a string
 type LenValidator struct {
 	MinLen int
@@ -86,46 +81,46 @@ type LenValidator struct {
 
 func (v LenValidator) Validate(value string) error {
 
-	validate := false;
+	validate := false
 	if v.MaxLen < 0 && v.MinLen < 0 {
-		validate = true;
+		validate = true
 	}
 
-	l := len(value);
+	l := len(value)
 
 	if v.MaxLen < 0 {
 		validate = l >= v.MinLen
-		if (!validate) {
-			return errors.New(v.ErrorMessage());
+		if !validate {
+			return errors.New(v.ErrorMessage())
 		} else {
-			return nil;
+			return nil
 		}
 	}
 
 	if v.MinLen < 0 {
-		validate = l <= v.MaxLen;
-		if (!validate) {
-			return errors.New(v.ErrorMessage());
+		validate = l <= v.MaxLen
+		if !validate {
+			return errors.New(v.ErrorMessage())
 		} else {
-			return nil;
+			return nil
 		}
 	}
 
-	validate = l >= v.MinLen && l <= v.MaxLen;
-	if (!validate) {
-		return errors.New(v.ErrorMessage());
+	validate = l >= v.MinLen && l <= v.MaxLen
+	if !validate {
+		return errors.New(v.ErrorMessage())
 	} else {
-		return nil;
+		return nil
 	}
 }
 
 func (v LenValidator) ValidateArray(values []string) bool {
-	return true;
+	return true
 }
 
 func (v LenValidator) ErrorMessage() string {
 	if v.MaxLen < 0 && v.MinLen < 0 {
-		return "";
+		return ""
 	}
 
 	if v.MaxLen < 0 {
@@ -142,7 +137,7 @@ func (v LenValidator) ErrorMessage() string {
 
 //validates against the content of a substring
 type SubstrValidator struct {
-	Against    []string
+	Against []string
 	//negative values ignore the position
 	//positive values Against must start at the position specified
 	Position   int
@@ -150,60 +145,58 @@ type SubstrValidator struct {
 	Mode       SubstrMode
 }
 
-type SubstrMode int;
+type SubstrMode int
 
 const (
-	SUBSTR_MODE_OR SubstrMode = 0
+	SUBSTR_MODE_OR  SubstrMode = 0
 	SUBSTR_MODE_AND SubstrMode = 1
 )
 
 func (v *SubstrValidator) Validate(value string) bool {
-	if len(value) - 1 < v.Position {
-		panic(errors.New("Index specified is larger than value length!"));
+	if len(value)-1 < v.Position {
+		panic(errors.New("Index specified is larger than value length!"))
 	}
 
 	if v.Position < 0 {
 		for _, v := range v.Against {
 			if !strings.Contains(value, v) {
-				return false;
+				return false
 			}
 		}
-		return true;
+		return true
 	}
 
 	for _, against := range v.Against {
-		l := len(against);
-		sub := value[v.Position:l];
+		l := len(against)
+		sub := value[v.Position:l]
 
 		if v.IgnoreCase {
-			sub = strings.ToUpper(sub);
-			against = strings.ToUpper(against);
+			sub = strings.ToUpper(sub)
+			against = strings.ToUpper(against)
 		}
 
 		if v.Mode == SUBSTR_MODE_AND && sub != against {
-			return false;
+			return false
 		}
 
 		if v.Mode == SUBSTR_MODE_OR && sub == against {
-			return true;
+			return true
 		}
 	}
 
 	if v.Mode == SUBSTR_MODE_OR {
-		return false;
+		return false
 	}
 
-	return true;
+	return true
 
 }
 
 func (v *SubstrValidator) ErrorMessage() string {
-	s := "";
+	s := ""
 	for _, v := range v.Against {
-		s = fmt.Sprintf("%s %s", s, v);
+		s = fmt.Sprintf("%s %s", s, v)
 	}
 
-	return fmt.Sprintf("Il valore deve contenere i caratteri: %s", s);
+	return fmt.Sprintf("Il valore deve contenere i caratteri: %s", s)
 }
-
-
