@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	LANGUAGE_COOKIE_KEY string = "PAGE_LANG_CURRENT_ID"
+	LanguageCookieKey string = "PAGE_LANG_CURRENT_ID"
 )
 
 //Reads a static file and outputs it as a string.
@@ -215,9 +215,9 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 		lang = inputs["X-AppEngine-Country"].Value()
 	}
 
-	_, lok = inputs[LANGUAGE_COOKIE_KEY]
+	_, lok = inputs[LanguageCookieKey]
 	if lok {
-		lang = inputs[LANGUAGE_COOKIE_KEY].Value()
+		lang = inputs[LanguageCookieKey].Value()
 	}
 
 	_, lok = inputs["hl"]
@@ -227,7 +227,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	}
 
 	lcookie := http.Cookie{}
-	lcookie.Name = LANGUAGE_COOKIE_KEY
+	lcookie.Name = LanguageCookieKey
 	lcookie.Value = lang
 	lcookie.Path = "/"
 	out.AddCookie(lcookie)

@@ -3,14 +3,28 @@ package page
 import (
 	"distudio.com/mage"
 	"golang.org/x/net/context"
+	"golang.org/x/text/language"
 )
 
 type Website struct {
 	mage.Application
+	Router InternationalRouter
 }
 
-func (w *Website) AuthenticatorForPath(token string) error {
-	return nil
+type Options struct {
+	Languages []language.Tag
+}
+
+func NewWebsite(opts *Options) *Website {
+	ws := Website{}
+	if opts != nil {
+		if opts.Languages != nil {
+			// create the language matcher
+			ws.Router = NewInternationalRouter()
+			ws.Router.matcher = language.NewMatcher(opts.Languages)
+		}
+	}
+	return &ws
 }
 
 func (app Website) OnStart(ctx context.Context) context.Context {
