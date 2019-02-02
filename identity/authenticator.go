@@ -19,11 +19,15 @@ func (authenticator UserAuthenticator) Authenticate(ctx context.Context) context
 	inputs := mage.InputsFromContext(ctx)
 	if tkn, ok := inputs[HeaderToken]; ok {
 		token := tkn.Value()
-		// grab the last chars after hashLenght
+		// grab the last chars after hashLength
 		encoded := token[hashLen:]
 		u := User{}
 		err := model.FromEncodedKey(ctx, &u, encoded)
 		if err != nil || u.Token != token {
+			return ctx
+		}
+
+		if !u.IsEnabled() {
 			return ctx
 		}
 

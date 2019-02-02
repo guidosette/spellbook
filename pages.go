@@ -375,15 +375,10 @@ func (page *SendMailPage) Process(ctx context.Context, out *mage.ResponseOutput)
 
 	if err != nil {
 		//if we have a field error we handle it returning a 404
-		if fe, isField := err.(FieldError); isField {
-			renderer := mage.JSONRenderer{}
-			renderer.Data = fe
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-		//else is a generic error, we return a 500
-		log.Errorf(ctx, "%s", err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		renderer := mage.JSONRenderer{}
+		renderer.Data = err.Error()
+		out.Renderer = &renderer
+		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
 	return mage.Redirect{Status: http.StatusOK}

@@ -1,4 +1,4 @@
-package page
+package validators
 
 import (
 	"errors"
@@ -10,67 +10,11 @@ import (
 //structs implementing "Validator"
 
 //checks if the given string is an email address
-type EmailValidator struct {
-	Message string
-}
+type EmailValidator struct {}
 
 func (validator EmailValidator) Validate(value string) error {
 	_, err := mail.ParseAddress(value)
 	return err
-}
-
-func (validator EmailValidator) ValidateArray(value []string) bool {
-	return true
-}
-
-func (validator EmailValidator) ErrorMessage() string {
-	return validator.Message
-}
-
-//Validates the len of an array
-type ArrayLenValidator struct {
-	MinLenArray int
-	MaxLenArray int
-}
-
-func (v ArrayLenValidator) Validate(value string) error {
-	return nil
-}
-
-func (v ArrayLenValidator) ValidateArray(values []string) bool {
-
-	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
-		return true
-	}
-
-	l := len(values)
-
-	if v.MaxLenArray < 0 {
-		return l >= v.MinLenArray
-	}
-
-	if v.MinLenArray < 0 {
-		return l <= v.MaxLenArray
-	}
-
-	return l >= v.MinLenArray && l <= v.MaxLenArray
-
-}
-
-func (v ArrayLenValidator) ErrorMessage() string {
-	if v.MaxLenArray < 0 && v.MinLenArray < 0 {
-		return ""
-	}
-
-	if v.MaxLenArray < 0 {
-		return fmt.Sprintf("Seleziona almeno %d opzione.", v.MinLenArray)
-	}
-
-	if v.MinLenArray < 0 {
-		return fmt.Sprintf("Seleziona al massimo %d opzioni.", v.MaxLenArray)
-	}
-
-	return fmt.Sprintf("Seleziona da %d a %d opzioni.", v.MinLenArray, v.MaxLenArray)
 }
 
 //Validates the len of a string
@@ -114,10 +58,6 @@ func (v LenValidator) Validate(value string) error {
 	}
 }
 
-func (v LenValidator) ValidateArray(values []string) bool {
-	return true
-}
-
 func (v LenValidator) ErrorMessage() string {
 	if v.MaxLen < 0 && v.MinLen < 0 {
 		return ""
@@ -148,22 +88,22 @@ type SubstrValidator struct {
 type SubstrMode int
 
 const (
-	SUBSTR_MODE_OR  SubstrMode = 0
-	SUBSTR_MODE_AND SubstrMode = 1
-)
+	ModeSubstringOr  SubstrMode = iota
+	ModeSubstringAnd
+	)
 
-func (v *SubstrValidator) Validate(value string) bool {
+func (v *SubstrValidator) Validate(value string) error {
 	if len(value)-1 < v.Position {
-		panic(errors.New("Index specified is larger than value length!"))
+		return errors.New("specified index  is larger than value length!")
 	}
 
 	if v.Position < 0 {
 		for _, v := range v.Against {
 			if !strings.Contains(value, v) {
-				return false
+				return fmt.Errorf("string %s does not contain substring %s", value, v)
 			}
 		}
-		return true
+		return nil
 	}
 
 	for _, against := range v.Against {
@@ -175,28 +115,19 @@ func (v *SubstrValidator) Validate(value string) bool {
 			against = strings.ToUpper(against)
 		}
 
-		if v.Mode == SUBSTR_MODE_AND && sub != against {
-			return false
+		if v.Mode == ModeSubstringAnd && sub != against {
+			return fmt.Errorf("string %s does not contain substring %s", value, against)
 		}
 
-		if v.Mode == SUBSTR_MODE_OR && sub == against {
-			return true
+		if v.Mode == ModeSubstringOr && sub == against {
+			return nil
 		}
 	}
 
-	if v.Mode == SUBSTR_MODE_OR {
-		return false
+	if v.Mode == ModeSubstringOr {
+		return fmt.Errorf("string %s is not valid", value)
 	}
 
-	return true
+	return nil
 
-}
-
-func (v *SubstrValidator) ErrorMessage() string {
-	s := ""
-	for _, v := range v.Against {
-		s = fmt.Sprintf("%s %s", s, v)
-	}
-
-	return fmt.Sprintf("Il valore deve contenere i caratteri: %s", s)
 }

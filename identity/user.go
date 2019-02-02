@@ -6,6 +6,7 @@ import (
 	"distudio.com/mage/model"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -19,10 +20,10 @@ type User struct {
 	model.Model
 	Name        string
 	Surname     string
-	Nickname string
 	Email       string
 	Password    string
 	Token       string
+	Locale      string
 	Permission Permission
 	LastLogin time.Time
 }
@@ -53,7 +54,7 @@ func (user *User) MarshalJSON() ([]byte, error) {
 
 func (user User) hash() string {
 	now := time.Now().UTC().Unix()
-	s := fmt.Sprintf("%s%s%s%s%d",user.Nickname, tokenSeparator, user.Password, tokenSeparator, now)
+	s := fmt.Sprintf("%s%s%s%s%d",user.StringID(), tokenSeparator, user.Password, tokenSeparator, now)
 	hasher := sha1.New()
 	hasher.Write([]byte(s))
 	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
@@ -71,7 +72,7 @@ func HashPassword(password string, salt string) string {
 
 func (user User) GenerateToken() (string, error) {
 	if user.Key == nil {
-		return "", fmt.Errorf("can't generate token. User %s does not exists", user.Nickname)
+		return "", errors.New("can't generate token. User does not exists")
 	}
 	hash := user.hash()
 	return fmt.Sprintf("%s%s",hash, user.EncodedKey()), nil

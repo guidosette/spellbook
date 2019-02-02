@@ -3,10 +3,8 @@ package page
 import (
 	"context"
 	"distudio.com/mage"
-	"distudio.com/page/controller"
 	"fmt"
 	"golang.org/x/text/language"
-	"google.golang.org/appengine/log"
 )
 
 const KeyLanguageParam = "lang"
@@ -29,13 +27,17 @@ func (router *InternationalRouter) SetRoutes(urls []string, handler func(ctx con
 	}
 }
 
+func (router *InternationalRouter) SetUniversalRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
+	router.DefaultRouter.SetRoute(url, handler, authenticator)
+}
+
 func (router *InternationalRouter) SetRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
 
 	// if no language is specified, redirect to the default language
 	router.Router.SetRoute(url, func(ctx context.Context) (interface{}, context.Context) {
 		lang,_, _ := router.matcher.Match(language.Make(""))
 		url := fmt.Sprintf("/%s%s", lang.String(), url)
-		return &controller.RedirectController{To: url}, ctx
+		return &RedirectController{To: url}, ctx
 	})
 
 	// prepend the url with the language param
@@ -49,11 +51,10 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 		params := mage.RoutingParams(ctx)
 		lkey := params[KeyLanguageParam].Value()
 		lang := language.Make(lkey)
-		log.Debugf(ctx, "language key is %s. tag value is %s. Params: %+v", lkey, lang, params)
 		tag, _, _ := router.matcher.Match(lang)
 		if t := tag.String(); lkey != t {
 			url := fmt.Sprintf("/%s%s",t, url)
-			return &controller.RedirectController{To:url}, ctx
+			return &RedirectController{To:url}, ctx
 		}
 		ctx = context.WithValue(ctx, KeyLanguageTag, tag)
 		return handler(ctx), ctx

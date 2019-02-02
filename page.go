@@ -6,6 +6,8 @@ import (
 	"golang.org/x/text/language"
 )
 
+const salt = "AnticmS"
+
 type Website struct {
 	mage.Application
 	Router InternationalRouter
