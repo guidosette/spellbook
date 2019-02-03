@@ -6,9 +6,12 @@ import (
 	"distudio.com/mage/model"
 	"distudio.com/page/identity"
 	"distudio.com/page/validators"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/user"
 	"net/http"
 )
 
@@ -32,10 +35,10 @@ func (controller TokenController) HandlePost(ctx context.Context, ins mage.Reque
 
 	// checks the provided credentials. If correct creates a token, saves the user and returns the token
 	errs := Errors{}
-	nick := validators.NewField("nickname", true, ins)
-	nickname, err := nick.Value()
+	nick := validators.NewField("username", true, ins)
+	username, err := nick.Value()
 	if err != nil {
-		errs.AddError("nickname", err)
+		errs.AddError("username", err)
 	}
 
 	password := validators.NewField("password", true, ins)
@@ -51,7 +54,7 @@ func (controller TokenController) HandlePost(ctx context.Context, ins mage.Reque
 	}
 
 	u := identity.User{}
-	err = model.FromStringID(ctx, &u, nickname, nil)
+	err = model.FromStringID(ctx, &u, username, nil)
 
 	if err == datastore.ErrNoSuchEntity {
 		return mage.Redirect{Status: http.StatusNotFound}
@@ -102,80 +105,115 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
 	case http.MethodPost:
-		// creates an user if doesn't exists
+		// check if we have an enabled user or a guser admin
+		guser := user.Current(ctx)
 		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
-		if !ok {
+
+		// we neither have a
+		if guser == nil && u == nil {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionCreateUser) {
+		if guser != nil && !guser.Admin {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
-		// user can create a new user, check if data are correct
+		// we at least have an user.
+		if me, ok := u.(identity.User); (guser == nil && !ok) || (ok && !me.HasPermission(identity.PermissionCreateUser)) {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
+
+		log.Debugf(ctx, "guser is %v. user is %v", guser, u)
+
+		j, ok := ins[mage.KeyRequestJSON]
+		if !ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
 		errs := Errors{}
-		nick := validators.NewField("nickname", true, ins)
-		nickname, err := nick.Value()
-		if err != nil {
-			errs.AddError("nickname", err)
-		}
 
-		// if we have the nickname, check if the user does not exists
-		newuser := identity.User{}
+		jdata := j.Value()
 
-		err = model.FromStringID(ctx, &newuser, nickname, nil)
-		if err != nil {
-			// clear the errors
-			errs.Clear()
-			errs.AddError("nickname", fmt.Errorf("user with nickname %s already exists", nickname))
-			renderer := mage.JSONRenderer{}
-			renderer.Data = errs
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusConflict}
-		}
+		meta := struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}{}
 
-		// the user does not exist. Go on and create it
-		password := validators.NewField("password", true, ins)
-		password.AddValidator(validators.LenValidator{MinLen: 8})
-		pwd, err := password.Value()
-		if err != nil {
-			errs.AddError("password", err)
-		}
+		err := json.Unmarshal([]byte(jdata), &meta)
 
-		newuser.Password = pwd
-
-		if name, ok := ins["name"]; ok {
-			newuser.Name = name.Value()
-		}
-
-		if surname, ok := ins["surname"]; ok {
-			newuser.Surname = surname.Value()
-		}
-
-		if locale, ok := ins["locale"]; ok {
-			// locale will be evaluated later, after language is resolved.
-			// if the locale is not valid or is not supported, the default locale will be used
-			newuser.Locale = locale.Value()
-		}
-
-		if errs.HasErrors() {
+			// check the username
+		username := identity.SanitizeUserName(meta.Username)
+		if username == "" {
+			msg := fmt.Sprintf("invalid username %s", meta.Username)
+			log.Errorf(ctx, msg)
+			errs.AddError("username", errors.New(msg))
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
 			out.Renderer = &renderer
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		// else, create the new user
-		opts := model.CreateOptions{}
-		opts.WithStringId(nickname)
-		err = model.CreateWithOptions(ctx, &newuser, &opts)
-		if err != nil {
-			errs.Clear()
-			errs.AddError("", err)
-			return mage.Redirect{Status:http.StatusInternalServerError}
+		// check if the user already exists
+		err = model.FromStringID(ctx, &identity.User{}, username, nil)
+		if err == nil {
+			// user already exists
+			msg := fmt.Sprintf("user %s already exists.", username)
+			log.Errorf(ctx, msg)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusConflict}
 		}
 
+		if err != datastore.ErrNoSuchEntity {
+			// user already exists
+			msg := fmt.Sprintf("error retrieving user with username %s: %s.", username, err)
+			log.Errorf(ctx, msg)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+
+		pf := validators.NewRawField("password", true, meta.Password)
+		pf.AddValidator(validators.LenValidator{MinLen:8})
+
+		if err = pf.Validate(); err != nil {
+			log.Errorf(ctx, "invalid password %s for username %s", meta.Password, username)
+			errs.AddError(pf.Name, err)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		newuser := identity.User{}
+		err = json.Unmarshal([]byte(jdata), &newuser)
+		if err != nil {
+			log.Errorf(ctx, "error unmarshaling data %s : %s", jdata, err)
+			errs.AddError("", err)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		opts := model.CreateOptions{}
+		opts.WithStringId(username)
+
+		newuser.AddPermission(identity.PermissionLogIn)
+		err = model.CreateWithOptions(ctx, &newuser, &opts)
+		if err != nil {
+			log.Errorf(ctx, "error creating user %s: %s", username, err)
+			errs.AddError("", err)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		renderer := mage.JSONRenderer{}
+		renderer.Data = &newuser
+		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusCreated}
 	}
 	return mage.Redirect{Status: http.StatusMethodNotAllowed}

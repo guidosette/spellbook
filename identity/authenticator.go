@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	HeaderToken string = "X-Authorization"
+	HeaderToken string = "X-Authentication"
 	KeyUser string = "__pUser__"
 )
 

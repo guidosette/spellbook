@@ -26,13 +26,13 @@ type LenValidator struct {
 func (v LenValidator) Validate(value string) error {
 
 	validate := false
-	if v.MaxLen < 0 && v.MinLen < 0 {
+	if v.MaxLen <= 0 && v.MinLen <= 0 {
 		validate = true
 	}
 
 	l := len(value)
 
-	if v.MaxLen < 0 {
+	if v.MaxLen <= 0 {
 		validate = l >= v.MinLen
 		if !validate {
 			return errors.New(v.ErrorMessage())
@@ -41,7 +41,7 @@ func (v LenValidator) Validate(value string) error {
 		}
 	}
 
-	if v.MinLen < 0 {
+	if v.MinLen <= 0 {
 		validate = l <= v.MaxLen
 		if !validate {
 			return errors.New(v.ErrorMessage())

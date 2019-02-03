@@ -13,6 +13,17 @@ const (
 	PermissionPublishPost
 )
 
+var Permissions = []Permission{
+	PermissionEnabled,
+	PermissionLogIn,
+	PermissionCreateUser,
+	PermissionEditUser,
+	PermissionBlockUser,
+	PermissionCreatePost,
+	PermissionEditPost,
+	PermissionPublishPost,
+}
+
 func (user User) HasPermission(permission Permission) bool {
 	return user.Permission & permission != 0
 }

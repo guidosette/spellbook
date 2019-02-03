@@ -30,6 +30,13 @@ func NewField(name string, required bool, in mage.RequestInputs) *Field {
 	return f
 }
 
+func NewRawField(name string, required bool, value string) *Field {
+	vs := make([]Validator, 0, 0)
+	f := &Field{Name: name, Required:required, validators:vs}
+	f.value = value
+	return f
+}
+
 func (field *Field) AddValidator(v Validator) {
 	field.validators = append(field.validators, v)
 }

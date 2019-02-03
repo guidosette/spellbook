@@ -8,12 +8,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+	"unicode"
 )
 
 const (
 	tokenSeparator = "|"
 	hashLen = 28
+	UsernameMaxLen = 32
+	UsernameMinLen = 4
 )
 
 type User struct {
@@ -28,28 +32,84 @@ type User struct {
 	LastLogin time.Time
 }
 
+func (user *User) UnmarshalJSON(data []byte) error {
+	// username (alias StringID) must be handled by the consumer of the model
+	alias := struct {
+		Name string `json:"name"`
+		Surname string `json:"surname"`
+		Email string `json:"email"`
+		Token string `json:"token"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	user.Name = alias.Name
+	user.Surname = alias.Surname
+	user.Email = alias.Email
+	user.Token = alias.Token
+	return nil
+}
+
 func (user *User) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Name    string    `json:"name"`
 		Surname string    `json:"surname"`
 		Email   string    `json:"email"`
 		Token   string    `json:"token"`
-		Permission   Permission `json:"level"`
+		Permissions   []Permission `json:"permissions"`
 	}
 
 	return json.Marshal(&struct {
-		Id string `json:"id"`
+		Username string `json:"username"`
 		Alias
 	}{
-		user.Key.Encode(),
+		user.StringID(),
 		Alias{
 			Name:    user.Name,
 			Surname: user.Surname,
 			Email:   user.Email,
 			Token:   user.Token,
-			Permission:  user.Permission,
+			Permissions:  user.Permissions(),
 		},
 	})
+}
+
+func (user User) Permissions() []Permission {
+	var perms []Permission
+	for _, permission := range Permissions {
+		if user.HasPermission(permission) {
+			perms = append(perms, permission)
+		}
+	}
+	return perms
+}
+
+// sanitizes a string to be used a username
+// if there is an error or the username is invalid an empty string is returned
+func SanitizeUserName(username string) string {
+	u := strings.TrimSpace(username)
+
+	if len(username) > UsernameMaxLen {
+		return ""
+	}
+
+	if len(username) < UsernameMinLen {
+		return ""
+	}
+
+	for _, c := range u {
+		if unicode.IsLetter(c) || unicode.IsNumber(c) || c == '.' || c == '_' {
+			continue
+		}
+		return ""
+	}
+
+	u = strings.ToLower(u)
+
+	return u
 }
 
 func (user User) hash() string {
