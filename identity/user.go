@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	guser "google.golang.org/appengine/user"
 	"strings"
 	"time"
 	"unicode"
@@ -30,6 +31,7 @@ type User struct {
 	Locale      string
 	Permission Permission
 	LastLogin time.Time
+	gUser *guser.User`model:"-",json:"-"`
 }
 
 func (user *User) UnmarshalJSON(data []byte) error {
@@ -38,7 +40,7 @@ func (user *User) UnmarshalJSON(data []byte) error {
 		Name string `json:"name"`
 		Surname string `json:"surname"`
 		Email string `json:"email"`
-		Token string `json:"token"`
+		Permissions []string `json:"permissions"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -46,10 +48,11 @@ func (user *User) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+
 	user.Name = alias.Name
 	user.Surname = alias.Surname
 	user.Email = alias.Email
-	user.Token = alias.Token
+	user.GrantNamedPermissions(alias.Permissions)
 	return nil
 }
 
@@ -58,30 +61,28 @@ func (user *User) MarshalJSON() ([]byte, error) {
 		Name    string    `json:"name"`
 		Surname string    `json:"surname"`
 		Email   string    `json:"email"`
-		Token   string    `json:"token"`
-		Permissions   []Permission `json:"permissions"`
+		Permissions   []string `json:"permissions"`
 	}
 
 	return json.Marshal(&struct {
 		Username string `json:"username"`
 		Alias
 	}{
-		user.StringID(),
+		user.Username(),
 		Alias{
 			Name:    user.Name,
 			Surname: user.Surname,
 			Email:   user.Email,
-			Token:   user.Token,
 			Permissions:  user.Permissions(),
 		},
 	})
 }
 
-func (user User) Permissions() []Permission {
-	var perms []Permission
-	for _, permission := range Permissions {
+func (user User) Permissions() []string {
+	var perms []string
+	for permission, description := range Permissions {
 		if user.HasPermission(permission) {
-			perms = append(perms, permission)
+			perms = append(perms, description)
 		}
 	}
 	return perms
@@ -119,6 +120,17 @@ func (user User) hash() string {
 	hasher.Write([]byte(s))
 	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 	return hash
+}
+
+func (user User) IsGUser() bool {
+	return user.gUser != nil
+}
+
+func (user User) Username() string {
+	if user.IsGUser() {
+		return user.gUser.String()
+	}
+	return user.StringID()
 }
 
 func HashPassword(password string, salt string) string {
