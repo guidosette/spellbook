@@ -52,7 +52,7 @@ func (controller TokenController) HandlePost(ctx context.Context, ins mage.Reque
 	}
 
 	// checks the provided credentials. If correct creates a token, saves the user and returns the token
-	errs := Errors{}
+	errs := validators.Errors{}
 	nick := validators.NewRawField("username", true, credentials.Username)
 	username, err := nick.Value()
 	if err != nil {
@@ -128,7 +128,6 @@ func (controller *IdentityController) Process(ctx context.Context, out *mage.Res
 	u := ctx.Value(identity.KeyUser)
 	me, ok := u.(identity.User)
 	if !ok {
-		log.Debugf(ctx, "user is not an user: +v", u)
 		return mage.Redirect{Status: http.StatusUnauthorized}
 	}
 
@@ -172,7 +171,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		if !ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
-		errs := Errors{}
+
 
 		jdata := j.Value()
 
@@ -182,20 +181,47 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		}{}
 
 		err := json.Unmarshal([]byte(jdata), &meta)
+		if err != nil {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
 
-		// check the username
+		// validate input fields
+		errs := validators.Errors{}
+
 		username := identity.SanitizeUserName(meta.Username)
-		if username == "" {
+		uf := validators.NewRawField("username", true, username)
+		uf.AddValidator(validators.DatastoreKeyNameValidator{})
+		if err = uf.Validate(); err != nil {
 			msg := fmt.Sprintf("invalid username %s", meta.Username)
 			log.Errorf(ctx, msg)
 			errs.AddError("username", errors.New(msg))
+		}
+
+		pf := validators.NewRawField("password", true, meta.Password)
+		pf.AddValidator(validators.LenValidator{MinLen:8})
+
+		if err = pf.Validate(); err != nil {
+			log.Errorf(ctx, "invalid password %s for username %s", meta.Password, username)
+			errs.AddError(pf.Name, err)
+		}
+
+		// retrieve the other fields
+		newuser := identity.User{}
+		err = json.Unmarshal([]byte(jdata), &newuser)
+		if err != nil {
+			log.Errorf(ctx, "error unmarshalling data %s : %s", jdata, err)
+			errs.AddError("", err)
+		}
+
+		// check for client input erros
+		if errs.HasErrors() {
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
 			out.Renderer = &renderer
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		// check if the user already exists
+		// check for user existence
 		err = model.FromStringID(ctx, &identity.User{}, username, nil)
 		if err == nil {
 			// user already exists
@@ -217,30 +243,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
-		pf := validators.NewRawField("password", true, meta.Password)
-		pf.AddValidator(validators.LenValidator{MinLen:8})
-
-		if err = pf.Validate(); err != nil {
-			log.Errorf(ctx, "invalid password %s for username %s", meta.Password, username)
-			errs.AddError(pf.Name, err)
-			renderer := mage.JSONRenderer{}
-			renderer.Data = errs
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-
-		// retrieve the other fields
-		newuser := identity.User{}
-		err = json.Unmarshal([]byte(jdata), &newuser)
-		if err != nil {
-			log.Errorf(ctx, "error unmarshaling data %s : %s", jdata, err)
-			errs.AddError("", err)
-			renderer := mage.JSONRenderer{}
-			renderer.Data = errs
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-
+		// input is valid, create the resource
 		opts := model.CreateOptions{}
 		opts.WithStringId(username)
 
@@ -252,7 +255,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
 			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
+			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		renderer := mage.JSONRenderer{}
@@ -392,7 +395,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// check if the password is correct in case the user supplied it
-		errs := Errors{}
+		errs := validators.Errors{}
 
 		if juser.Password != "" {
 			pf := validators.NewRawField("password", true, juser.Password)

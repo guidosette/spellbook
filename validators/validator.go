@@ -2,12 +2,49 @@ package validators
 
 import (
 	"distudio.com/mage"
+	"encoding/json"
 	"errors"
 	"strings"
 )
 
 var ErrMissingField = errors.New("missing field")
 
+type fieldError struct {
+	error
+	field string
+}
+
+func (err fieldError) MarshalJSON() ([]byte, error) {
+	type Alias struct {
+		Field string
+		Error string
+	}
+	return json.Marshal(Alias{err.field, err.Error()})
+}
+
+type Errors struct {
+	errors []fieldError
+}
+
+func (errs Errors) HasErrors() bool {
+	return errs.errors != nil
+}
+
+func (errs *Errors) AddError(name string, value error) {
+	errs.errors = append(errs.errors, fieldError{error:value, field:name})
+}
+
+func (errs *Errors) Clear() {
+	errs.errors = nil
+}
+
+func (errs *Errors) MarshalJSON() ([]byte, error) {
+	return json.Marshal(errs.errors)
+}
+
+// Validator operates on a single field.
+// Returns a validation error if the field does not satisfy a set of constraint.
+// Each validator acts upon a given constraint
 type Validator interface {
 	Validate(value string) error
 }

@@ -48,7 +48,6 @@ func (user *User) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-
 	user.Name = alias.Name
 	user.Surname = alias.Surname
 	user.Email = alias.Email
