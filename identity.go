@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/http"
+	"strconv"
 )
 
 // This controller is responsible for dispensing new tokens
@@ -276,8 +277,53 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		// if there is no param then it is a list request
 		param, ok := params["username"]
 		if !ok {
-			// handle pagination of users. todo
-			return mage.Redirect{Status: http.StatusNotImplemented}
+			// handle query params for page data:
+			page := 0
+			size := 20
+			if pin, ok := ins["page"]; ok {
+				if num, err := strconv.Atoi(pin.Value()); err == nil {
+					page = num
+				} else {
+					return mage.Redirect{ Status: http.StatusBadRequest}
+				}
+			}
+
+			if sin, ok := ins["results"]; ok {
+				if num, err := strconv.Atoi(sin.Value()); err == nil {
+					size = num
+					// cap the size to 100
+					if size > 100 {
+						size = 100
+					}
+				} else {
+					return mage.Redirect{Status: http.StatusBadRequest}
+				}
+			}
+
+			var users []*identity.User
+			q := model.NewQuery(&identity.User{})
+			q = q.OffsetBy(page * size)
+			// get one more so we know if we are done
+			q = q.Limit(size + 1)
+			err := q.GetMulti(ctx, &users)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusInternalServerError}
+			}
+
+			// todo: generalize list handling and responses
+			l := len(users)
+			count := size
+			if l < size {
+				count = l
+			}
+			response := struct {
+				Items []*identity.User `json:"items"`
+				More bool `json:"more"`
+			}{users[:count], l > size}
+			renderer := mage.JSONRenderer{}
+			renderer.Data = response
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusOK}
 		}
 
 		username := param.Value()

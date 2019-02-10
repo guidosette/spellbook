@@ -49,6 +49,4 @@ func (controller *RedirectController) Process(ctx context.Context, out *mage.Res
 	return mage.Redirect{Location:controller.To, Status:http.StatusFound}
 }
 
-func (controller *RedirectController) OnDestroy(ctx context.Context) {
-
-}
+func (controller *RedirectController) OnDestroy(ctx context.Context) {}
