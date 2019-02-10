@@ -4,6 +4,7 @@ type Permission int64
 
 const (
 	PermissionEnabled = 1 << iota
+	PermissionLoadFiles
 	PermissionReadUser
 	PermissionCreateUser
 	PermissionEditUser
@@ -16,6 +17,7 @@ const (
 
 var Permissions = map[Permission]string{
 	PermissionEnabled: "PERMISSION_ENABLED",
+	PermissionLoadFiles: "PERMISSION_LOAD_FILES",
 	PermissionReadUser: "PERMISSION_READ_USERS",
 	PermissionCreateUser: "PERMISSION_CREATE_USERS",
 	PermissionEditUser: "PERMISSION_UPDATE_USERS",
