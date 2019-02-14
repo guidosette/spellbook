@@ -84,7 +84,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 
 	tags := strings.Split(post.Tags, ";")
 	return json.Marshal(&struct {
-		Tags []string `json:"username"`
+		Tags []string `json:"tags"`
 		Alias
 	}{
 		tags,
