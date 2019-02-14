@@ -14,7 +14,7 @@ type Post struct {
 	Subtitle string `model:"search";json:"subtitle"`
 	Body     string `model:"search";json:"body"`
 	Tags     string `model:"search";json:"tags"`
-	Category string `model:"search";json:"category"`
+	Category string `model:"search";json:"category";page:"gettable,category"`
 	Topic    string `model:"search";json:"topic"`
 	Locale   string `json:"locale"`
 	Revision int    `json:"revision"`
@@ -84,7 +84,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 
 	tags := strings.Split(post.Tags, ";")
 	return json.Marshal(&struct {
-		Tags []string `json:"username"`
+		Tags []string `json:"tags"`
 		Alias
 	}{
 		tags,
