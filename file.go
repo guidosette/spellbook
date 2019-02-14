@@ -119,6 +119,15 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			log.Errorf(ctx, "upload: unable to close bucket %s: %s", bucket, err.Error())
 		}
 
+		// return the file data
+		response := struct {
+			URI string
+		}{filename}
+
+		renderer := mage.JSONRenderer{}
+		renderer.Data = response
+		out.Renderer = &renderer
+
 		return mage.Redirect{Status:http.StatusCreated}
 
 	}
