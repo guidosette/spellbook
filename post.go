@@ -14,6 +14,7 @@ import (
 	"google.golang.org/appengine/log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -120,6 +121,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		// if there is no param then it is a list request
 		param, ok := params["slug"]
 		if !ok {
+
 			// handle query params for page data:
 			page := 0
 			size := 20
@@ -143,26 +145,40 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 				}
 			}
 
-			var posts []*post.Post
-			q := model.NewQuery(&post.Post{})
-			q = q.OffsetBy(page * size)
-			// get one more so we know if we are done
-			q = q.Limit(size + 1)
-			err := q.GetMulti(ctx, &posts)
-			if err != nil {
-				return mage.Redirect{Status: http.StatusInternalServerError}
+			var result interface{}
+			l := 0
+			// check property
+			property, ok := ins["property"]
+			if ok {
+				// property
+				categories, err := controller.HandleResourceProperties(ctx, property.Value(), page, size)
+				if err != nil {
+					log.Errorf(ctx, "Error retrieving posts %+v", err)
+					return mage.Redirect{Status: http.StatusInternalServerError}
+				}
+				l = len(categories)
+				result = categories[:controller.GetCorrectCountForPaging(size, l)]
+			} else {
+				// list posts
+				var posts []*post.Post
+				q := model.NewQuery(&post.Post{})
+				q = q.OffsetBy(page * size)
+				// get one more so we know if we are done
+				q = q.Limit(size + 1)
+				err := q.GetMulti(ctx, &posts)
+				if err != nil {
+					log.Errorf(ctx, "Error retrieving posts %+v", err)
+					return mage.Redirect{Status: http.StatusInternalServerError}
+				}
+				l = len(posts)
+				result = posts[:controller.GetCorrectCountForPaging(size, l)]
 			}
 
 			// todo: generalize list handling and responses
-			l := len(posts)
-			count := size
-			if l < size {
-				count = l
-			}
 			response := struct {
-				Items []*post.Post `json:"items"`
-				More  bool         `json:"more"`
-			}{posts[:count], l > size}
+				Items interface{} `json:"items"`
+				More  bool        `json:"more"`
+			}{result, l > size}
 			renderer := mage.JSONRenderer{}
 			renderer.Data = response
 			out.Renderer = &renderer
@@ -257,4 +273,44 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 	}
 
 	return mage.Redirect{Status: http.StatusMethodNotAllowed}
+}
+
+func (controller *PostController) GetCorrectCountForPaging(size int, l int) int {
+	count := size
+	if l < size {
+		count = l
+	}
+	return count
+}
+
+func (controller *PostController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
+	// todo: generalize
+	name := ""
+	switch property {
+	case "category":
+		name = "Category"
+	case "topic":
+		name = "Topic"
+	default:
+		return nil, errors.New("No property found")
+	}
+
+	var posts []*post.Post
+	q := model.NewQuery(&post.Post{})
+	q = q.OffsetBy(page * size)
+	q = q.Distinct(name)
+	// get one more so we know if we are done
+	q = q.Limit(size + 1)
+	err := q.GetAll(ctx, &posts)
+	if err != nil {
+		log.Errorf(ctx, "Error retrieving categories: %+v", err)
+		return nil, err
+	}
+	var categories []interface{}
+	for _, p := range posts {
+		value := reflect.ValueOf(p).Elem().FieldByName(name).String()
+		categories = append(categories, &value)
+	}
+	return categories, nil
+
 }

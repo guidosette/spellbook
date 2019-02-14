@@ -14,7 +14,7 @@ type Post struct {
 	Subtitle string `model:"search";json:"subtitle"`
 	Body     string `model:"search";json:"body"`
 	Tags     string `model:"search";json:"tags"`
-	Category string `model:"search";json:"category"`
+	Category string `model:"search";json:"category";page:"gettable,category"`
 	Topic    string `model:"search";json:"topic"`
 	Locale   string `json:"locale"`
 	Revision int    `json:"revision"`
