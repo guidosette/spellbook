@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"strings"
 )
 
 // checks if the given string is an email address
@@ -67,6 +68,42 @@ func (v DatastoreKeyNameValidator) Validate(value string) error {
 
 	if len(value) > 2 && value[:2] == "__" {
 		return fmt.Errorf("%s can't start with '__'", value)
+	}
+
+	return nil
+}
+
+// Checks if a given string is a valid datastore name
+type FileNameValidator struct {
+	AllowEmpty bool
+}
+
+func (v FileNameValidator) Validate(value string) error {
+	if len(value) > 1024 {
+		return errors.New("file name can't be larger than 1024 bytes")
+	}
+
+	if value == "." || value == "..." || value == ".." {
+		return fmt.Errorf("invalid file name: %s", value)
+	}
+
+	if strings.HasPrefix(value, ".well-known/acme-challenge") {
+		return errors.New("file name can't start with '.well-known/acme-challenge'")
+	}
+
+	// todo: validate against unicode chars
+	if strings.Contains(value,"\n") || strings.Contains(value, "\r\n") {
+		return errors.New("file name can't contain new lines or line feeds")
+	}
+
+	if value == "" && !v.AllowEmpty {
+		return errors.New("string is empty")
+	}
+
+	for _, s := range value {
+		if s == '#' || s == '[' || s == ']' || s == '*' || s == '?' {
+			return fmt.Errorf("file name %q contains invalid character %q", value, s)
+		}
 	}
 
 	return nil
