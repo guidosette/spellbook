@@ -172,7 +172,6 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-
 		jdata := j.Value()
 
 		meta := struct {
@@ -215,6 +214,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 
 		// check for client input erros
 		if errs.HasErrors() {
+			log.Errorf(ctx, "error HasErrors %+v", errs)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
 			out.Renderer = &renderer
@@ -226,6 +226,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		if err == nil {
 			// user already exists
 			msg := fmt.Sprintf("user %s already exists.", username)
+			errs.AddError("", errors.New(msg))
 			log.Errorf(ctx, msg)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -236,6 +237,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		if err != datastore.ErrNoSuchEntity {
 			// user already exists
 			msg := fmt.Sprintf("error retrieving user with username %s: %s.", username, err)
+			errs.AddError("", errors.New(msg))
 			log.Errorf(ctx, msg)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
