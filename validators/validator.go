@@ -103,3 +103,11 @@ func (field *Field) Value() (string, error) {
 	}
 	return field.value, nil
 }
+
+func (field Field) MustValue() string {
+	val, err := field.Value()
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
