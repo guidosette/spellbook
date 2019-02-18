@@ -20,6 +20,7 @@ type Post struct {
 	Category string `model:"search";json:"category";page:"gettable,category"`
 	Topic    string `model:"search";json:"topic"`
 	Locale   string `json:"locale"`
+	Cover    string `json:"cover"`
 	Revision int    `json:"revision"`
 	// username of the author
 	Author    string    `model:"search";json:"author"`
@@ -31,21 +32,22 @@ type Post struct {
 func (post *Post) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Slug        string   `json:"slug"`
-		Name        string   `json:"name"`
-		Title       string   `json:"title"`
-		Subtitle    string   `json:"subtitle"`
-		Body        string   `json:"body"`
-		Tags        []string `json:"tags"`
-		Category    string   `json:"category"`
-		Topic       string   `json:"topic"`
-		Locale      string   `json:"locale"`
-		Revision    int      `json:"revision"`
-		Author      string   `json:"author"`
-		Created   time.Time `json:"created"`
-		Updated   time.Time `json:"updated"`
-		Published time.Time `json:"published"`
-		IsPublished bool     `json:"isPublished"`
+		Slug        string    `json:"slug"`
+		Name        string    `json:"name"`
+		Title       string    `json:"title"`
+		Subtitle    string    `json:"subtitle"`
+		Body        string    `json:"body"`
+		Tags        []string  `json:"tags"`
+		Category    string    `json:"category"`
+		Topic       string    `json:"topic"`
+		Locale      string    `json:"locale"`
+		Revision    int       `json:"revision"`
+		Author      string    `json:"author"`
+		Cover       string    `json:"cover"`
+		Created     time.Time `json:"created"`
+		Updated     time.Time `json:"updated"`
+		Published   time.Time `json:"published"`
+		IsPublished bool      `json:"isPublished"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -63,6 +65,7 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 	post.Locale = alias.Locale
 	post.Revision = alias.Revision
 	post.Author = alias.Author
+	post.Cover = alias.Cover
 	post.Created = alias.Created
 	post.Updated = alias.Updated
 	post.Published = alias.Published
@@ -87,16 +90,17 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		Locale    string    `json:"locale"`
 		Revision  int       `json:"revision"`
 		Author    string    `json:"author"`
+		Cover     string    `json:"cover"`
 		Created   time.Time `json:"created"`
 		Updated   time.Time `json:"updated"`
 		Published time.Time `json:"published"`
 	}
 
 	tags := strings.Split(post.Tags, ";")
-	isPublished:= post.Published != ZeroTime
+	isPublished := post.Published != ZeroTime
 	return json.Marshal(&struct {
-		Tags []string `json:"tags"`
-		IsPublished bool `json:"isPublished"`
+		Tags        []string `json:"tags"`
+		IsPublished bool     `json:"isPublished"`
 		Alias
 	}{
 		tags,
@@ -110,6 +114,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 			Category:  post.Category,
 			Topic:     post.Topic,
 			Locale:    post.Locale,
+			Cover:    post.Cover,
 			Revision:  post.Revision,
 			Author:    post.Author,
 			Created:   post.Created,

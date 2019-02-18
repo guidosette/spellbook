@@ -257,6 +257,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Topic = jpost.Topic
 		p.Locale = jpost.Locale
 		p.Body = jpost.Body
+		p.Cover = jpost.Cover
 		p.Revision = jpost.Revision
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
