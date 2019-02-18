@@ -303,14 +303,14 @@ func (controller *PostController) HandleResourceProperties(ctx context.Context, 
 	q = q.Limit(size + 1)
 	err := q.GetAll(ctx, &posts)
 	if err != nil {
-		log.Errorf(ctx, "Error retrieving categories: %+v", err)
+		log.Errorf(ctx, "Error retrieving result: %+v", err)
 		return nil, err
 	}
-	var categories []interface{}
+	var result []interface{}
 	for _, p := range posts {
 		value := reflect.ValueOf(p).Elem().FieldByName(name).String()
-		categories = append(categories, &value)
+		result = append(result, &value)
 	}
-	return categories, nil
+	return result, nil
 
 }
