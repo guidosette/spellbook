@@ -40,7 +40,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
-		// get the post data
+		// get the p data
 		j, ok := ins[mage.KeyRequestJSON]
 		if !ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -67,7 +67,10 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		thepost.Created = time.Now().UTC()
 		thepost.Revision = 1
-
+		if thepost.Published != post.ZeroTime {
+			// setted
+			thepost.Published = time.Now().UTC()
+		}
 		// validate input fields
 
 		if thepost.Title == "" || thepost.Body == "" {
@@ -91,7 +94,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		err = model.CreateWithOptions(ctx, &thepost, &opts)
 		if err != nil {
-			log.Errorf(ctx, "error creating post %s: %s", thepost.Slug, err)
+			log.Errorf(ctx, "error creating p %s: %s", thepost.Slug, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -151,13 +154,13 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			property, ok := ins["property"]
 			if ok {
 				// property
-				categories, err := controller.HandleResourceProperties(ctx, property.Value(), page, size)
+				properties, err := controller.HandleResourceProperties(ctx, property.Value(), page, size)
 				if err != nil {
 					log.Errorf(ctx, "Error retrieving posts %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
-				l = len(categories)
-				result = categories[:controller.GetCorrectCountForPaging(size, l)]
+				l = len(properties)
+				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
 				// list posts
 				var posts []*post.Post
@@ -193,7 +196,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		if err != nil {
-			log.Errorf(ctx, "error retrieving post %s: %s", slug, err.Error())
+			log.Errorf(ctx, "error retrieving p %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
@@ -208,7 +211,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionEditUser) {
+		if !current.HasPermission(identity.PermissionEditPost) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -227,9 +230,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		// handle the json request
 		jdata := j.Value()
 
-		jpost := struct {
-			*post.Post
-		}{Post: &post.Post{}}
+		jpost := post.Post{}
 
 		err := json.Unmarshal([]byte(jdata), &jpost)
 		if err != nil {
@@ -239,8 +240,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		// retrieve the user
 		slug := param.Value()
-		post := post.Post{}
-		err = model.FromStringID(ctx, &post, slug, nil)
+		p := post.Post{}
+		err = model.FromStringID(ctx, &p, slug, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
@@ -249,25 +250,36 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		post.Title = jpost.Title
-		post.Subtitle = jpost.Subtitle
-		post.Category = jpost.Category
-		post.Topic = jpost.Topic
-		post.Body = jpost.Body
-		//target.Locale = juser.Locale
-		post.Revision = jpost.Revision
-		post.Updated = time.Now().UTC()
-		post.Tags = jpost.Tags
-		post.Author = current.Username()
+		p.Name = jpost.Name
+		p.Title = jpost.Title
+		p.Subtitle = jpost.Subtitle
+		p.Category = jpost.Category
+		p.Topic = jpost.Topic
+		p.Locale = jpost.Locale
+		p.Body = jpost.Body
+		p.Revision = jpost.Revision
+		p.Updated = time.Now().UTC()
+		p.Tags = jpost.Tags
+		p.Author = current.Username()
+		if jpost.Published == post.ZeroTime {
+			// not setted
+			p.Published = post.ZeroTime
+		} else {
+			// setted
+			// check previous data
+			if p.Published == post.ZeroTime {
+				p.Published = time.Now().UTC()
+			}
+		}
 
-		err = model.Update(ctx, &post)
+		err = model.Update(ctx, &p)
 		if err != nil {
-			log.Errorf(ctx, "error updating post %s: %s", slug, err.Error())
+			log.Errorf(ctx, "error updating p %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &post
+		renderer.Data = &p
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 	}
@@ -291,6 +303,8 @@ func (controller *PostController) HandleResourceProperties(ctx context.Context, 
 		name = "Category"
 	case "topic":
 		name = "Topic"
+	case "name":
+		name = "Name"
 	default:
 		return nil, errors.New("No property found")
 	}
