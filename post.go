@@ -219,9 +219,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// get post related multimedia
-		multimedia := make([]*post.Multimedia, 0)
 		q := model.NewQuery(&post.Multimedia{})
-		for _, m := range item.Multimedia {
+		for _, m := range item.MultimediaGroups {
 			var mm []*post.Multimedia
 			q.WithField("Group =", m)
 			err := q.GetMulti(ctx, &mm)
@@ -229,16 +228,13 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 				log.Errorf(ctx, "error retrieving multimedia: %s", err)
 				return mage.Redirect{Status: http.StatusInternalServerError}
 			}
-			multimedia = append(multimedia, mm...)
+			for _, val := range mm {
+				item.Multimedia = append(item.Multimedia, *val)
+			}
 		}
 
-		response := struct {
-			*post.Post
-			Multimedia []*post.Multimedia
-		}{&item, multimedia}
-
 		renderer := mage.JSONRenderer{}
-		renderer.Data = response
+		renderer.Data = &item
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 	case http.MethodPut:
@@ -307,6 +303,28 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			// check previous data
 			if p.Published == post.ZeroTime {
 				p.Published = time.Now().UTC()
+			}
+		}
+
+		// retrieve the multimedia groups
+		var media []post.Multimedia
+		err = json.Unmarshal([]byte(j.Value()), media)
+		errs := validators.Errors{}
+		if err != nil {
+			msg := fmt.Sprintf("bad input for multimedia: %s", err.Error())
+			errs.AddError("multimedia", errors.New(msg))
+			log.Errorf(ctx, msg)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		// reset multimedia groups
+		p.MultimediaGroups = nil
+		for _, m := range media {
+			if !p.HasMultimedia(m) {
+				p.AddMultimedia(m)
 			}
 		}
 
