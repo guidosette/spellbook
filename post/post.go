@@ -11,22 +11,23 @@ var ZeroTime = time.Time{}
 
 type Post struct {
 	model.Model
-	Slug     string `json:"slug"`
-	Name     string `model:"search";json:"name"`
-	Title    string `model:"search";json:"title"`
-	Subtitle string `model:"search";json:"subtitle"`
-	Body     string `model:"search";json:"body"`
-	Tags     string `model:"search";json:"tags"`
-	Category string `model:"search";json:"category";page:"gettable,category"`
-	Topic    string `model:"search";json:"topic"`
-	Locale   string `json:"locale"`
-	Cover    string `json:"cover"`
-	Revision int    `json:"revision"`
+	Slug     string
+	Name     string `model:"search"`
+	Title    string `model:"search"`
+	Subtitle string `model:"search"`
+	Body     string `model:"search,noindex"`
+	Tags     string `model:"search"`
+	Category string `model:"search";page:"gettable,category"`
+	Topic    string `model:"search"`
+	Locale   string
+	Cover    string
+	Revision int
+	Multimedia []string
 	// username of the author
-	Author    string    `model:"search";json:"author"`
-	Created   time.Time `json:"created"`
-	Updated   time.Time `json:"updated"`
-	Published time.Time `json:"published"`
+	Author    string    `model:"search"`
+	Created   time.Time
+	Updated   time.Time
+	Published time.Time
 }
 
 func (post *Post) UnmarshalJSON(data []byte) error {
@@ -98,6 +99,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 
 	tags := strings.Split(post.Tags, ";")
 	isPublished := post.Published != ZeroTime
+
 	return json.Marshal(&struct {
 		Tags        []string `json:"tags"`
 		IsPublished bool     `json:"isPublished"`
@@ -122,4 +124,17 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 			Published: post.Published,
 		},
 	})
+}
+
+func (post Post) HasMultimedia(mm Multimedia) bool {
+	for _, v := range post.Multimedia {
+		if v == mm.Group {
+			return true
+		}
+	}
+	return false
+}
+
+func (post *Post) AddMultimedia(mm Multimedia) {
+	post.Multimedia = append(post.Multimedia, mm.Group)
 }

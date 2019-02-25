@@ -68,7 +68,6 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		thepost.Created = time.Now().UTC()
 		thepost.Revision = 1
 		if thepost.Published != post.ZeroTime {
-			// setted
 			thepost.Published = time.Now().UTC()
 		}
 		// validate input fields
@@ -88,13 +87,32 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 		thepost.Author = user.Username()
 
+		// retrieve the multimedia groups
+		var media []post.Multimedia
+		err = json.Unmarshal([]byte(j.Value()), media)
+		if err != nil {
+			msg := fmt.Sprintf("bad input for multimedia: %s", err.Error())
+			errs.AddError("multimedia", errors.New(msg))
+			log.Errorf(ctx, msg)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		for _, m := range media {
+			if !thepost.HasMultimedia(m) {
+				thepost.AddMultimedia(m)
+			}
+		}
+
 		// input is valid, create the resource
 		opts := model.CreateOptions{}
 		opts.WithStringId(thepost.Slug)
 
 		err = model.CreateWithOptions(ctx, &thepost, &opts)
 		if err != nil {
-			log.Errorf(ctx, "error creating p %s: %s", thepost.Slug, err)
+			log.Errorf(ctx, "error creating post %s: %s", thepost.Slug, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -200,8 +218,27 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
+		// get post related multimedia
+		multimedia := make([]*post.Multimedia, 0)
+		q := model.NewQuery(&post.Multimedia{})
+		for _, m := range item.Multimedia {
+			var mm []*post.Multimedia
+			q.WithField("Group =", m)
+			err := q.GetMulti(ctx, &mm)
+			if err != nil {
+				log.Errorf(ctx, "error retrieving multimedia: %s", err)
+				return mage.Redirect{Status: http.StatusInternalServerError}
+			}
+			multimedia = append(multimedia, mm...)
+		}
+
+		response := struct {
+			*post.Post
+			Multimedia []*post.Multimedia
+		}{&item, multimedia}
+
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &item
+		renderer.Data = response
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 	case http.MethodPut:
