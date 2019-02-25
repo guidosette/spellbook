@@ -10,7 +10,7 @@ type Multimedia struct {
 	model.Model `json:"-"`
 	Name string `json:"name"`
 	Description string `json:"description"`
-	ResourceUrl string `json:"resource"`
+	ResourceUrl string `json:"resourceUrl"`
 	Group string `json:"group"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
