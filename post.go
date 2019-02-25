@@ -87,25 +87,6 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 		thepost.Author = user.Username()
 
-		// retrieve the multimedia groups
-		var media []post.Multimedia
-		err = json.Unmarshal([]byte(j.Value()), media)
-		if err != nil {
-			msg := fmt.Sprintf("bad input for multimedia: %s", err.Error())
-			errs.AddError("multimedia", errors.New(msg))
-			log.Errorf(ctx, msg)
-			renderer := mage.JSONRenderer{}
-			renderer.Data = errs
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-
-		for _, m := range media {
-			if !thepost.HasMultimedia(m) {
-				thepost.AddMultimedia(m)
-			}
-		}
-
 		// input is valid, create the resource
 		opts := model.CreateOptions{}
 		opts.WithStringId(thepost.Slug)
@@ -294,6 +275,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Revision = jpost.Revision
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
+		p.MultimediaGroups = jpost.MultimediaGroups
+		p.Multimedia = jpost.Multimedia
 		p.Author = current.Username()
 		if jpost.Published == post.ZeroTime {
 			// not setted
@@ -303,28 +286,6 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			// check previous data
 			if p.Published == post.ZeroTime {
 				p.Published = time.Now().UTC()
-			}
-		}
-
-		// retrieve the multimedia groups
-		var media []post.Multimedia
-		err = json.Unmarshal([]byte(j.Value()), media)
-		errs := validators.Errors{}
-		if err != nil {
-			msg := fmt.Sprintf("bad input for multimedia: %s", err.Error())
-			errs.AddError("multimedia", errors.New(msg))
-			log.Errorf(ctx, msg)
-			renderer := mage.JSONRenderer{}
-			renderer.Data = errs
-			out.Renderer = &renderer
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-
-		// reset multimedia groups
-		p.MultimediaGroups = nil
-		for _, m := range media {
-			if !p.HasMultimedia(m) {
-				p.AddMultimedia(m)
 			}
 		}
 

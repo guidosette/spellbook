@@ -45,7 +45,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 		media := post.Multimedia{}
 		err := json.Unmarshal([]byte(j.Value()), &media)
 		if err != nil {
-			msg := fmt.Sprintf("bad json input")
+			msg := fmt.Sprintf("bad json input: %s", err.Error())
 			errs.AddError("", errors.New(msg))
 		}
 
