@@ -322,7 +322,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusOK}
 	}
 
-	return mage.Redirect{Status: http.StatusMethodNotAllowed}
+	return mage.Redirect{Status: http.StatusNotImplemented}
 }
 
 func (controller *PostController) GetCorrectCountForPaging(size int, l int) int {
