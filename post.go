@@ -91,6 +91,11 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		opts := model.CreateOptions{}
 		opts.WithStringId(thepost.Slug)
 
+		// // WARNING: the volatile field Multimedia because Memcache (Gob)
+		//	can't ignore field
+		tmp := thepost.Multimedia
+		thepost.Multimedia = nil
+
 		err = model.CreateWithOptions(ctx, &thepost, &opts)
 		if err != nil {
 			log.Errorf(ctx, "error creating post %s: %s", thepost.Slug, err)
@@ -101,6 +106,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
+		// return the swapped multimedia value
+		thepost.Multimedia = tmp
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &thepost
 		out.Renderer = &renderer
@@ -276,7 +283,6 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
 		p.MultimediaGroups = jpost.MultimediaGroups
-		p.Multimedia = jpost.Multimedia
 		p.Author = current.Username()
 		if jpost.Published == post.ZeroTime {
 			// not setted
@@ -294,6 +300,10 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			log.Errorf(ctx, "error updating p %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
+
+		// WARNING: value the volatile field Multimedia because Memcache (Gob)
+		// can't ignore field
+		p.Multimedia = jpost.Multimedia
 
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &p
