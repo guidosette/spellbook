@@ -18,13 +18,13 @@ import (
 	"time"
 )
 
-type MultimediaController struct {
+type AttachmentController struct {
 	mage.Controller
 }
 
-func (controller *MultimediaController) OnDestroy(ctx context.Context) {}
+func (controller *AttachmentController) OnDestroy(ctx context.Context) {}
 
-func (controller *MultimediaController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (controller *AttachmentController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 	ins := mage.InputsFromContext(ctx)
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
@@ -42,7 +42,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 		}
 
 		errs := validators.Errors{}
-		media := post.Multimedia{}
+		media := post.Attachment{}
 		err := json.Unmarshal([]byte(j.Value()), &media)
 		if err != nil {
 			msg := fmt.Sprintf("bad json input: %s", err.Error())
@@ -50,7 +50,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 		}
 
 		if errs.HasErrors() {
-			log.Errorf(ctx, "wrong input to create multimedia: %s", errs)
+			log.Errorf(ctx, "wrong input to create attachment: %s", errs)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
 			out.Renderer = &renderer
@@ -62,7 +62,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 
 		err = model.Create(ctx, &media)
 		if err != nil {
-			log.Errorf(ctx, "error creating multimedia %s: %s", media.Name, err)
+			log.Errorf(ctx, "error creating attachment %s: %s", media.Name, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -120,21 +120,21 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 				// property
 				properties, err := controller.HandleResourceProperties(ctx, property.Value(), page, size)
 				if err != nil {
-					log.Errorf(ctx, "Error retrieving multimedia %+v", err)
+					log.Errorf(ctx, "Error retrieving attachment %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
 				l = len(properties)
 				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
 				// list posts
-				var posts []*post.Multimedia
-				q := model.NewQuery(&post.Multimedia{})
+				var posts []*post.Attachment
+				q := model.NewQuery(&post.Attachment{})
 				q = q.OffsetBy(page * size)
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
 				err := q.GetMulti(ctx, &posts)
 				if err != nil {
-					log.Errorf(ctx, "Error retrieving multimedia %+v", err)
+					log.Errorf(ctx, "Error retrieving attachment %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
 				l = len(posts)
@@ -153,19 +153,19 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 		}
 
 		id := param.Value()
-		item := post.Multimedia{}
+		item := post.Attachment{}
 		err := model.FromStringID(ctx, &item, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
 
 		if err != nil {
-			log.Errorf(ctx, "error retrieving multimedia %s: %s", id, err.Error())
+			log.Errorf(ctx, "error retrieving attachment %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		response := struct {
-			*post.Multimedia
+			*post.Attachment
 		}{&item}
 
 		renderer := mage.JSONRenderer{}
@@ -194,7 +194,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 		// handle the json request
 		jdata := j.Value()
 
-		jmultimedia := post.Multimedia{}
+		jmultimedia := post.Attachment{}
 
 		err := json.Unmarshal([]byte(jdata), &jmultimedia)
 		if err != nil {
@@ -204,7 +204,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 
 		// retrieve the user
 		id := param.Value()
-		p := post.Multimedia{}
+		p := post.Attachment{}
 		err = model.FromStringID(ctx, &p, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -235,7 +235,7 @@ func (controller *MultimediaController) Process(ctx context.Context, out *mage.R
 	return mage.Redirect{Status: http.StatusNotImplemented}
 }
 
-func (controller *MultimediaController) GetCorrectCountForPaging(size int, l int) int {
+func (controller *AttachmentController) GetCorrectCountForPaging(size int, l int) int {
 	count := size
 	if l < size {
 		count = l
@@ -243,7 +243,7 @@ func (controller *MultimediaController) GetCorrectCountForPaging(size int, l int
 	return count
 }
 
-func (controller *MultimediaController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
+func (controller *AttachmentController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
 	// todo: generalize
 	name := ""
 	switch property {

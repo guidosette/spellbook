@@ -93,8 +93,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		// // WARNING: the volatile field Multimedia because Memcache (Gob)
 		//	can't ignore field
-		tmp := thepost.Multimedia
-		thepost.Multimedia = nil
+		tmp := thepost.Attachments
+		thepost.Attachments = nil
 
 		err = model.CreateWithOptions(ctx, &thepost, &opts)
 		if err != nil {
@@ -107,7 +107,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// return the swapped multimedia value
-		thepost.Multimedia = tmp
+		thepost.Attachments = tmp
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &thepost
 		out.Renderer = &renderer
@@ -207,17 +207,17 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// get post related multimedia
-		q := model.NewQuery(&post.Multimedia{})
-		for _, m := range item.MultimediaGroups {
-			var mm []*post.Multimedia
+		q := model.NewQuery(&post.Attachment{})
+		for _, m := range item.AttachmentGroups {
+			var mm []*post.Attachment
 			q.WithField("Group =", m)
 			err := q.GetMulti(ctx, &mm)
 			if err != nil {
-				log.Errorf(ctx, "error retrieving multimedia: %s", err)
+				log.Errorf(ctx, "error retrieving attachments: %s", err)
 				return mage.Redirect{Status: http.StatusInternalServerError}
 			}
 			for _, val := range mm {
-				item.Multimedia = append(item.Multimedia, *val)
+				item.Attachments = append(item.Attachments, *val)
 			}
 		}
 
@@ -282,7 +282,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Revision = jpost.Revision
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
-		p.MultimediaGroups = jpost.MultimediaGroups
+		p.AttachmentGroups = jpost.AttachmentGroups
 		p.Author = current.Username()
 		if jpost.Published == post.ZeroTime {
 			// not setted
@@ -303,7 +303,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		// WARNING: value the volatile field Multimedia because Memcache (Gob)
 		// can't ignore field
-		p.Multimedia = jpost.Multimedia
+		p.Attachments = jpost.Attachments
 
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &p
@@ -333,7 +333,7 @@ func (controller *PostController) HandleResourceProperties(ctx context.Context, 
 	case "name":
 		name = "Name"
 	default:
-		return nil, errors.New("No property found")
+		return nil, errors.New("no property found")
 	}
 
 	var posts []*post.Post

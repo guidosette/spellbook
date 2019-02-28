@@ -22,8 +22,8 @@ type Post struct {
 	Locale           string
 	Cover            string
 	Revision         int
-	MultimediaGroups []string
-	Multimedia       []Multimedia `model:"-"`
+	AttachmentGroups []string
+	Attachments       []Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -44,7 +44,7 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 		Topic       string       `json:"topic"`
 		Locale      string       `json:"locale"`
 		Revision    int          `json:"revision"`
-		Multimedia  []Multimedia `json:"multimedia"`
+		Attachments  []Attachment `json:"attachments"`
 		Author      string       `json:"author"`
 		Cover       string       `json:"cover"`
 		Created     time.Time    `json:"created"`
@@ -69,11 +69,11 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 	post.Revision = alias.Revision
 	post.Author = alias.Author
 	post.Cover = alias.Cover
-	post.Multimedia = alias.Multimedia
+	post.Attachments = alias.Attachments
 	// add multimedia groups
-	for _, media := range alias.Multimedia {
-		if !post.HasMultimedia(media) {
-			post.AddMultimedia(media)
+	for _, media := range alias.Attachments {
+		if !post.HasAttachment(media) {
+			post.AddAttachment(media)
 		}
 	}
 	post.Created = alias.Created
@@ -99,7 +99,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		Topic      string       `json:"topic"`
 		Locale     string       `json:"locale"`
 		Revision   int          `json:"revision"`
-		Multimedia []Multimedia `json:"multimedia"`
+		Attachments []Attachment`json:"attachments"`
 		Author     string       `json:"author"`
 		Cover      string       `json:"cover"`
 		Created    time.Time    `json:"created"`
@@ -128,7 +128,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 			Locale:     post.Locale,
 			Cover:      post.Cover,
 			Revision:   post.Revision,
-			Multimedia: post.Multimedia,
+			Attachments: post.Attachments,
 			Author:     post.Author,
 			Created:    post.Created,
 			Updated:    post.Updated,
@@ -137,15 +137,15 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (post Post) HasMultimedia(mm Multimedia) bool {
-	for _, v := range post.MultimediaGroups {
-		if v == mm.Group {
+func (post Post) HasAttachment(att Attachment) bool {
+	for _, v := range post.AttachmentGroups {
+		if v == att.Group {
 			return true
 		}
 	}
 	return false
 }
 
-func (post *Post) AddMultimedia(mm Multimedia) {
-	post.MultimediaGroups = append(post.MultimediaGroups, mm.Group)
+func (post *Post) AddAttachment(attachment Attachment) {
+	post.AttachmentGroups = append(post.AttachmentGroups, attachment.Group)
 }
