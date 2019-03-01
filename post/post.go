@@ -23,7 +23,7 @@ type Post struct {
 	Cover            string
 	Revision         int
 	AttachmentGroups []string
-	Attachments       []Attachment `model:"-"`
+	Attachments      []Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -44,7 +44,7 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 		Topic       string       `json:"topic"`
 		Locale      string       `json:"locale"`
 		Revision    int          `json:"revision"`
-		Attachments  []Attachment `json:"attachments"`
+		Attachments []Attachment `json:"attachments"`
 		Author      string       `json:"author"`
 		Cover       string       `json:"cover"`
 		Created     time.Time    `json:"created"`
@@ -89,22 +89,22 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 
 func (post *Post) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Slug       string       `json:"slug"`
-		Name       string       `json:"name"`
-		Title      string       `json:"title"`
-		Subtitle   string       `json:"subtitle"`
-		Body       string       `json:"body"`
-		Tags       []string     `json:"tags"`
-		Category   string       `json:"category"`
-		Topic      string       `json:"topic"`
-		Locale     string       `json:"locale"`
-		Revision   int          `json:"revision"`
-		Attachments []Attachment`json:"attachments"`
-		Author     string       `json:"author"`
-		Cover      string       `json:"cover"`
-		Created    time.Time    `json:"created"`
-		Updated    time.Time    `json:"updated"`
-		Published  time.Time    `json:"published"`
+		Slug        string       `json:"slug"`
+		Name        string       `json:"name"`
+		Title       string       `json:"title"`
+		Subtitle    string       `json:"subtitle"`
+		Body        string       `json:"body"`
+		Tags        []string     `json:"tags"`
+		Category    string       `json:"category"`
+		Topic       string       `json:"topic"`
+		Locale      string       `json:"locale"`
+		Revision    int          `json:"revision"`
+		Attachments []Attachment `json:"attachments"`
+		Author      string       `json:"author"`
+		Cover       string       `json:"cover"`
+		Created     time.Time    `json:"created"`
+		Updated     time.Time    `json:"updated"`
+		Published   time.Time    `json:"published"`
 	}
 
 	tags := strings.Split(post.Tags, ";")
@@ -118,21 +118,21 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		tags,
 		isPublished,
 		Alias{
-			Slug:       post.Slug,
-			Name:       post.Name,
-			Title:      post.Title,
-			Subtitle:   post.Subtitle,
-			Body:       post.Body,
-			Category:   post.Category,
-			Topic:      post.Topic,
-			Locale:     post.Locale,
-			Cover:      post.Cover,
-			Revision:   post.Revision,
+			Slug:        post.Slug,
+			Name:        post.Name,
+			Title:       post.Title,
+			Subtitle:    post.Subtitle,
+			Body:        post.Body,
+			Category:    post.Category,
+			Topic:       post.Topic,
+			Locale:      post.Locale,
+			Cover:       post.Cover,
+			Revision:    post.Revision,
 			Attachments: post.Attachments,
-			Author:     post.Author,
-			Created:    post.Created,
-			Updated:    post.Updated,
-			Published:  post.Published,
+			Author:      post.Author,
+			Created:     post.Created,
+			Updated:     post.Updated,
+			Published:   post.Published,
 		},
 	})
 }

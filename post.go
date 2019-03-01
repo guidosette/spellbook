@@ -207,9 +207,9 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// get post related multimedia
-		q := model.NewQuery(&post.Attachment{})
 		for _, m := range item.AttachmentGroups {
 			var mm []*post.Attachment
+			q := model.NewQuery(&post.Attachment{})
 			q.WithField("Group =", m)
 			err := q.GetMulti(ctx, &mm)
 			if err != nil {
