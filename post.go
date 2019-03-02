@@ -207,18 +207,14 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// get post related multimedia
-		for _, m := range item.AttachmentGroups {
-			var mm []*post.Attachment
-			q := model.NewQuery(&post.Attachment{})
-			q.WithField("Group =", m)
-			err := q.GetMulti(ctx, &mm)
-			if err != nil {
-				log.Errorf(ctx, "error retrieving attachments: %s", err)
-				return mage.Redirect{Status: http.StatusInternalServerError}
-			}
-			for _, val := range mm {
-				item.Attachments = append(item.Attachments, *val)
-			}
+
+
+		q := model.NewQuery(&post.Attachment{})
+		q.WithField("Parent =", item.Slug)
+		err = q.GetMulti(ctx, &item.Attachments)
+		if err != nil {
+			log.Errorf(ctx, "error retrieving attachments: %s", err)
+			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		renderer := mage.JSONRenderer{}
@@ -282,7 +278,6 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Revision = jpost.Revision
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
-		p.AttachmentGroups = jpost.AttachmentGroups
 		p.Author = current.Username()
 		if jpost.Published == post.ZeroTime {
 			// not setted

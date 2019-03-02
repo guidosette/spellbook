@@ -49,6 +49,10 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			errs.AddError("", errors.New(msg))
 		}
 
+		// attachment parent is required.
+		// if not attachment is to be specified the default value must be used
+
+
 		if errs.HasErrors() {
 			log.Errorf(ctx, "wrong input to create attachment: %s", errs)
 			renderer := mage.JSONRenderer{}

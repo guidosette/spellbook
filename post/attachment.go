@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const AttachmentGlobalParent = "GLOBAL"
+
 type Attachment struct {
 	model.Model `json:"-"`
 	Name string `json:"name"`
@@ -12,7 +14,7 @@ type Attachment struct {
 	ResourceUrl string `json:"resourceUrl"`
 	Group string `json:"group"`
 	Type string `json:"type"`
-	Parent string `json:"-"`
+	Parent string `json:"parent"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 	Uploader string `json:"uploader"`

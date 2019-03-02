@@ -22,8 +22,7 @@ type Post struct {
 	Locale           string
 	Cover            string
 	Revision         int
-	AttachmentGroups []string
-	Attachments      []Attachment `model:"-"`
+	Attachments      []*Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -44,7 +43,7 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 		Topic       string       `json:"topic"`
 		Locale      string       `json:"locale"`
 		Revision    int          `json:"revision"`
-		Attachments []Attachment `json:"attachments"`
+		Attachments []*Attachment `json:"attachments"`
 		Author      string       `json:"author"`
 		Cover       string       `json:"cover"`
 		Created     time.Time    `json:"created"`
@@ -70,12 +69,6 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 	post.Author = alias.Author
 	post.Cover = alias.Cover
 	post.Attachments = alias.Attachments
-	// add multimedia groups
-	for _, media := range alias.Attachments {
-		if !post.HasAttachment(media) {
-			post.AddAttachment(media)
-		}
-	}
 	post.Created = alias.Created
 	post.Updated = alias.Updated
 	post.Published = alias.Published
@@ -99,7 +92,7 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		Topic       string       `json:"topic"`
 		Locale      string       `json:"locale"`
 		Revision    int          `json:"revision"`
-		Attachments []Attachment `json:"attachments"`
+		Attachments []*Attachment `json:"attachments"`
 		Author      string       `json:"author"`
 		Cover       string       `json:"cover"`
 		Created     time.Time    `json:"created"`
@@ -135,17 +128,4 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 			Published:   post.Published,
 		},
 	})
-}
-
-func (post Post) HasAttachment(att Attachment) bool {
-	for _, v := range post.AttachmentGroups {
-		if v == att.Group {
-			return true
-		}
-	}
-	return false
-}
-
-func (post *Post) AddAttachment(attachment Attachment) {
-	post.AttachmentGroups = append(post.AttachmentGroups, attachment.Group)
 }
