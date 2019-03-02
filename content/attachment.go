@@ -5,7 +5,15 @@ import (
 	"time"
 )
 
-const AttachmentGlobalParent = "GLOBAL"
+const (
+	// global name for attachments without parents
+	AttachmentGlobalParent = "GLOBAL"
+
+	// supported attachments
+	AttachmentTypeGallery = "gallery"
+	AttachmentTypeAttachment = "attachments"
+	AttachmentTypeVideo = "video"
+)
 
 type Attachment struct {
 	model.Model `json:"-"`
