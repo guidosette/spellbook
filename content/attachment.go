@@ -1,4 +1,4 @@
-package post
+package content
 
 import (
 	"distudio.com/mage/model"

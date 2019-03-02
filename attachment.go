@@ -5,7 +5,7 @@ import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
 	"distudio.com/page/identity"
-	"distudio.com/page/post"
+	"distudio.com/page/content"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"fmt"
@@ -42,7 +42,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		errs := validators.Errors{}
-		attachment := post.Attachment{}
+		attachment := content.Attachment{}
 		err := json.Unmarshal([]byte(j.Value()), &attachment)
 		if err != nil {
 			msg := fmt.Sprintf("bad json input: %s", err.Error())
@@ -52,7 +52,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		// attachment parent is required.
 		// if not attachment is to be specified the default value must be used
 		if attachment.Parent == "" {
-			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", post.AttachmentGlobalParent)
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", content.AttachmentGlobalParent)
 			errs.AddError("Parent", errors.New(msg))
 		}
 
@@ -133,19 +133,18 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 				l = len(properties)
 				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
-				// list posts
-				var posts []*post.Attachment
-				q := model.NewQuery(&post.Attachment{})
+				var attachments []*content.Attachment
+				q := model.NewQuery(&content.Attachment{})
 				q = q.OffsetBy(page * size)
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
-				err := q.GetMulti(ctx, &posts)
+				err := q.GetMulti(ctx, &attachments)
 				if err != nil {
 					log.Errorf(ctx, "Error retrieving attachment %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
-				l = len(posts)
-				result = posts[:controller.GetCorrectCountForPaging(size, l)]
+				l = len(attachments)
+				result = attachments[:controller.GetCorrectCountForPaging(size, l)]
 			}
 
 			// todo: generalize list handling and responses
@@ -160,7 +159,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		id := param.Value()
-		item := post.Attachment{}
+		item := content.Attachment{}
 		err := model.FromStringID(ctx, &item, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -172,7 +171,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		response := struct {
-			*post.Attachment
+			*content.Attachment
 		}{&item}
 
 		renderer := mage.JSONRenderer{}
@@ -201,7 +200,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		// handle the json request
 		jdata := j.Value()
 
-		jatt := post.Attachment{}
+		jatt := content.Attachment{}
 		err := json.Unmarshal([]byte(jdata), &jatt)
 		if err != nil {
 			log.Errorf(ctx, "malformed json: %s", err.Error())
@@ -210,7 +209,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		// retrieve the user
 		id := param.Value()
-		attachment := post.Attachment{}
+		attachment := content.Attachment{}
 		err = model.FromStringID(ctx, &attachment, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -218,7 +217,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		errs := validators.Errors{}
 		if attachment.Parent == "" {
-			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", post.AttachmentGlobalParent)
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", content.AttachmentGlobalParent)
 			errs.AddError("parent", errors.New(msg))
 		}
 
@@ -272,8 +271,8 @@ func (controller *AttachmentController) HandleResourceProperties(ctx context.Con
 		return nil, errors.New("No property found")
 	}
 
-	var posts []*post.Post
-	q := model.NewQuery(&post.Post{})
+	var posts []*content.Content
+	q := model.NewQuery(&content.Content{})
 	q = q.OffsetBy(page * size)
 	q = q.Distinct(name)
 	// get one more so we know if we are done

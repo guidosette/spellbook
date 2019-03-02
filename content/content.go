@@ -1,4 +1,4 @@
-package post
+package content
 
 import (
 	"distudio.com/mage/model"
@@ -9,7 +9,7 @@ import (
 
 var ZeroTime = time.Time{}
 
-type Post struct {
+type Content struct {
 	model.Model
 	Slug             string
 	Name             string `model:"search"`
@@ -30,7 +30,7 @@ type Post struct {
 	Published time.Time
 }
 
-func (post *Post) UnmarshalJSON(data []byte) error {
+func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Slug        string       `json:"slug"`
@@ -57,30 +57,30 @@ func (post *Post) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	post.Slug = alias.Slug
-	post.Name = alias.Name
-	post.Title = alias.Title
-	post.Subtitle = alias.Subtitle
-	post.Body = alias.Body
-	post.Category = alias.Category
-	post.Topic = alias.Topic
-	post.Locale = alias.Locale
-	post.Revision = alias.Revision
-	post.Author = alias.Author
-	post.Cover = alias.Cover
-	post.Attachments = alias.Attachments
-	post.Created = alias.Created
-	post.Updated = alias.Updated
-	post.Published = alias.Published
+	content.Slug = alias.Slug
+	content.Name = alias.Name
+	content.Title = alias.Title
+	content.Subtitle = alias.Subtitle
+	content.Body = alias.Body
+	content.Category = alias.Category
+	content.Topic = alias.Topic
+	content.Locale = alias.Locale
+	content.Revision = alias.Revision
+	content.Author = alias.Author
+	content.Cover = alias.Cover
+	content.Attachments = alias.Attachments
+	content.Created = alias.Created
+	content.Updated = alias.Updated
+	content.Published = alias.Published
 	if alias.IsPublished {
-		post.Published = time.Now().UTC()
+		content.Published = time.Now().UTC()
 	}
-	post.Tags = strings.Join(alias.Tags[:], ";")
+	content.Tags = strings.Join(alias.Tags[:], ";")
 
 	return nil
 }
 
-func (post *Post) MarshalJSON() ([]byte, error) {
+func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Slug        string       `json:"slug"`
 		Name        string       `json:"name"`
@@ -100,8 +100,8 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		Published   time.Time    `json:"published"`
 	}
 
-	tags := strings.Split(post.Tags, ";")
-	isPublished := post.Published != ZeroTime
+	tags := strings.Split(content.Tags, ";")
+	isPublished := content.Published != ZeroTime
 
 	return json.Marshal(&struct {
 		Tags        []string `json:"tags"`
@@ -111,21 +111,21 @@ func (post *Post) MarshalJSON() ([]byte, error) {
 		tags,
 		isPublished,
 		Alias{
-			Slug:        post.Slug,
-			Name:        post.Name,
-			Title:       post.Title,
-			Subtitle:    post.Subtitle,
-			Body:        post.Body,
-			Category:    post.Category,
-			Topic:       post.Topic,
-			Locale:      post.Locale,
-			Cover:       post.Cover,
-			Revision:    post.Revision,
-			Attachments: post.Attachments,
-			Author:      post.Author,
-			Created:     post.Created,
-			Updated:     post.Updated,
-			Published:   post.Published,
+			Slug:        content.Slug,
+			Name:        content.Name,
+			Title:       content.Title,
+			Subtitle:    content.Subtitle,
+			Body:        content.Body,
+			Category:    content.Category,
+			Topic:       content.Topic,
+			Locale:      content.Locale,
+			Cover:       content.Cover,
+			Revision:    content.Revision,
+			Attachments: content.Attachments,
+			Author:      content.Author,
+			Created:     content.Created,
+			Updated:     content.Updated,
+			Published:   content.Published,
 		},
 	})
 }

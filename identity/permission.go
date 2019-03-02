@@ -9,10 +9,10 @@ const (
 	PermissionCreateUser
 	PermissionEditUser
 	PermissionBlockUser
-	PermissionReadPost
-	PermissionCreatePost
-	PermissionEditPost
-	PermissionPublishPost
+	PermissionReadContent
+	PermissionCreateContent
+	PermissionEditContent
+	PermissionPublishContent
 )
 
 var Permissions = map[Permission]string{
@@ -22,10 +22,10 @@ var Permissions = map[Permission]string{
 	PermissionCreateUser: "PERMISSION_CREATE_USERS",
 	PermissionEditUser: "PERMISSION_UPDATE_USERS",
 	PermissionBlockUser: "PERMISSION_BLOCK_USERS",
-	PermissionReadPost: "PERMISSION_READ_POSTS",
-	PermissionCreatePost: "PERMISSION_CREATE_POSTS",
-	PermissionEditPost: "PERMISSION_UPDATE_POSTS",
-	PermissionPublishPost: "PERMISSION_PUBLISH_POSTS",
+	PermissionReadContent: "PERMISSION_READ_CONTENT",
+	PermissionCreateContent: "PERMISSION_CREATE_CONTENT",
+	PermissionEditContent: "PERMISSION_UPDATE_CONTENT",
+	PermissionPublishContent: "PERMISSION_PUBLISH_CONTENT",
 }
 
 func NamedPermissionToPermission(name string) Permission {

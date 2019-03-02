@@ -3,8 +3,8 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
+	"distudio.com/page/content"
 	"distudio.com/page/identity"
-	"distudio.com/page/post"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -19,13 +19,13 @@ import (
 	"time"
 )
 
-type PostController struct {
+type ContentController struct {
 	mage.Controller
 }
 
-func (controller *PostController) OnDestroy(ctx context.Context) {}
+func (controller *ContentController) OnDestroy(ctx context.Context) {}
 
-func (controller *PostController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (controller *ContentController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 	ins := mage.InputsFromContext(ctx)
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
@@ -36,7 +36,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionCreatePost) {
+		if !user.HasPermission(identity.PermissionCreateContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -48,8 +48,8 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		errs := validators.Errors{}
 
-		thepost := post.Post{}
-		err := json.Unmarshal([]byte(j.Value()), &thepost)
+		thecontent := content.Content{}
+		err := json.Unmarshal([]byte(j.Value()), &thecontent)
 		if err != nil {
 			msg := fmt.Sprintf("bad json: %s", err.Error())
 			errs.AddError("", errors.New(msg))
@@ -65,15 +65,15 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		thepost.Created = time.Now().UTC()
-		thepost.Revision = 1
-		if thepost.Published != post.ZeroTime {
-			thepost.Published = time.Now().UTC()
+		thecontent.Created = time.Now().UTC()
+		thecontent.Revision = 1
+		if thecontent.Published != content.ZeroTime {
+			thecontent.Published = time.Now().UTC()
 		}
 		// validate input fields
 
-		if thepost.Title == "" || thepost.Body == "" {
-			msg := fmt.Sprintf("the body or the title can't be both empty")
+		if thecontent.Title == "" || thecontent.Name == "" {
+			msg := fmt.Sprintf(" title and name can't be empty")
 			errs.AddError("", errors.New(msg))
 			log.Errorf(ctx, msg)
 			renderer := mage.JSONRenderer{}
@@ -82,23 +82,23 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		if thepost.Slug == "" {
-			thepost.Slug = url.PathEscape(thepost.Title)
+		if thecontent.Slug == "" {
+			thecontent.Slug = url.PathEscape(thecontent.Title)
 		}
-		thepost.Author = user.Username()
+		thecontent.Author = user.Username()
 
 		// input is valid, create the resource
 		opts := model.CreateOptions{}
-		opts.WithStringId(thepost.Slug)
+		opts.WithStringId(thecontent.Slug)
 
 		// // WARNING: the volatile field Multimedia because Memcache (Gob)
 		//	can't ignore field
-		tmp := thepost.Attachments
-		thepost.Attachments = nil
+		tmp := thecontent.Attachments
+		thecontent.Attachments = nil
 
-		err = model.CreateWithOptions(ctx, &thepost, &opts)
+		err = model.CreateWithOptions(ctx, &thecontent, &opts)
 		if err != nil {
-			log.Errorf(ctx, "error creating post %s: %s", thepost.Slug, err)
+			log.Errorf(ctx, "error creating post %s: %s", thecontent.Slug, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -107,9 +107,9 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// return the swapped multimedia value
-		thepost.Attachments = tmp
+		thecontent.Attachments = tmp
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &thepost
+		renderer.Data = &thecontent
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
@@ -121,7 +121,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionReadPost) {
+		if !current.HasPermission(identity.PermissionReadContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -169,18 +169,18 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
 				// list posts
-				var posts []*post.Post
-				q := model.NewQuery(&post.Post{})
+				var conts []*content.Content
+				q := model.NewQuery(&content.Content{})
 				q = q.OffsetBy(page * size)
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
-				err := q.GetMulti(ctx, &posts)
+				err := q.GetMulti(ctx, &conts)
 				if err != nil {
 					log.Errorf(ctx, "Error retrieving posts %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
-				l = len(posts)
-				result = posts[:controller.GetCorrectCountForPaging(size, l)]
+				l = len(conts)
+				result = conts[:controller.GetCorrectCountForPaging(size, l)]
 			}
 
 			// todo: generalize list handling and responses
@@ -195,7 +195,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		slug := param.Value()
-		item := post.Post{}
+		item := content.Content{}
 		err := model.FromStringID(ctx, &item, slug, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -209,7 +209,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		// get post related multimedia
 
 
-		q := model.NewQuery(&post.Attachment{})
+		q := model.NewQuery(&content.Attachment{})
 		q.WithField("Parent =", item.Slug)
 		err = q.GetMulti(ctx, &item.Attachments)
 		if err != nil {
@@ -228,7 +228,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionEditPost) {
+		if !current.HasPermission(identity.PermissionEditContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -247,7 +247,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		// handle the json request
 		jdata := j.Value()
 
-		jpost := post.Post{}
+		jpost := content.Content{}
 
 		err := json.Unmarshal([]byte(jdata), &jpost)
 		if err != nil {
@@ -257,7 +257,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 
 		// retrieve the user
 		slug := param.Value()
-		p := post.Post{}
+		p := content.Content{}
 		err = model.FromStringID(ctx, &p, slug, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -279,13 +279,13 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
 		p.Author = current.Username()
-		if jpost.Published == post.ZeroTime {
+		if jpost.Published == content.ZeroTime {
 			// not setted
-			p.Published = post.ZeroTime
+			p.Published = content.ZeroTime
 		} else {
 			// setted
 			// check previous data
-			if p.Published == post.ZeroTime {
+			if p.Published == content.ZeroTime {
 				p.Published = time.Now().UTC()
 			}
 		}
@@ -309,7 +309,7 @@ func (controller *PostController) Process(ctx context.Context, out *mage.Respons
 	return mage.Redirect{Status: http.StatusNotImplemented}
 }
 
-func (controller *PostController) GetCorrectCountForPaging(size int, l int) int {
+func (controller *ContentController) GetCorrectCountForPaging(size int, l int) int {
 	count := size
 	if l < size {
 		count = l
@@ -317,7 +317,7 @@ func (controller *PostController) GetCorrectCountForPaging(size int, l int) int 
 	return count
 }
 
-func (controller *PostController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
+func (controller *ContentController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
 	// todo: generalize
 	name := ""
 	switch property {
@@ -331,8 +331,8 @@ func (controller *PostController) HandleResourceProperties(ctx context.Context, 
 		return nil, errors.New("no property found")
 	}
 
-	var posts []*post.Post
-	q := model.NewQuery(&post.Post{})
+	var posts []*content.Content
+	q := model.NewQuery(&content.Content{})
 	q = q.OffsetBy(page * size)
 	q = q.Distinct(name)
 	// get one more so we know if we are done
