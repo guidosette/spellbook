@@ -42,8 +42,8 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		errs := validators.Errors{}
-		media := post.Attachment{}
-		err := json.Unmarshal([]byte(j.Value()), &media)
+		attachment := post.Attachment{}
+		err := json.Unmarshal([]byte(j.Value()), &attachment)
 		if err != nil {
 			msg := fmt.Sprintf("bad json input: %s", err.Error())
 			errs.AddError("", errors.New(msg))
@@ -51,7 +51,10 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		// attachment parent is required.
 		// if not attachment is to be specified the default value must be used
-
+		if attachment.Parent == "" {
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", post.AttachmentGlobalParent)
+			errs.AddError("Parent", errors.New(msg))
+		}
 
 		if errs.HasErrors() {
 			log.Errorf(ctx, "wrong input to create attachment: %s", errs)
@@ -61,12 +64,12 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		media.Created = time.Now().UTC()
-		media.Uploader = user.Username()
+		attachment.Created = time.Now().UTC()
+		attachment.Uploader = user.Username()
 
-		err = model.Create(ctx, &media)
+		err = model.Create(ctx, &attachment)
 		if err != nil {
-			log.Errorf(ctx, "error creating attachment %s: %s", media.Name, err)
+			log.Errorf(ctx, "error creating attachment %s: %s", attachment.Name, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -75,7 +78,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &media
+		renderer.Data = &attachment
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
@@ -198,9 +201,8 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		// handle the json request
 		jdata := j.Value()
 
-		jmultimedia := post.Attachment{}
-
-		err := json.Unmarshal([]byte(jdata), &jmultimedia)
+		jatt := post.Attachment{}
+		err := json.Unmarshal([]byte(jdata), &jatt)
 		if err != nil {
 			log.Errorf(ctx, "malformed json: %s", err.Error())
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -208,30 +210,43 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		// retrieve the user
 		id := param.Value()
-		p := post.Attachment{}
-		err = model.FromStringID(ctx, &p, id, nil)
+		attachment := post.Attachment{}
+		err = model.FromStringID(ctx, &attachment, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
 
+		errs := validators.Errors{}
+		if attachment.Parent == "" {
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", post.AttachmentGlobalParent)
+			errs.AddError("parent", errors.New(msg))
+		}
+
 		if err != nil {
+			errs.AddError("", err)
+		}
+
+		if errs.HasErrors() {
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		p.Name = jmultimedia.Name
-		p.Description = jmultimedia.Description
-		p.ResourceUrl = jmultimedia.ResourceUrl
-		p.Group = jmultimedia.Group
-		p.Updated = time.Now().UTC()
+		attachment.Name = jatt.Name
+		attachment.Description = jatt.Description
+		attachment.ResourceUrl = jatt.ResourceUrl
+		attachment.Group = jatt.Group
+		attachment.Updated = time.Now().UTC()
 
-		err = model.Update(ctx, &p)
+		err = model.Update(ctx, &attachment)
 		if err != nil {
 			log.Errorf(ctx, "error updating multimedia %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &p
+		renderer.Data = &attachment
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 
