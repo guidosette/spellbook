@@ -215,11 +215,6 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			l = len(files)
 			result = files[:controller.GetCorrectCountForPaging(size, l)]
 
-			//debug
-			files = append(files, content.File{Name:"Image 1",ResourceUrl:"url_1"})
-			files = append(files, content.File{Name:"Image 2",ResourceUrl:"url_2"})
-			result = files
-
 			response := struct {
 				Items interface{} `json:"items"`
 				More  bool        `json:"more"`
