@@ -1,15 +1,15 @@
 package page
 
 import (
-	"context"
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/identity"
 	"distudio.com/page/content"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/http"
@@ -207,10 +207,14 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		// retrieve the user
+		// retrieve the attachment
 		id := param.Value()
+		idInt, _ := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
 		attachment := content.Attachment{}
-		err = model.FromStringID(ctx, &attachment, id, nil)
+		err = model.FromIntID(ctx, &attachment, idInt, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
