@@ -94,7 +94,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// build the filename
-		filename := fmt.Sprintf("/%s%s/%s", typ, namespace, name)
+		filename := fmt.Sprintf("%s%s/%s", typ, namespace, name)
 
 		// handle the upload to Google Cloud Storage
 		bucket, err := file.DefaultBucketName(ctx)
@@ -124,9 +124,11 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		// return the file data
+		const publicURL = "https://storage.googleapis.com/%s/%s"
+		uri := fmt.Sprintf(publicURL, bucket, filename)
 		response := struct {
 			URI string
-		}{filename}
+		}{uri}
 
 		renderer := mage.JSONRenderer{}
 		renderer.Data = response
@@ -207,7 +209,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 					log.Errorf(ctx, "listBucket: unable to list bucket %q: %v", bucket, err)
 					break
 				}
-				file := content.File{Name:obj.Name,ResourceUrl:obj.MediaLink}
+				file := content.File{Name: obj.Name, ResourceUrl: obj.MediaLink}
 				files = append(files, file)
 				log.Infof(ctx, "obj: %v", obj)
 			}
