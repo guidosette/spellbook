@@ -71,7 +71,6 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Attachments = alias.Attachments
 	content.Created = alias.Created
 	content.Updated = alias.Updated
-	content.Published = alias.Published
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
