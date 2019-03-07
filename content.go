@@ -208,7 +208,6 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		// get post related multimedia
 
-
 		q := model.NewQuery(&content.Attachment{})
 		q.WithField("Parent =", item.Slug)
 		err = q.GetMulti(ctx, &item.Attachments)
@@ -255,7 +254,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		// retrieve the user
+		// retrieve the content
 		slug := param.Value()
 		p := content.Content{}
 		err = model.FromStringID(ctx, &p, slug, nil)
@@ -302,6 +301,69 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &p
+		out.Renderer = &renderer
+		return mage.Redirect{Status: http.StatusOK}
+	case http.MethodDelete:
+		u := ctx.Value(identity.KeyUser)
+		user, ok := u.(identity.User)
+		if !ok {
+			return mage.Redirect{Status: http.StatusUnauthorized}
+		}
+
+		if !user.HasPermission(identity.PermissionEditContent) {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
+
+		params := mage.RoutingParams(ctx)
+		param, ok := params["slug"]
+		if !ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		slug := param.Value()
+		p := content.Content{}
+		err := model.FromStringID(ctx, &p, slug, nil)
+		if err == datastore.ErrNoSuchEntity {
+			return mage.Redirect{Status: http.StatusNotFound}
+		}
+
+		err = model.Delete(ctx, &p, nil)
+		if err != nil {
+			log.Errorf(ctx, "error deleting content %s: %s", slug, err.Error())
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+
+		// delete attachments with parent = slug
+		attachments := make([]*content.Attachment, 0, 0)
+		q := model.NewQuery(&content.Attachment{})
+		q.WithField("Parent =", slug)
+		err = q.GetMulti(ctx, &attachments)
+		if err != nil {
+			log.Errorf(ctx, "error retrieving attachments: %s", err)
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+
+		errs := validators.Errors{}
+		for _, attachment := range attachments {
+			err = model.Delete(ctx, attachment, nil)
+			if err != nil {
+				msg := fmt.Sprintf("error deleting attachment %+v: %s", attachment, err.Error())
+				errs.AddError("", errors.New(msg))
+				log.Errorf(ctx, msg)
+			}
+		}
+
+		// check for client input erros
+		if errs.HasErrors() {
+			log.Errorf(ctx, "error HasErrors %+v", errs)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		renderer := mage.JSONRenderer{}
+		renderer.Data = nil
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 	}
