@@ -168,7 +168,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 				l = len(properties)
 				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
-				// list posts
+				// list contents
 				var conts []*content.Content
 				q := model.NewQuery(&content.Content{})
 				q = q.OffsetBy(page * size)
@@ -195,6 +195,8 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		}
 
 		slug := param.Value()
+
+		// get info content
 		item := content.Content{}
 		err := model.FromStringID(ctx, &item, slug, nil)
 		if err == datastore.ErrNoSuchEntity {
@@ -206,20 +208,87 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
-		// get post related multimedia
+		// check property
+		_, okSupportedLanguages := ins["supportedLanguages"]
+		if okSupportedLanguages {
+			// get supported languages: already inserted
 
-		q := model.NewQuery(&content.Attachment{})
-		q.WithField("Parent =", item.Slug)
-		err = q.GetMulti(ctx, &item.Attachments)
-		if err != nil {
-			log.Errorf(ctx, "error retrieving attachments: %s", err)
-			return mage.Redirect{Status: http.StatusInternalServerError}
+			// handle query params for page data:
+			page := 0
+			size := 20
+			if pin, ok := ins["page"]; ok {
+				if num, err := strconv.Atoi(pin.Value()); err == nil {
+					page = num
+				} else {
+					return mage.Redirect{Status: http.StatusBadRequest}
+				}
+			}
+
+			if sin, ok := ins["results"]; ok {
+				if num, err := strconv.Atoi(sin.Value()); err == nil {
+					size = num
+					// cap the size to 100
+					if size > 100 {
+						size = 100
+					}
+				} else {
+					return mage.Redirect{Status: http.StatusBadRequest}
+				}
+			}
+
+			var result interface{}
+			l := 0
+
+			var contents []*content.Content
+			q := model.NewQuery(&content.Content{})
+			q = q.WithField("Name =", item.Name)
+			q = q.OffsetBy(page * size)
+			// get one more so we know if we are done
+			q = q.Limit(size + 1)
+			err := q.GetAll(ctx, &contents)
+			if err != nil {
+				log.Errorf(ctx, "Error retrieving result: %+v", err)
+				return mage.Redirect{Status: http.StatusInternalServerError}
+			}
+
+			//ws := application()
+			//languages := ws.options.Languages
+
+			var languagesInserted []interface{}
+			for _, c := range contents {
+				lang := c.Locale
+				languagesInserted = append(languagesInserted, lang)
+			}
+
+			l = len(languagesInserted)
+			result = languagesInserted[:controller.GetCorrectCountForPaging(size, l)]
+
+			// todo: generalize list handling and responses
+			response := struct {
+				Items interface{} `json:"items"`
+				More  bool        `json:"more"`
+			}{result, l > size}
+			renderer := mage.JSONRenderer{}
+			renderer.Data = response
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusOK}
+		} else {
+			// continue to get info content
+			// get post related multimedia
+
+			q := model.NewQuery(&content.Attachment{})
+			q.WithField("Parent =", item.Slug)
+			err = q.GetMulti(ctx, &item.Attachments)
+			if err != nil {
+				log.Errorf(ctx, "error retrieving attachments: %s", err)
+				return mage.Redirect{Status: http.StatusInternalServerError}
+			}
+
+			renderer := mage.JSONRenderer{}
+			renderer.Data = &item
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusOK}
 		}
-
-		renderer := mage.JSONRenderer{}
-		renderer.Data = &item
-		out.Renderer = &renderer
-		return mage.Redirect{Status: http.StatusOK}
 	case http.MethodPut:
 		me := ctx.Value(identity.KeyUser)
 		current, ok := me.(identity.User)
