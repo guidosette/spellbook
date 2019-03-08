@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type FileController struct {
@@ -165,7 +166,6 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		handle := client.Bucket(bucket)
 
 		params := mage.RoutingParams(ctx)
-		// try to get the username.
 		// if there is no param then it is a list request
 		param, ok := params["name"]
 		if !ok {
@@ -198,7 +198,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			l := 0
 
 			files := make([]content.File, 0, 0)
-			query := &storage.Query{Prefix: "foo"}
+			query := &storage.Query{}
 			it := handle.Objects(ctx, query)
 			for {
 				obj, err := it.Next()
@@ -209,9 +209,13 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 					log.Errorf(ctx, "listBucket: unable to list bucket %q: %v", bucket, err)
 					break
 				}
-				file := content.File{Name: obj.Name, ResourceUrl: obj.MediaLink}
+				name := obj.Name
+				s := strings.Split(obj.Name, "/")
+				if len(s) > 0 {
+					name = s[len(s)-1]
+				}
+				file := content.File{Name: name, ResourceUrl: obj.MediaLink}
 				files = append(files, file)
-				log.Infof(ctx, "obj: %v", obj)
 			}
 
 			l = len(files)

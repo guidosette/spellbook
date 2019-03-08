@@ -209,8 +209,9 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		// retrieve the attachment
 		id := param.Value()
-		idInt, _ := strconv.ParseInt(id, 10, 64)
+		idInt, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
+			log.Errorf(ctx, "error convert id %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 		attachment := content.Attachment{}
@@ -250,6 +251,51 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &attachment
+		out.Renderer = &renderer
+		return mage.Redirect{Status: http.StatusOK}
+
+	case http.MethodDelete:
+		u := ctx.Value(identity.KeyUser)
+		user, ok := u.(identity.User)
+		if !ok {
+			return mage.Redirect{Status: http.StatusUnauthorized}
+		}
+
+		if !user.HasPermission(identity.PermissionEditContent) {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
+
+		params := mage.RoutingParams(ctx)
+		param, ok := params["id"]
+		if !ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
+		id := param.Value()
+		idInt, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			log.Errorf(ctx, "error convert id %s: %s", id, err.Error())
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		attachment := content.Attachment{}
+		err = model.FromIntID(ctx, &attachment, idInt, nil)
+		if err == datastore.ErrNoSuchEntity {
+			return mage.Redirect{Status: http.StatusNotFound}
+		}
+		if err != nil {
+			log.Errorf(ctx, "error retrieving attachment %s: %s", id, err.Error())
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+
+		// delete attachment
+		err = model.Delete(ctx, &attachment, nil)
+		if err != nil {
+			log.Errorf(ctx, "error deleting attachment %s: %s", id, err.Error())
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+
+		renderer := mage.JSONRenderer{}
+		renderer.Data = nil
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 

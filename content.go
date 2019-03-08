@@ -40,7 +40,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
-		// get the p data
+		// get the content data
 		j, ok := ins[mage.KeyRequestJSON]
 		if !ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -204,7 +204,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		}
 
 		if err != nil {
-			log.Errorf(ctx, "error retrieving p %s: %s", slug, err.Error())
+			log.Errorf(ctx, "error retrieving content %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
@@ -360,7 +360,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		err = model.Update(ctx, &p)
 		if err != nil {
-			log.Errorf(ctx, "error updating p %s: %s", slug, err.Error())
+			log.Errorf(ctx, "error updating content %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
@@ -390,13 +390,17 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		}
 
 		slug := param.Value()
-		p := content.Content{}
-		err := model.FromStringID(ctx, &p, slug, nil)
+		cont := content.Content{}
+		err := model.FromStringID(ctx, &cont, slug, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
+		if err != nil {
+			log.Errorf(ctx, "error retrieving content %s: %s", slug, err.Error())
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
 
-		err = model.Delete(ctx, &p, nil)
+		err = model.Delete(ctx, &cont, nil)
 		if err != nil {
 			log.Errorf(ctx, "error deleting content %s: %s", slug, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
