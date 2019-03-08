@@ -80,6 +80,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 
 		buffer := make([]byte, fh.Size)
 		if err != nil {
+			log.Errorf(ctx, "error buffer: %s", err.Error())
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
@@ -88,6 +89,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			// reset the buffer
 			_, err = f.Seek(0, 0)
 			if err != nil {
+				log.Errorf(ctx, "error Seek buffer: %s", err.Error())
 				return mage.Redirect{Status: http.StatusInternalServerError}
 			}
 		} else {
