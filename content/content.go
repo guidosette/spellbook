@@ -99,7 +99,11 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Published   time.Time    `json:"published"`
 	}
 
-	tags := strings.Split(content.Tags, ";")
+	tags := make([]string, 0, 0)
+	if len(content.Tags)>0 {
+		tags = strings.Split(content.Tags, ";")
+	}
+
 	isPublished := content.Published != ZeroTime
 
 	return json.Marshal(&struct {
