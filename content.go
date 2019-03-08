@@ -162,7 +162,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 				// property
 				properties, err := controller.HandleResourceProperties(ctx, property.Value(), page, size)
 				if err != nil {
-					log.Errorf(ctx, "Error retrieving posts %+v", err)
+					log.Errorf(ctx, "Error retrieving posts property: %v %+v", property, err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
 				l = len(properties)
@@ -176,7 +176,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 				q = q.Limit(size + 1)
 				err := q.GetMulti(ctx, &conts)
 				if err != nil {
-					log.Errorf(ctx, "Error retrieving posts %+v", err)
+					log.Errorf(ctx, "Error retrieving list posts %+v", err)
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
 				l = len(conts)
