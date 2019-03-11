@@ -11,18 +11,18 @@ var ZeroTime = time.Time{}
 
 type Content struct {
 	model.Model
-	Slug             string
-	Name             string `model:"search"`
-	Title            string `model:"search"`
-	Subtitle         string `model:"search"`
-	Body             string `model:"search,noindex"`
-	Tags             string `model:"search"`
-	Category         string `model:"search";page:"gettable,category"`
-	Topic            string `model:"search"`
-	Locale           string
-	Cover            string
-	Revision         int
-	Attachments      []*Attachment `model:"-"`
+	Slug        string
+	Name        string `model:"search"`
+	Title       string `model:"search"`
+	Subtitle    string `model:"search"`
+	Body        string `model:"search,noindex"`
+	Tags        string `model:"search"`
+	Category    string `model:"search";page:"gettable,category"`
+	Topic       string `model:"search"`
+	Locale      string
+	Cover       string
+	Revision    int
+	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -33,23 +33,23 @@ type Content struct {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Slug        string       `json:"slug"`
-		Name        string       `json:"name"`
-		Title       string       `json:"title"`
-		Subtitle    string       `json:"subtitle"`
-		Body        string       `json:"body"`
-		Tags        []string     `json:"tags"`
-		Category    string       `json:"category"`
-		Topic       string       `json:"topic"`
-		Locale      string       `json:"locale"`
-		Revision    int          `json:"revision"`
+		Slug        string        `json:"slug"`
+		Name        string        `json:"name"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Revision    int           `json:"revision"`
 		Attachments []*Attachment `json:"attachments"`
-		Author      string       `json:"author"`
-		Cover       string       `json:"cover"`
-		Created     time.Time    `json:"created"`
-		Updated     time.Time    `json:"updated"`
-		Published   time.Time    `json:"published"`
-		IsPublished bool         `json:"isPublished"`
+		Author      string        `json:"author"`
+		Cover       string        `json:"cover"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
+		IsPublished bool          `json:"isPublished"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -81,26 +81,26 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Slug        string       `json:"slug"`
-		Name        string       `json:"name"`
-		Title       string       `json:"title"`
-		Subtitle    string       `json:"subtitle"`
-		Body        string       `json:"body"`
-		Tags        []string     `json:"tags"`
-		Category    string       `json:"category"`
-		Topic       string       `json:"topic"`
-		Locale      string       `json:"locale"`
-		Revision    int          `json:"revision"`
+		Slug        string        `json:"slug"`
+		Name        string        `json:"name"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Revision    int           `json:"revision"`
 		Attachments []*Attachment `json:"attachments"`
-		Author      string       `json:"author"`
-		Cover       string       `json:"cover"`
-		Created     time.Time    `json:"created"`
-		Updated     time.Time    `json:"updated"`
-		Published   time.Time    `json:"published"`
+		Author      string        `json:"author"`
+		Cover       string        `json:"cover"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
 	}
 
 	tags := make([]string, 0, 0)
-	if len(content.Tags)>0 {
+	if len(content.Tags) > 0 {
 		tags = strings.Split(content.Tags, ";")
 	}
 

@@ -13,6 +13,8 @@ const (
 	PermissionCreateContent
 	PermissionEditContent
 	PermissionPublishContent
+	PermissionReadNewsletter
+	PermissionEditNewsletter
 )
 
 var Permissions = map[Permission]string{
@@ -26,6 +28,8 @@ var Permissions = map[Permission]string{
 	PermissionCreateContent: "PERMISSION_CREATE_CONTENT",
 	PermissionEditContent: "PERMISSION_UPDATE_CONTENT",
 	PermissionPublishContent: "PERMISSION_PUBLISH_CONTENT",
+	PermissionReadNewsletter: "PERMISSION_READ_NEWSLETTER",
+	PermissionEditNewsletter: "PERMISSION_EDIT_NEWSLETTER",
 }
 
 func NamedPermissionToPermission(name string) Permission {
