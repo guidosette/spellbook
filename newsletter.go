@@ -1,14 +1,12 @@
 package page
 
 import (
-	"bytes"
 	"distudio.com/mage"
 	"distudio.com/mage/model"
 	"distudio.com/page/content"
 	"distudio.com/page/identity"
 	"distudio.com/page/newsletter"
 	"distudio.com/page/validators"
-	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -182,27 +180,20 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 					return mage.Redirect{Status: http.StatusInternalServerError}
 				}
 
-				b := &bytes.Buffer{}
-				wr := csv.NewWriter(b)
 				files := make([]string, len(newsletters), cap(newsletters))
 
-				// todo
 				csvString := ""
 				for i, newsletter := range newsletters {
 					if i == 0 {
-						csvString = fmt.Sprintf("%s\n\"%s\"", csvString, newsletter.Email)
+						csvString = fmt.Sprintf("\"%s\"", newsletter.Email)
 					} else {
 						csvString = fmt.Sprintf("%s\n\"%s\"", csvString, newsletter.Email)
 					}
 					files = append(files, newsletter.Email)
 				}
 
-				wr.Write(files) // converts array of string to comma seperated values for 1 row.
-				wr.Flush() // writes the csv writer data to  the buffered data io writer(b(bytes.buffer))
-
 				renderer := mage.TextRenderer{}
 				renderer.Data = csvString
-				//renderer.Data = b.Bytes()
 				out.Renderer = &renderer
 				out.AddHeader("Content-type", "text/csv")
 				out.AddHeader("Content-Disposition", "attachment;filename=newsletter.csv")
