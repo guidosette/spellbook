@@ -77,8 +77,8 @@ func (controller *BaseController) GetPaging(ins mage.RequestInputs) (*Paging, er
 	if ffin, ok := ins["filterField"]; ok {
 		filterField = ffin.Value()
 	}
-	if ffin, ok := ins["filterValue"]; ok {
-		filterValue = ffin.Value()
+	if fvin, ok := ins["filterValue"]; ok {
+		filterValue = fvin.Value()
 	}
 
 	var paging Paging
