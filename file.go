@@ -13,12 +13,12 @@ import (
 	"google.golang.org/appengine/log"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 type FileController struct {
 	mage.Controller
+	BaseController
 }
 
 func (controller *FileController) OnDestroy(ctx context.Context) {}
@@ -173,27 +173,12 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		if !ok {
 			// list
 			// handle query params for page data:
-			page := 0
-			size := 20
-			if pin, ok := ins["page"]; ok {
-				if num, err := strconv.Atoi(pin.Value()); err == nil {
-					page = num
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
+			paging, err := controller.GetPaging(ins)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusBadRequest}
 			}
-
-			if sin, ok := ins["results"]; ok {
-				if num, err := strconv.Atoi(sin.Value()); err == nil {
-					size = num
-					// cap the size to 100
-					if size > 100 {
-						size = 100
-					}
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
-			}
+			page := paging.page
+			size := paging.size
 
 			log.Infof(ctx, "page", page) //todo
 			var result interface{}
@@ -260,12 +245,4 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 
 	}
 	return mage.Redirect{Status: http.StatusNotImplemented}
-}
-
-func (controller *FileController) GetCorrectCountForPaging(size int, l int) int {
-	count := size
-	if l < size {
-		count = l
-	}
-	return count
 }

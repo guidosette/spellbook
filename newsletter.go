@@ -14,12 +14,12 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 type NewsletterController struct {
 	mage.Controller
+	BaseController
 }
 
 func (controller *NewsletterController) OnDestroy(ctx context.Context) {}
@@ -143,27 +143,12 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		if !ok {
 
 			// handle query params for page data:
-			page := 0
-			size := 20
-			if pin, ok := ins["page"]; ok {
-				if num, err := strconv.Atoi(pin.Value()); err == nil {
-					page = num
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
+			paging, err := controller.GetPaging(ins)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusBadRequest}
 			}
-
-			if sin, ok := ins["results"]; ok {
-				if num, err := strconv.Atoi(sin.Value()); err == nil {
-					size = num
-					// cap the size to 100
-					if size > 100 {
-						size = 100
-					}
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
-			}
+			page := paging.page
+			size := paging.size
 
 			var result interface{}
 			l := 0
@@ -285,12 +270,4 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 	}
 
 	return mage.Redirect{Status: http.StatusNotImplemented}
-}
-
-func (controller *NewsletterController) GetCorrectCountForPaging(size int, l int) int {
-	count := size
-	if l < size {
-		count = l
-	}
-	return count
 }

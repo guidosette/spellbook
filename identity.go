@@ -12,11 +12,10 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/http"
-	"strconv"
 )
 
 // This controller is responsible for dispensing new tokens
-type TokenController struct {}
+type TokenController struct{}
 
 func (controller *TokenController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 	ins := mage.InputsFromContext(ctx)
@@ -34,21 +33,20 @@ func (controller TokenController) HandlePost(ctx context.Context, ins mage.Reque
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-
 	j, ok := ins[mage.KeyRequestJSON]
 
 	if !ok {
-		return mage.Redirect{Status:http.StatusBadRequest}
+		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
 	credentials := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
-	} {}
+	}{}
 
 	err := json.Unmarshal([]byte(j.Value()), &credentials)
 	if err != nil {
-		return mage.Redirect{Status:http.StatusBadRequest}
+		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
 	// checks the provided credentials. If correct creates a token, saves the user and returns the token
@@ -114,13 +112,13 @@ func (controller *TokenController) HandleDelete(ctx context.Context, ins mage.Re
 	if err != nil {
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
-	return mage.Redirect{Status:http.StatusOK}
+	return mage.Redirect{Status: http.StatusOK}
 }
 
 func (controller *TokenController) OnDestroy(ctx context.Context) {}
 
 // identity controller, used to operate on the current user
-type IdentityController struct {}
+type IdentityController struct{}
 
 func (controller *IdentityController) OnDestroy(ctx context.Context) {}
 
@@ -137,16 +135,18 @@ func (controller *IdentityController) Process(ctx context.Context, out *mage.Res
 		renderer := mage.JSONRenderer{}
 		renderer.Data = &me
 		out.Renderer = &renderer
-		return mage.Redirect{Status:http.StatusOK}
+		return mage.Redirect{Status: http.StatusOK}
 	}
 
-	return mage.Redirect{Status:http.StatusNotImplemented}
+	return mage.Redirect{Status: http.StatusNotImplemented}
 }
 
 // This controller handles user's CRUD operations
 // Before performing each operation test if the user requesting the method
 // holds permissions relating to user manipulations
-type UserController struct {}
+type UserController struct {
+	BaseController
+}
 
 func (controller *UserController) OnDestroy(ctx context.Context) {}
 
@@ -197,7 +197,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		}
 
 		pf := validators.NewRawField("password", true, meta.Password)
-		pf.AddValidator(validators.LenValidator{MinLen:8})
+		pf.AddValidator(validators.LenValidator{MinLen: 8})
 
 		if err = pf.Validate(); err != nil {
 			log.Errorf(ctx, "invalid password %s for username %s", meta.Password, username)
@@ -283,34 +283,19 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		param, ok := params["username"]
 		if !ok {
 			// handle query params for page data:
-			page := 0
-			size := 20
-			if pin, ok := ins["page"]; ok {
-				if num, err := strconv.Atoi(pin.Value()); err == nil {
-					page = num
-				} else {
-					return mage.Redirect{ Status: http.StatusBadRequest}
-				}
+			paging, err := controller.GetPaging(ins)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusBadRequest}
 			}
-
-			if sin, ok := ins["results"]; ok {
-				if num, err := strconv.Atoi(sin.Value()); err == nil {
-					size = num
-					// cap the size to 100
-					if size > 100 {
-						size = 100
-					}
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
-			}
+			page := paging.page
+			size := paging.size
 
 			var users []*identity.User
 			q := model.NewQuery(&identity.User{})
 			q = q.OffsetBy(page * size)
 			// get one more so we know if we are done
 			q = q.Limit(size + 1)
-			err := q.GetMulti(ctx, &users)
+			err = q.GetMulti(ctx, &users)
 			if err != nil {
 				return mage.Redirect{Status: http.StatusInternalServerError}
 			}
@@ -323,7 +308,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			}
 			response := struct {
 				Items []*identity.User `json:"items"`
-				More bool `json:"more"`
+				More  bool             `json:"more"`
 			}{users[:count], l > size}
 			renderer := mage.JSONRenderer{}
 			renderer.Data = response
@@ -362,7 +347,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		params := mage.RoutingParams(ctx)
 		param, ok := params["username"]
 		if !ok {
-			return mage.Redirect{Status:http.StatusBadRequest}
+			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
 		j, ok := ins[mage.KeyRequestJSON]
@@ -376,7 +361,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		juser := struct {
 			*identity.User
 			Password string `json:"password"`
-		}{User:&identity.User{}}
+		}{User: &identity.User{}}
 
 		err := json.Unmarshal([]byte(jdata), &juser)
 		if err != nil {
@@ -389,7 +374,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 		target := identity.User{}
 		err = model.FromStringID(ctx, &target, username, nil)
 		if err == datastore.ErrNoSuchEntity {
-			return mage.Redirect{Status:http.StatusNotFound}
+			return mage.Redirect{Status: http.StatusNotFound}
 		}
 
 		if err != nil {
@@ -401,7 +386,7 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 
 		if juser.Password != "" {
 			pf := validators.NewRawField("password", true, juser.Password)
-			pf.AddValidator(validators.LenValidator{MinLen:8})
+			pf.AddValidator(validators.LenValidator{MinLen: 8})
 
 			if err = pf.Validate(); err != nil {
 				err = fmt.Errorf("invalid password %s for username %s", juser.Password, username)

@@ -15,12 +15,12 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"time"
 )
 
 type ContentController struct {
 	mage.Controller
+	BaseController
 }
 
 func (controller *ContentController) OnDestroy(ctx context.Context) {}
@@ -67,6 +67,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		thecontent.Created = time.Now().UTC()
 		thecontent.Revision = 1
+		thecontent.Order = 1
 		if thecontent.Published != content.ZeroTime {
 			thecontent.Published = time.Now().UTC()
 		}
@@ -132,27 +133,13 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		if !ok {
 
 			// handle query params for page data:
-			page := 0
-			size := 20
-			if pin, ok := ins["page"]; ok {
-				if num, err := strconv.Atoi(pin.Value()); err == nil {
-					page = num
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
+			paging, err := controller.GetPaging(ins)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusBadRequest}
 			}
-
-			if sin, ok := ins["results"]; ok {
-				if num, err := strconv.Atoi(sin.Value()); err == nil {
-					size = num
-					// cap the size to 100
-					if size > 100 {
-						size = 100
-					}
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
-			}
+			page := paging.page
+			size := paging.size
+			log.Infof(ctx, "paging %+v", paging)
 
 			var result interface{}
 			l := 0
@@ -172,6 +159,12 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 				var conts []*content.Content
 				q := model.NewQuery(&content.Content{})
 				q = q.OffsetBy(page * size)
+				if len(paging.orderField) > 0 {
+					q = q.OrderBy(paging.orderField, paging.order)
+				}
+				if len(paging.filterField) > 0 {
+					q = q.WithField(paging.filterField + " =", paging.filterValue)
+				}
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
 				err := q.GetMulti(ctx, &conts)
@@ -214,27 +207,12 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			// get supported languages: already inserted
 
 			// handle query params for page data:
-			page := 0
-			size := 20
-			if pin, ok := ins["page"]; ok {
-				if num, err := strconv.Atoi(pin.Value()); err == nil {
-					page = num
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
+			paging, err := controller.GetPaging(ins)
+			if err != nil {
+				return mage.Redirect{Status: http.StatusBadRequest}
 			}
-
-			if sin, ok := ins["results"]; ok {
-				if num, err := strconv.Atoi(sin.Value()); err == nil {
-					size = num
-					// cap the size to 100
-					if size > 100 {
-						size = 100
-					}
-				} else {
-					return mage.Redirect{Status: http.StatusBadRequest}
-				}
-			}
+			page := paging.page
+			size := paging.size
 
 			var result interface{}
 			l := 0
@@ -245,7 +223,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			q = q.OffsetBy(page * size)
 			// get one more so we know if we are done
 			q = q.Limit(size + 1)
-			err := q.GetAll(ctx, &contents)
+			err = q.GetAll(ctx, &contents)
 			if err != nil {
 				log.Errorf(ctx, "Error retrieving result: %+v", err)
 				return mage.Redirect{Status: http.StatusInternalServerError}
@@ -344,6 +322,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		p.Body = jpost.Body
 		p.Cover = jpost.Cover
 		p.Revision = jpost.Revision
+		p.Order = jpost.Order
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
 		p.Author = current.Username()
@@ -442,14 +421,6 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 	}
 
 	return mage.Redirect{Status: http.StatusNotImplemented}
-}
-
-func (controller *ContentController) GetCorrectCountForPaging(size int, l int) int {
-	count := size
-	if l < size {
-		count = l
-	}
-	return count
 }
 
 func (controller *ContentController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {

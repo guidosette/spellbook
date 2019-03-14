@@ -22,6 +22,7 @@ type Content struct {
 	Locale      string
 	Cover       string
 	Revision    int
+	Order       int
 	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
@@ -43,6 +44,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Topic       string        `json:"topic"`
 		Locale      string        `json:"locale"`
 		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
 		Author      string        `json:"author"`
 		Cover       string        `json:"cover"`
@@ -66,6 +68,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Topic = alias.Topic
 	content.Locale = alias.Locale
 	content.Revision = alias.Revision
+	content.Order = alias.Order
 	content.Author = alias.Author
 	content.Cover = alias.Cover
 	content.Attachments = alias.Attachments
@@ -91,6 +94,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Topic       string        `json:"topic"`
 		Locale      string        `json:"locale"`
 		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
 		Author      string        `json:"author"`
 		Cover       string        `json:"cover"`
@@ -124,6 +128,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Locale:      content.Locale,
 			Cover:       content.Cover,
 			Revision:    content.Revision,
+			Order:       content.Order,
 			Attachments: content.Attachments,
 			Author:      content.Author,
 			Created:     content.Created,
