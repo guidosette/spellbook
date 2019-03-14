@@ -163,7 +163,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 					q = q.OrderBy(paging.orderField, paging.order)
 				}
 				if len(paging.filterField) > 0 {
-					q = q.WithField(paging.filterField + " =", paging.filterValue)
+					q = q.WithField(paging.filterField+" =", paging.filterValue)
 				}
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
