@@ -86,6 +86,27 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		if thecontent.Slug == "" {
 			thecontent.Slug = url.PathEscape(thecontent.Title)
 		}
+
+		// check same slug
+		// list content
+		var contents []*content.Content
+		q := model.NewQuery(&content.Content{})
+		q = q.WithField("Slug =", thecontent.Slug)
+		err = q.GetMulti(ctx, &contents)
+		if err != nil {
+			log.Errorf(ctx, "Error retrieving list contents %+v", err)
+			return mage.Redirect{Status: http.StatusInternalServerError}
+		}
+		if len(contents) > 0 {
+			msg := fmt.Sprintf("Slug already exist")
+			errs.AddError("", errors.New(msg))
+			log.Errorf(ctx, msg)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+
 		thecontent.Author = user.Username()
 
 		// input is valid, create the resource
