@@ -19,8 +19,8 @@ const (
 type Attachment struct {
 	model.Model `json:"-"`
 	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	ResourceUrl string    `json:"resourceUrl"`
+	Description string    `json:"description";model:"noindex"`
+	ResourceUrl string    `json:"resourceUrl";model:"noindex"`
 	Group       string    `json:"group"`
 	Type        string    `json:"type"`
 	Parent      string    `json:"parent"`

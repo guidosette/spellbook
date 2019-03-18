@@ -29,9 +29,9 @@ type Content struct {
 	Name        string `model:"search"`
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
-	Body        string `model:"search,noindex"`
+	Body        string `model:"search,noindex,HTML"`
 	Tags        string `model:"search"`
-	Category    string `model:"search";page:"gettable,category"`
+	Category    string `model:"search,atom";page:"gettable,category"`
 	Topic       string `model:"search"`
 	Locale      string
 	Cover       string
