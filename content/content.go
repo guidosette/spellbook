@@ -9,6 +9,20 @@ import (
 
 var ZeroTime = time.Time{}
 
+type ByOrder []*Content
+
+func(content ByOrder) Len() int {
+	return len(content)
+}
+
+func(content ByOrder) Swap(i,j int) {
+	content[i], content[j] = content[j], content[i]
+}
+
+func(content ByOrder) Less(i,j int) bool {
+	return content[i].Order < content[j].Order
+}
+
 type Content struct {
 	model.Model
 	Slug        string
