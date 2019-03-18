@@ -5,6 +5,7 @@ import (
 	"distudio.com/mage"
 	"fmt"
 	"golang.org/x/text/language"
+	"net/http"
 )
 
 const KeyLanguageParam = "lang"
@@ -37,10 +38,18 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 	router.Router.SetRoute(url, func(ctx context.Context) (interface{}, context.Context) {
 		lang,_, _ := router.matcher.Match(language.Make(""))
 		url := fmt.Sprintf("/%s%s", lang.String(), url)
-		return &RedirectController{To: url}, ctx
+		parms := mage.InputsFromContext(ctx)
+		switch parms[mage.KeyRequestMethod].Value() {
+		case http.MethodGet:
+			fallthrough
+		case http.MethodHead:
+			return &RedirectController{To:url}, ctx
+		default:
+			return &TemporaryRedirectController{To:url}, ctx
+		}
 	})
 
-	// prepend the url with the language param
+	// else a language has been specified, prepend the url with the language param
 	lurl := fmt.Sprintf("/:%s%s", KeyLanguageParam, url)
 	// add the language-corrected route to the router
 	router.Router.SetRoute(lurl, func(ctx context.Context) (interface{}, context.Context) {
@@ -54,7 +63,17 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 		tag, _, _ := router.matcher.Match(lang)
 		if t := tag.String(); lkey != t {
 			url := fmt.Sprintf("/%s%s",t, url)
-			return &RedirectController{To:url}, ctx
+			// if its not a get request, return a 307
+			parms := mage.InputsFromContext(ctx)
+			switch parms[mage.KeyRequestMethod].Value() {
+			case http.MethodGet:
+				fallthrough
+			case http.MethodHead:
+				return &RedirectController{To:url}, ctx
+			default:
+				return &TemporaryRedirectController{To:url}, ctx
+			}
+
 		}
 		ctx = context.WithValue(ctx, KeyLanguageTag, tag)
 		return handler(ctx), ctx
