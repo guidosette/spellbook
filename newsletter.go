@@ -230,15 +230,15 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		return mage.Redirect{Status: http.StatusOK}
 
 	case http.MethodDelete:
-		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
-		if !ok {
-			return mage.Redirect{Status: http.StatusUnauthorized}
-		}
-
-		if !user.HasPermission(identity.PermissionEditNewsletter) {
-			return mage.Redirect{Status: http.StatusForbidden}
-		}
+		//u := ctx.Value(identity.KeyUser)
+		//user, ok := u.(identity.User)
+		//if !ok {
+		//	return mage.Redirect{Status: http.StatusUnauthorized}
+		//}
+		//
+		//if !user.HasPermission(identity.PermissionEditNewsletter) {
+		//	return mage.Redirect{Status: http.StatusForbidden}
+		//}
 
 		params := mage.RoutingParams(ctx)
 		param, ok := params["email"]
