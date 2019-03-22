@@ -340,6 +340,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		p.Category = jpost.Category
 		p.Topic = jpost.Topic
 		p.Locale = jpost.Locale
+		p.Description = jpost.Description
 		p.Body = jpost.Body
 		p.Cover = jpost.Cover
 		p.Revision = jpost.Revision

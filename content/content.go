@@ -11,15 +11,15 @@ var ZeroTime = time.Time{}
 
 type ByOrder []*Content
 
-func(content ByOrder) Len() int {
+func (content ByOrder) Len() int {
 	return len(content)
 }
 
-func(content ByOrder) Swap(i,j int) {
+func (content ByOrder) Swap(i, j int) {
 	content[i], content[j] = content[j], content[i]
 }
 
-func(content ByOrder) Less(i,j int) bool {
+func (content ByOrder) Less(i, j int) bool {
 	return content[i].Order < content[j].Order
 }
 
@@ -34,6 +34,7 @@ type Content struct {
 	Category    string `model:"search,atom";page:"gettable,category"`
 	Topic       string `model:"search"`
 	Locale      string
+	Description string
 	Cover       string
 	Revision    int
 	Order       int
@@ -57,6 +58,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Category    string        `json:"category"`
 		Topic       string        `json:"topic"`
 		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
 		Revision    int           `json:"revision"`
 		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
@@ -81,6 +83,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Category = alias.Category
 	content.Topic = alias.Topic
 	content.Locale = alias.Locale
+	content.Description = alias.Description
 	content.Revision = alias.Revision
 	content.Order = alias.Order
 	content.Author = alias.Author
@@ -107,6 +110,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Category    string        `json:"category"`
 		Topic       string        `json:"topic"`
 		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
 		Revision    int           `json:"revision"`
 		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
@@ -140,6 +144,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Category:    content.Category,
 			Topic:       content.Topic,
 			Locale:      content.Locale,
+			Description: content.Description,
 			Cover:       content.Cover,
 			Revision:    content.Revision,
 			Order:       content.Order,
