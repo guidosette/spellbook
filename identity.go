@@ -212,6 +212,15 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			errs.AddError("", err)
 		}
 
+		if !me.HasPermission(identity.PermissionEditPermissions) {
+			// if you don't have PermissionEditPermissions, you can modify only PermissionEnabled
+			if !((len(newuser.Permissions()) == 1 && newuser.IsEnabled()) || (len(newuser.Permissions()) == 0 && !newuser.IsEnabled())) {
+				msg := fmt.Sprintf("you cannot modify permissions")
+				log.Errorf(ctx, msg)
+				errs.AddError("permissions", errors.New(msg))
+			}
+		}
+
 		// check for client input erros
 		if errs.HasErrors() {
 			log.Errorf(ctx, "error HasErrors %+v", errs)
@@ -412,6 +421,16 @@ func (controller *UserController) Process(ctx context.Context, out *mage.Respons
 			target.Email = juser.Email
 		}
 
+		if !current.HasPermission(identity.PermissionEditPermissions) && juser.ChangedPermission(target) {
+			err := fmt.Errorf("you cannot modify permissions")
+			log.Errorf(ctx, "ChangedPermission")
+			errs.AddError("permissions", err)
+			renderer := mage.JSONRenderer{}
+			renderer.Data = errs
+			out.Renderer = &renderer
+			return mage.Redirect{Status: http.StatusBadRequest}
+
+		}
 		target.Name = juser.Name
 		target.Surname = juser.Surname
 		target.Permission = juser.Permission

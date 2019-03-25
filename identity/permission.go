@@ -8,6 +8,7 @@ const (
 	PermissionReadUser
 	PermissionCreateUser
 	PermissionEditUser
+	PermissionEditPermissions
 	PermissionBlockUser
 	PermissionReadContent
 	PermissionCreateContent
@@ -18,18 +19,19 @@ const (
 )
 
 var Permissions = map[Permission]string{
-	PermissionEnabled: "PERMISSION_ENABLED",
-	PermissionLoadFiles: "PERMISSION_LOAD_FILES",
-	PermissionReadUser: "PERMISSION_READ_USERS",
-	PermissionCreateUser: "PERMISSION_CREATE_USERS",
-	PermissionEditUser: "PERMISSION_UPDATE_USERS",
-	PermissionBlockUser: "PERMISSION_BLOCK_USERS",
-	PermissionReadContent: "PERMISSION_READ_CONTENT",
-	PermissionCreateContent: "PERMISSION_CREATE_CONTENT",
-	PermissionEditContent: "PERMISSION_UPDATE_CONTENT",
-	PermissionPublishContent: "PERMISSION_PUBLISH_CONTENT",
-	PermissionReadNewsletter: "PERMISSION_READ_NEWSLETTER",
-	PermissionEditNewsletter: "PERMISSION_EDIT_NEWSLETTER",
+	PermissionEnabled:         "PERMISSION_ENABLED",
+	PermissionLoadFiles:       "PERMISSION_LOAD_FILES",
+	PermissionReadUser:        "PERMISSION_READ_USERS",
+	PermissionCreateUser:      "PERMISSION_CREATE_USERS",
+	PermissionEditUser:        "PERMISSION_UPDATE_USERS",
+	PermissionEditPermissions: "PERMISSION_EDIT_PERMISSIONS",
+	PermissionBlockUser:       "PERMISSION_BLOCK_USERS",
+	PermissionReadContent:     "PERMISSION_READ_CONTENT",
+	PermissionCreateContent:   "PERMISSION_CREATE_CONTENT",
+	PermissionEditContent:     "PERMISSION_UPDATE_CONTENT",
+	PermissionPublishContent:  "PERMISSION_PUBLISH_CONTENT",
+	PermissionReadNewsletter:  "PERMISSION_READ_NEWSLETTER",
+	PermissionEditNewsletter:  "PERMISSION_EDIT_NEWSLETTER",
 }
 
 func NamedPermissionToPermission(name string) Permission {
@@ -42,7 +44,7 @@ func NamedPermissionToPermission(name string) Permission {
 }
 
 func (user User) HasPermission(permission Permission) bool {
-	return user.Permission & permission != 0
+	return user.Permission&permission != 0
 }
 
 func (user *User) GrantPermission(permission Permission) {
@@ -82,3 +84,16 @@ func (user *User) Ban() {
 	user.RemovePermission(PermissionEnabled)
 }
 
+/**
+comparison without PermissionEnabled
+ **/
+func (user User) ChangedPermission(oldUser User) bool {
+	if oldUser.HasPermission(PermissionEnabled) {
+		oldUser.RemovePermission(PermissionEnabled)
+	}
+	if user.HasPermission(PermissionEnabled) {
+		user.RemovePermission(PermissionEnabled)
+	}
+	changed := user.Permission != oldUser.Permission
+	return changed
+}
