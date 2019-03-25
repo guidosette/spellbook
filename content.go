@@ -67,7 +67,6 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		thecontent.Created = time.Now().UTC()
 		thecontent.Revision = 1
-		thecontent.Order = 1
 		if thecontent.Published != content.ZeroTime {
 			thecontent.Published = time.Now().UTC()
 		}
@@ -156,6 +155,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			// handle query params for page data:
 			paging, err := controller.GetPaging(ins)
 			if err != nil {
+				log.Errorf(ctx, "Error paging: %+v", err)
 				return mage.Redirect{Status: http.StatusBadRequest}
 			}
 			page := paging.page

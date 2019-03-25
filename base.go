@@ -28,7 +28,7 @@ type Paging struct {
 }
 
 const orderAscKey = "asc"
-const OorderDescKey = "desc"
+const orderDescKey = "desc"
 
 func (controller *BaseController) OnDestroy(ctx context.Context) {}
 
@@ -44,7 +44,7 @@ func (controller *BaseController) GetPaging(ins mage.RequestInputs) (*Paging, er
 		if num, err := strconv.Atoi(pin.Value()); err == nil {
 			page = num
 		} else {
-			return nil, errors.New("error page")
+			return nil, errors.New("error paging page")
 		}
 	}
 
@@ -56,17 +56,20 @@ func (controller *BaseController) GetPaging(ins mage.RequestInputs) (*Paging, er
 				size = 100
 			}
 		} else {
-			return nil, errors.New("error page")
+			return nil, errors.New("error paging results")
 		}
 	}
 
 	if oin, ok := ins["order"]; ok {
-		if strings.Compare(oin.Value(), orderAscKey) == 0 {
-			order = model.ASC
-		} else if strings.Compare(oin.Value(), OorderDescKey) == 0 {
-			order = model.DESC
-		} else {
-			return nil, errors.New("error order")
+		oins := oin.Value()
+		if len(oins) > 0 {
+			if strings.Compare(oins, orderAscKey) == 0 {
+				order = model.ASC
+			} else if strings.Compare(oin.Value(), orderDescKey) == 0 {
+				order = model.DESC
+			} else {
+				return nil, errors.New("error order")
+			}
 		}
 	}
 
