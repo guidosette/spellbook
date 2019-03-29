@@ -387,3 +387,33 @@ func (page *SendMailPage) Process(ctx context.Context, out *mage.ResponseOutput)
 func (page *SendMailPage) OnDestroy(ctx context.Context) {
 
 }
+
+
+/**
+	REDIRECT StatusMovedPermanently
+ */
+type MovedController struct {
+	mage.Controller
+	To string
+}
+
+func (controller *MovedController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+	return mage.Redirect{Location: controller.To, Status: http.StatusMovedPermanently}
+}
+
+func (controller *MovedController) OnDestroy(ctx context.Context) {}
+
+
+/**
+	REDIRECT StatusFound
+ */
+type FoundController struct {
+	mage.Controller
+	To string
+}
+
+func (controller *FoundController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+	return mage.Redirect{Location: controller.To, Status: http.StatusFound}
+}
+
+func (controller *FoundController) OnDestroy(ctx context.Context) {}
