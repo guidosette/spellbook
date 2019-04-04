@@ -37,8 +37,9 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 	// if no language is specified, redirect to the default language
 	router.Router.SetRoute(url, func(ctx context.Context) (interface{}, context.Context) {
 		lang,_, _ := router.matcher.Match(language.Make(""))
-		url := fmt.Sprintf("/%s%s", lang.String(), url)
 		parms := mage.InputsFromContext(ctx)
+		url := parms[mage.KeyRequestURL].Value()
+		url = fmt.Sprintf("/%s%s", lang.String(), url)
 		switch parms[mage.KeyRequestMethod].Value() {
 		case http.MethodGet:
 			fallthrough
