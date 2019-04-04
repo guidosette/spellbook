@@ -293,6 +293,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 		lfname = fmt.Sprintf("i18n/%s.%s", page.FileName, "json")
 	}
 
+	_, err = os.Stat(lfname)
+	if os.IsNotExist(err) {
+		log.Debugf(ctx, "Can't find json file %s", fname)
+		return mage.Redirect{Status: http.StatusNotFound}
+	}
+
 	//now that we have the locale, read the json language file and get the corresponding values
 	jlang, err := ioutil.ReadFile(lfname)
 
