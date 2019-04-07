@@ -1,0 +1,308 @@
+package resource
+
+import (
+	"context"
+	"distudio.com/mage"
+	"distudio.com/page/resource/identity"
+	"distudio.com/page/validators"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
+	"net/http"
+	"strconv"
+)
+
+type ListOptions struct {
+	Size int
+	Page int
+	Order string
+	Descending bool
+}
+
+type Manager interface {
+	NewResource(ctx context.Context) (Resource, error)
+	FromId(ctx context.Context, id string) (Resource, error)
+	ListOf(ctx context.Context, opts ListOptions) ([]Resource, error)
+	PropertyValues(ctx context.Context, properties []string) ([]string, error)
+	Save(ctx context.Context, resource Resource) error
+	Delete(ctx context.Context, resource Resource) error
+}
+
+type Resource interface {
+	Id() string
+	Create(ctx context.Context) error
+	// todo: other should be a general serializable object
+	Update(ctx context.Context, other Resource) error
+	Property(ctx context.Context, property string) error
+}
+
+type Controller struct {
+	mage.Controller
+	manager Manager
+}
+
+func (controller *Controller) IsPublicMethod(method string) bool {
+	return true
+}
+
+func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+
+	ins := mage.InputsFromContext(ctx)
+
+	method := ins[mage.KeyRequestMethod].Value()
+	if !controller.IsPublicMethod(method) {
+		u, ok := ctx.Value(identity.KeyUser).(identity.User)
+		if !ok {
+			log.Errorf(ctx, "non public controller requires authenticated user")
+			return mage.Redirect{Status: http.StatusUnauthorized}
+		}
+
+		if !controller.factory.HoldsValidPermissions(u) {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
+	}
+
+
+	params := mage.RoutingParams(ctx)
+	key, hasKey := params["key"]
+	prop, hasProperty := ins["property"]
+
+	switch method {
+	case http.MethodPost:
+		return controller.HandlePost(ctx, out)
+	case http.MethodGet:
+		if !hasKey {
+			if hasProperty {
+				return controller.HandlePropertyValues(ctx, out)
+			}
+			return controller.HandleList(ctx, out)
+		}
+		return controller.HandleGet(ctx, key.Value(), out)
+	case http.MethodPut:
+		if !hasKey {
+			log.Errorf(ctx, "no item was specify for put method")
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		return controller.HandlePut(ctx, key.Value(), out)
+	case http.MethodDelete:
+		if !hasKey {
+			log.Errorf(ctx, "no item was specify for delete method")
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		return controller.HandleDelete(ctx, key.Value(), out)
+	}
+
+	return mage.Redirect{Status: http.StatusNotImplemented}
+}
+
+// REST Method handlers
+func (controller *Controller) HandleGet(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+
+	resource, err := controller.manager.FromId(ctx, key)
+	if err != nil {
+		if _, ok := err.(validators.FieldError); ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		if err == datastore.ErrNoSuchEntity {
+			return mage.Redirect{Status: http.StatusNotFound}
+		}
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	renderer.Data = resource
+	return mage.Redirect{Status: http.StatusOK}
+}
+
+func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+
+}
+
+func (controller *Controller) HandleList(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+	// build paging
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+
+	opts := ListOptions{}
+	opts.Size = 20
+	opts.Page = 0
+
+	ins := mage.InputsFromContext(ctx)
+	if pin, ok := ins["page"]; ok {
+		if num, err := strconv.Atoi(pin.Value()); err == nil {
+			opts.Page = num
+		} else {
+			log.Errorf(ctx, "invalid page value : %s. page must be an integer", pin)
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+	}
+
+	if sin, ok := ins["results"]; ok {
+		if num, err := strconv.Atoi(sin.Value()); err == nil {
+			opts.Size = num
+		} else {
+			log.Errorf(ctx, "invalid result size value : %s. results must be an integer", sin)
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+	}
+
+	// order is not mandatory
+	if oin, ok := ins["order"]; ok {
+		oins := oin.Value()
+		// descendig has the format "-fieldname"
+		opts.Descending = oins[:1] == "-"
+		if opts.Descending {
+			opts.Order = oins[1:]
+		} else {
+			opts.Order = oins
+		}
+	}
+
+	// todo: handle property
+
+	results, err := controller.manager.ListOf(ctx, opts)
+	if err != nil {
+		return mage.Redirect{Status:http.StatusInternalServerError}
+	}
+
+	l := len(results)
+	count := opts.Size
+	if l < opts.Size {
+		count = l
+	}
+
+	renderer.Data = struct {
+		Items interface{} `json:"items"`
+		More  bool        `json:"more"`
+	}{results[:count], l > opts.Size}
+	return mage.Redirect{Status: http.StatusOK}
+}
+
+// handles a post request, ensuring the creation of the resourse
+func (controller *Controller) HandlePost(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+
+	resource, err := controller.manager.NewResource(ctx)
+	if err != nil {
+		if _, ok := err.(validators.FieldError); ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	errs := validators.Errors{}
+	// get the content data
+	ins := mage.InputsFromContext(ctx)
+	j, ok := ins[mage.KeyRequestJSON]
+	if !ok {
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	err = json.Unmarshal([]byte(j.Value()), resource)
+	if err != nil {
+		msg := fmt.Sprintf("bad json: %s", err.Error())
+		errs.AddError("", errors.New(msg))
+		log.Errorf(ctx, msg)
+		renderer.Data = errs
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	if err = resource.Create(ctx); err != nil {
+		errs.AddFieldError(err.(validators.FieldError))
+	}
+
+	// check for client input erros
+	if errs.HasErrors() {
+		log.Errorf(ctx, "invalid request")
+		renderer.Data = errs
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	if err = controller.manager.Save(ctx, resource); err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	renderer.Data = resource
+	return mage.Redirect{Status: http.StatusOK}
+}
+
+// Handles put requests, ensuring the update of the requested resource
+func (controller *Controller) HandlePut(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+
+	ins := mage.InputsFromContext(ctx)
+	j, ok := ins[mage.KeyRequestJSON]
+	if !ok {
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	resource, err := controller.manager.FromId(ctx, key)
+	if err != nil {
+		if _, ok := err.(validators.FieldError); ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		if err == datastore.ErrNoSuchEntity {
+			return mage.Redirect{Status: http.StatusNotFound}
+		}
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	errs := validators.Errors{}
+	jresource, err := controller.manager.NewResource(ctx)
+	if err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	err = json.Unmarshal([]byte(j.Value()), &jresource)
+	if err != nil {
+		log.Errorf(ctx, "malformed json: %s", err.Error())
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	if err = resource.Update(ctx, jresource); err != nil {
+		errs.AddFieldError(err.(validators.FieldError))
+	}
+
+	if errs.HasErrors() {
+		log.Errorf(ctx, "invalid request")
+		renderer.Data = errs
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+
+	if err = controller.manager.Save(ctx, resource); err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	renderer.Data = resource
+	return mage.Redirect{Status: http.StatusOK}
+}
+
+// Handles delete requests
+func (controller *Controller) HandleDelete(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+
+	resource, err := controller.manager.NewResource(ctx)
+	if err != nil {
+		if _, ok := err.(validators.FieldError); ok {
+			return mage.Redirect{Status: http.StatusBadRequest}
+		}
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	if err = controller.manager.Delete(ctx, resource); err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	return mage.Redirect{Status: http.StatusOK}
+}
+
+
+func (controller *Controller) OnDestroy(ctx context.Context) {
+
+}

@@ -3,8 +3,8 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/content"
-	"distudio.com/page/identity"
+	"distudio.com/page/resource/content"
+	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -67,7 +67,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		thecontent.Created = time.Now().UTC()
 		thecontent.Revision = 1
-		if thecontent.Published != content.ZeroTime {
+		if !thecontent.Published.IsZero() {
 			thecontent.Published = time.Now().UTC()
 		}
 		// validate input fields
@@ -224,6 +224,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 
 		// check property
 		_, okSupportedLanguages := ins["supportedLanguages"]
+		// todo: implement in a different controller
 		if okSupportedLanguages {
 			// get supported languages: already inserted
 
@@ -348,13 +349,13 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		p.Updated = time.Now().UTC()
 		p.Tags = jpost.Tags
 		p.Author = current.Username()
-		if jpost.Published == content.ZeroTime {
+		if jpost.Published.IsZero() {
 			// not setted
-			p.Published = content.ZeroTime
+			p.Published = time.Time{}
 		} else {
 			// setted
 			// check previous data
-			if p.Published == content.ZeroTime {
+			if p.Published.IsZero() {
 				p.Published = time.Now().UTC()
 			}
 		}
@@ -445,7 +446,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 	return mage.Redirect{Status: http.StatusNotImplemented}
 }
 
-func (controller *ContentController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]interface{}, error) {
+func (controller *ContentController) HandleResourceProperties(ctx context.Context, property string, page int, size int) ([]string, error) {
 	// todo: generalize
 	name := ""
 	switch property {
@@ -470,10 +471,10 @@ func (controller *ContentController) HandleResourceProperties(ctx context.Contex
 		log.Errorf(ctx, "Error retrieving result: %+v", err)
 		return nil, err
 	}
-	var result []interface{}
+	var result []string
 	for _, p := range posts {
 		value := reflect.ValueOf(p).Elem().FieldByName(name).String()
-		result = append(result, &value)
+		result = append(result, value)
 	}
 	return result, nil
 

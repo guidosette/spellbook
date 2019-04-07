@@ -3,8 +3,7 @@ package page
 import (
 	"cloud.google.com/go/storage"
 	"distudio.com/mage"
-	"distudio.com/page/content"
-	"distudio.com/page/identity"
+	"distudio.com/page/resource"
 	"distudio.com/page/validators"
 	"fmt"
 	"golang.org/x/net/context"
@@ -28,13 +27,13 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
 	case http.MethodPost:
-		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
+		u := ctx.Value(resource.KeyUser)
+		user, ok := u.(resource.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionLoadFiles) {
+		if !user.HasPermission(resource.PermissionLoadFiles) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -140,14 +139,14 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(identity.KeyUser)
-		current, ok := me.(identity.User)
+		me := ctx.Value(resource.KeyUser)
+		current, ok := me.(resource.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionReadContent) {
+		if !current.HasPermission(resource.PermissionReadContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -184,7 +183,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			var result interface{}
 			l := 0
 
-			files := make([]content.File, 0, 0)
+			files := make([]resource.File, 0, 0)
 			query := &storage.Query{}
 			it := handle.Objects(ctx, query)
 			for {
@@ -201,7 +200,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 				if len(s) > 0 {
 					name = s[len(s)-1]
 				}
-				file := content.File{Name: name, ResourceUrl: obj.MediaLink}
+				file := resource.File{Name: name, ResourceUrl: obj.MediaLink}
 				files = append(files, file)
 			}
 

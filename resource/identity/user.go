@@ -23,15 +23,15 @@ const (
 
 type User struct {
 	model.Model
-	Name        string
-	Surname     string
-	Email       string
-	Password    string
-	Token       string
-	Locale      string
+	Name       string
+	Surname    string
+	Email      string
+	Password   string
+	Token      string
+	Locale     string
 	Permission Permission
-	LastLogin time.Time
-	gUser *guser.User`model:"-",json:"-"`
+	LastLogin  time.Time
+	gUser      *guser.User`model:"-",json:"-"`
 }
 
 func (user *User) UnmarshalJSON(data []byte) error {

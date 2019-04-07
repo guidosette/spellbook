@@ -9,12 +9,16 @@ import (
 
 var ErrMissingField = errors.New("missing field")
 
-type fieldError struct {
+type FieldError struct {
 	error
 	field string
 }
 
-func (err fieldError) MarshalJSON() ([]byte, error) {
+func NewFieldError(field string, error error) FieldError {
+	return FieldError{error, field}
+}
+
+func (err FieldError) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Field string  `json:"field"`
 		Error string  `json:"error"`
@@ -23,15 +27,19 @@ func (err fieldError) MarshalJSON() ([]byte, error) {
 }
 
 type Errors struct {
-	errors []fieldError
+	errors []FieldError
 }
 
 func (errs Errors) HasErrors() bool {
 	return errs.errors != nil
 }
 
+func (errs *Errors) AddFieldError(error FieldError) {
+	errs.errors = append(errs.errors, error)
+}
+
 func (errs *Errors) AddError(name string, value error) {
-	errs.errors = append(errs.errors, fieldError{error:value, field:name})
+	errs.errors = append(errs.errors, NewFieldError(name, value))
 }
 
 func (errs *Errors) Clear() {

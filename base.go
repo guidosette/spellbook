@@ -3,7 +3,7 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/content"
+	"distudio.com/page/resource"
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
@@ -121,8 +121,8 @@ func (controller *BaseController) HandlerPagingResult(ctx context.Context, out *
 		result = properties[:controller.GetCorrectCountForPaging(size, l)]
 	} else {
 		// list contents
-		var conts []*content.Content
-		q := model.NewQuery(&content.Content{})
+		var conts []*resource.Content
+		q := model.NewQuery(&resource.Content{})
 		q = q.OffsetBy(page * size)
 		// get one more so we know if we are done
 		q = q.Limit(size + 1)
@@ -180,8 +180,8 @@ func (controller *BaseController) HandleResourceProperties(ctx context.Context, 
 	//}
 	name := controller.UcFirst(property)
 
-	var posts []*content.Content
-	q := model.NewQuery(&content.Content{})
+	var posts []*resource.Content
+	q := model.NewQuery(&resource.Content{})
 	q = q.OffsetBy(page * size)
 	q = q.Distinct(name)
 	// get one more so we know if we are done

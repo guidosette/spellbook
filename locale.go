@@ -2,7 +2,7 @@ package page
 
 import (
 	"distudio.com/mage"
-	"distudio.com/page/identity"
+	"distudio.com/page/resource"
 	"golang.org/x/net/context"
 	"net/http"
 )
@@ -22,8 +22,8 @@ func (controller *LocaleController) Process(ctx context.Context, out *mage.Respo
 		return mage.Redirect{Status: http.StatusNotImplemented}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(identity.KeyUser)
-		_, ok := me.(identity.User)
+		me := ctx.Value(resource.KeyUser)
+		_, ok := me.(resource.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}

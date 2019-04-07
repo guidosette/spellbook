@@ -3,9 +3,7 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/content"
-	"distudio.com/page/identity"
-	"distudio.com/page/newsletter"
+	"distudio.com/page/resource"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -47,7 +45,7 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 
 		errs := validators.Errors{}
 
-		thenewsletter := newsletter.Newsletter{}
+		thenewsletter := resource.Newsletter{}
 		err := json.Unmarshal([]byte(j.Value()), &thenewsletter)
 		if err != nil {
 			msg := fmt.Sprintf("bad json: %s", err.Error())
@@ -86,8 +84,8 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		}
 
 		// list newsletter
-		var emails []*newsletter.Newsletter
-		q := model.NewQuery(&newsletter.Newsletter{})
+		var emails []*resource.Newsletter
+		q := model.NewQuery(&resource.Newsletter{})
 		q = q.WithField("Email =", thenewsletter.Email)
 		err = q.GetMulti(ctx, &emails)
 		if err != nil {
@@ -125,14 +123,14 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(identity.KeyUser)
-		current, ok := me.(identity.User)
+		me := ctx.Value(resource.KeyUser)
+		current, ok := me.(resource.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionReadNewsletter) {
+		if !current.HasPermission(resource.PermissionReadNewsletter) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -157,8 +155,8 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 			if ok {
 				// csv
 				// list newsletter
-				var newsletters []*newsletter.Newsletter
-				q := model.NewQuery(&newsletter.Newsletter{})
+				var newsletters []*resource.Newsletter
+				q := model.NewQuery(&resource.Newsletter{})
 				err := q.GetMulti(ctx, &newsletters)
 				if err != nil {
 					log.Errorf(ctx, "Error retrieving list newsletter %+v", err)
@@ -185,8 +183,8 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 				return mage.Redirect{Status: http.StatusOK}
 			} else {
 				// list newsletter
-				var newsletters []*newsletter.Newsletter
-				q := model.NewQuery(&newsletter.Newsletter{})
+				var newsletters []*resource.Newsletter
+				q := model.NewQuery(&resource.Newsletter{})
 				q = q.OffsetBy(page * size)
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
@@ -213,7 +211,7 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		email := param.Value()
 
 		// get info content
-		item := content.Content{}
+		item := resource.Content{}
 		err := model.FromStringID(ctx, &item, email, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -247,7 +245,7 @@ func (controller *NewsletterController) Process(ctx context.Context, out *mage.R
 		}
 
 		email := param.Value()
-		newsletter := newsletter.Newsletter{}
+		newsletter := resource.Newsletter{}
 		err := model.FromStringID(ctx, &newsletter, email, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}

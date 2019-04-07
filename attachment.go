@@ -3,8 +3,8 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/content"
-	"distudio.com/page/identity"
+	"distudio.com/page/resource/content"
+	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"fmt"
@@ -53,7 +53,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		// attachment parent is required.
 		// if not attachment is to be specified the default value must be used
 		if attachment.Parent == "" {
-			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", content.AttachmentGlobalParent)
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", resource.AttachmentGlobalParent)
 			errs.AddError("Parent", errors.New(msg))
 		}
 
