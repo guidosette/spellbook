@@ -40,7 +40,7 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 	return &cont, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]interface{}, error) {
+func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]resource.Resource, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
 		return nil, resource.NewPermissionError(identity.PermissionReadContent)
@@ -65,7 +65,7 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]interface{}, len(conts))
+	resources := make([]resource.Resource, len(conts))
 	for i := range conts {
 		resources[i] = resource.Resource(conts[i])
 	}
@@ -73,13 +73,13 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 	return resources, nil
 }
 
-func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]interface{}, error) {
+func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]string, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
 		return nil, resource.NewPermissionError(identity.PermissionReadContent)
 	}
 
-	a := []string{"category", "topic", "name"} // list property accepted
+	a := []string{"Category", "Topic", "Name"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -108,7 +108,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 		log.Errorf(ctx, "Error retrieving result: %+v", err)
 		return nil, err
 	}
-	var result []interface{}
+	var result []string
 	for _, c := range conts {
 		value := reflect.ValueOf(c).Elem().FieldByName(name).String()
 		if len(value) > 0 {

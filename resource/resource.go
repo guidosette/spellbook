@@ -25,8 +25,8 @@ type ListOptions struct {
 type Manager interface {
 	NewResource(ctx context.Context) (Resource, error)
 	FromId(ctx context.Context, id string) (Resource, error)
-	ListOf(ctx context.Context, opts ListOptions) ([]interface{}, error)
-	ListOfProperties(ctx context.Context, opts ListOptions) ([]interface{}, error)
+	ListOf(ctx context.Context, opts ListOptions) ([]Resource, error)
+	ListOfProperties(ctx context.Context, opts ListOptions) ([]string, error)
 	Save(ctx context.Context, resource Resource) error
 	Delete(ctx context.Context, resource Resource) error
 }
@@ -40,12 +40,12 @@ type Resource interface {
 
 type PermissionError struct {
 	error
-	permission identity.Permission
+	message string
 }
 
 func NewPermissionError(permission identity.Permission) PermissionError {
-	msg := fmt.Sprintf(" %d", permission) // todo
-	return PermissionError{errors.New(msg), permission}
+	msg := fmt.Sprintf("%s", identity.Permissions[permission])
+	return PermissionError{errors.New(msg), msg}
 }
 
 type Controller struct {
@@ -126,21 +126,62 @@ func (controller *Controller) HandleGet(ctx context.Context, key string, out *ma
 }
 
 func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput, prop string) mage.Redirect {
-	opts := ListOptions{}
+	opts := &ListOptions{}
 	opts.Property = prop
-	return controller.BuildPaging(ctx, out, opts, controller.Manager.ListOfProperties)
+	opts, err := controller.BuildOptions(ctx, out, opts)
+	if err != nil {
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+	results, err := controller.Manager.ListOfProperties(ctx, *opts)
+	if err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
+
+	// output
+	l := len(results)
+	count := opts.Size
+	if l < opts.Size {
+		count = l
+	}
+
+	renderer := mage.JSONRenderer{}
+	out.Renderer = &renderer
+	renderer.Data = struct {
+		Items interface{} `json:"items"`
+		More  bool        `json:"more"`
+	}{results[:count], l > opts.Size}
+	return mage.Redirect{Status: http.StatusOK}
 }
 
 func (controller *Controller) HandleList(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
-	opts := ListOptions{}
-	return controller.BuildPaging(ctx, out, opts, controller.Manager.ListOf)
-}
+	opts := &ListOptions{}
+	opts, err := controller.BuildOptions(ctx, out, opts)
+	if err != nil {
+		return mage.Redirect{Status: http.StatusBadRequest}
+	}
+	results, err := controller.Manager.ListOf(ctx, *opts)
+	if err != nil {
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
 
-func (controller *Controller) BuildPaging(ctx context.Context, out *mage.ResponseOutput, opts ListOptions, list func(context.Context, ListOptions) ([]interface{}, error)) mage.Redirect {
-	// build paging
+	// output
+	l := len(results)
+	count := opts.Size
+	if l < opts.Size {
+		count = l
+	}
+
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
+	renderer.Data = struct {
+		Items interface{} `json:"items"`
+		More  bool        `json:"more"`
+	}{results[:count], l > opts.Size}
+	return mage.Redirect{Status: http.StatusOK}
+}
 
+func (controller *Controller) BuildOptions(ctx context.Context, out *mage.ResponseOutput, opts *ListOptions) (*ListOptions, error) {
+	// build paging
 	opts.Size = 20
 	opts.Page = 0
 
@@ -149,8 +190,8 @@ func (controller *Controller) BuildPaging(ctx context.Context, out *mage.Respons
 		if num, err := strconv.Atoi(pin.Value()); err == nil {
 			opts.Page = num
 		} else {
-			log.Errorf(ctx, "invalid page value : %s. page must be an integer", pin)
-			return mage.Redirect{Status: http.StatusBadRequest}
+			msg := fmt.Sprintf("invalid page value : %s. page must be an integer", pin)
+			return nil, errors.New(msg)
 		}
 	}
 
@@ -158,8 +199,8 @@ func (controller *Controller) BuildPaging(ctx context.Context, out *mage.Respons
 		if num, err := strconv.Atoi(sin.Value()); err == nil {
 			opts.Size = num
 		} else {
-			log.Errorf(ctx, "invalid result size value : %s. results must be an integer", sin)
-			return mage.Redirect{Status: http.StatusBadRequest}
+			msg := fmt.Sprintf("invalid result size value : %s. results must be an integer", sin)
+			return nil, errors.New(msg)
 		}
 	}
 
@@ -175,22 +216,7 @@ func (controller *Controller) BuildPaging(ctx context.Context, out *mage.Respons
 		}
 	}
 
-	results, err := list(ctx, opts)
-	if err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
-	}
-
-	l := len(results)
-	count := opts.Size
-	if l < opts.Size {
-		count = l
-	}
-
-	renderer.Data = struct {
-		Items interface{} `json:"items"`
-		More  bool        `json:"more"`
-	}{results[:count], l > opts.Size}
-	return mage.Redirect{Status: http.StatusOK}
+	return opts, nil
 }
 
 // handles a post request, ensuring the creation of the resourse
