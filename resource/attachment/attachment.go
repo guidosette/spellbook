@@ -1,7 +1,8 @@
-package content
+package attachment
 
 import (
 	"distudio.com/mage/model"
+	"distudio.com/page/resource"
 	"encoding/json"
 	"time"
 )
@@ -18,6 +19,7 @@ const (
 
 type Attachment struct {
 	model.Model `json:"-"`
+	resource.Resource
 	Name        string    `json:"name"`
 	Description string    `json:"description";model:"noindex"`
 	ResourceUrl string    `json:"resourceUrl";model:"noindex"`

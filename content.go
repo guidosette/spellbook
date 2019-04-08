@@ -3,6 +3,7 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
+	"distudio.com/page/resource/attachment"
 	"distudio.com/page/resource/content"
 	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
@@ -276,7 +277,7 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			// continue to get info content
 			// get post related multimedia
 
-			q := model.NewQuery(&content.Attachment{})
+			q := model.NewQuery(&attachment.Attachment{})
 			q.WithField("Parent =", item.Slug)
 			err = q.GetMulti(ctx, &item.Attachments)
 			if err != nil {
@@ -409,8 +410,8 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		}
 
 		// delete attachments with parent = slug
-		attachments := make([]*content.Attachment, 0, 0)
-		q := model.NewQuery(&content.Attachment{})
+		attachments := make([]*attachment.Attachment, 0, 0)
+		q := model.NewQuery(&attachment.Attachment{})
 		q.WithField("Parent =", slug)
 		err = q.GetMulti(ctx, &attachments)
 		if err != nil {

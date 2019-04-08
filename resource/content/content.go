@@ -4,6 +4,7 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page/resource"
+	"distudio.com/page/resource/attachment"
 	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
@@ -18,6 +19,9 @@ var ZeroTime = time.Time{}
 
 type ByOrder []*Content
 
+/**
+ByOrder start
+ */
 func (content ByOrder) Len() int {
 	return len(content)
 }
@@ -29,6 +33,10 @@ func (content ByOrder) Swap(i, j int) {
 func (content ByOrder) Less(i, j int) bool {
 	return content[i].Order < content[j].Order
 }
+
+/**
+ByOrder end
+ */
 
 type Content struct {
 	model.Model
@@ -46,7 +54,7 @@ type Content struct {
 	Cover       string
 	Revision    int
 	Order       int
-	Attachments []*Attachment `model:"-"`
+	Attachments []*attachment.Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -57,25 +65,25 @@ type Content struct {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Slug        string                 `json:"slug"`
-		Name        string                 `json:"name"`
-		Title       string                 `json:"title"`
-		Subtitle    string                 `json:"subtitle"`
-		Body        string                 `json:"body"`
-		Tags        []string               `json:"tags"`
-		Category    string                 `json:"category"`
-		Topic       string                 `json:"topic"`
-		Locale      string                 `json:"locale"`
-		Description string                 `json:"description"`
-		Revision    int                    `json:"revision"`
-		Order       int                    `json:"order"`
-		Attachments []*Attachment `json:"attachments"`
-		Author      string                 `json:"author"`
-		Cover       string                 `json:"cover"`
-		Created     time.Time              `json:"created"`
-		Updated     time.Time              `json:"updated"`
-		Published   time.Time              `json:"published"`
-		IsPublished bool                   `json:"isPublished"`
+		Slug        string                   `json:"slug"`
+		Name        string                   `json:"name"`
+		Title       string                   `json:"title"`
+		Subtitle    string                   `json:"subtitle"`
+		Body        string                   `json:"body"`
+		Tags        []string                 `json:"tags"`
+		Category    string                   `json:"category"`
+		Topic       string                   `json:"topic"`
+		Locale      string                   `json:"locale"`
+		Description string                   `json:"description"`
+		Revision    int                      `json:"revision"`
+		Order       int                      `json:"order"`
+		Attachments []*attachment.Attachment `json:"attachments"`
+		Author      string                   `json:"author"`
+		Cover       string                   `json:"cover"`
+		Created     time.Time                `json:"created"`
+		Updated     time.Time                `json:"updated"`
+		Published   time.Time                `json:"published"`
+		IsPublished bool                     `json:"isPublished"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -109,24 +117,24 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Slug        string        `json:"slug"`
-		Name        string                 `json:"name"`
-		Title       string                 `json:"title"`
-		Subtitle    string                 `json:"subtitle"`
-		Body        string                 `json:"body"`
-		Tags        []string               `json:"tags"`
-		Category    string                 `json:"category"`
-		Topic       string                 `json:"topic"`
-		Locale      string                 `json:"locale"`
-		Description string                 `json:"description"`
-		Revision    int                    `json:"revision"`
-		Order       int                    `json:"order"`
-		Attachments []*Attachment `json:"attachments"`
-		Author      string                 `json:"author"`
-		Cover       string                 `json:"cover"`
-		Created     time.Time              `json:"created"`
-		Updated     time.Time              `json:"updated"`
-		Published   time.Time              `json:"published"`
+		Slug        string                   `json:"slug"`
+		Name        string                   `json:"name"`
+		Title       string                   `json:"title"`
+		Subtitle    string                   `json:"subtitle"`
+		Body        string                   `json:"body"`
+		Tags        []string                 `json:"tags"`
+		Category    string                   `json:"category"`
+		Topic       string                   `json:"topic"`
+		Locale      string                   `json:"locale"`
+		Description string                   `json:"description"`
+		Revision    int                      `json:"revision"`
+		Order       int                      `json:"order"`
+		Attachments []*attachment.Attachment `json:"attachments"`
+		Author      string                   `json:"author"`
+		Cover       string                   `json:"cover"`
+		Created     time.Time                `json:"created"`
+		Updated     time.Time                `json:"updated"`
+		Published   time.Time                `json:"published"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -166,6 +174,11 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 }
 
 func (content *Content) Create(ctx context.Context) error {
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionCreateContent) {
+		return resource.NewPermissionError(identity.PermissionCreateContent)
+	}
+
 	content.Created = time.Now().UTC()
 	content.Revision = 1
 	if !content.Published.IsZero() {
@@ -203,8 +216,12 @@ func (content *Content) Create(ctx context.Context) error {
 	return nil
 }
 
-
 func (content *Content) Update(ctx context.Context, res resource.Resource) error {
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionEditContent) {
+		return resource.NewPermissionError(identity.PermissionEditContent)
+	}
+
 	other := res.(*Content)
 	content.Name = other.Name
 	content.Title = other.Title
@@ -234,14 +251,10 @@ func (content *Content) Update(ctx context.Context, res resource.Resource) error
 			content.Published = time.Now().UTC()
 		}
 	}
-	
+
 	return nil
 }
 
 func (content *Content) Id() string {
 	return content.StringID()
-}
-
-func (content *Content) Property(ctx context.Context, property string) error {
-	return nil
 }

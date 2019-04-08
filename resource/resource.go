@@ -15,17 +15,18 @@ import (
 )
 
 type ListOptions struct {
-	Size int
-	Page int
-	Order string
+	Size       int
+	Page       int
+	Order      string
 	Descending bool
+	Property   string
 }
 
 type Manager interface {
 	NewResource(ctx context.Context) (Resource, error)
 	FromId(ctx context.Context, id string) (Resource, error)
-	ListOf(ctx context.Context, opts ListOptions) ([]Resource, error)
-	PropertyValues(ctx context.Context, properties []string) ([]string, error)
+	ListOf(ctx context.Context, opts ListOptions) ([]interface{}, error)
+	ListOfProperties(ctx context.Context, opts ListOptions) ([]interface{}, error)
 	Save(ctx context.Context, resource Resource) error
 	Delete(ctx context.Context, resource Resource) error
 }
@@ -35,12 +36,21 @@ type Resource interface {
 	Create(ctx context.Context) error
 	// todo: other should be a general serializable object
 	Update(ctx context.Context, other Resource) error
-	Property(ctx context.Context, property string) error
+}
+
+type PermissionError struct {
+	error
+	permission identity.Permission
+}
+
+func NewPermissionError(permission identity.Permission) PermissionError {
+	msg := fmt.Sprintf(" %d", permission) // todo
+	return PermissionError{errors.New(msg), permission}
 }
 
 type Controller struct {
 	mage.Controller
-	manager Manager
+	Manager Manager
 }
 
 func (controller *Controller) IsPublicMethod(method string) bool {
@@ -53,17 +63,12 @@ func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOut
 
 	method := ins[mage.KeyRequestMethod].Value()
 	if !controller.IsPublicMethod(method) {
-		u, ok := ctx.Value(identity.KeyUser).(identity.User)
+		_, ok := ctx.Value(identity.KeyUser).(identity.User)
 		if !ok {
 			log.Errorf(ctx, "non public controller requires authenticated user")
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
-
-		if !controller.factory.HoldsValidPermissions(u) {
-			return mage.Redirect{Status: http.StatusForbidden}
-		}
 	}
-
 
 	params := mage.RoutingParams(ctx)
 	key, hasKey := params["key"]
@@ -75,7 +80,7 @@ func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOut
 	case http.MethodGet:
 		if !hasKey {
 			if hasProperty {
-				return controller.HandlePropertyValues(ctx, out)
+				return controller.HandlePropertyValues(ctx, out, prop.Value())
 			}
 			return controller.HandleList(ctx, out)
 		}
@@ -102,8 +107,11 @@ func (controller *Controller) HandleGet(ctx context.Context, key string, out *ma
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-	resource, err := controller.manager.FromId(ctx, key)
+	resource, err := controller.Manager.FromId(ctx, key)
 	if err != nil {
+		if _, ok := err.(PermissionError); ok {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
 		if _, ok := err.(validators.FieldError); ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
@@ -117,16 +125,22 @@ func (controller *Controller) HandleGet(ctx context.Context, key string, out *ma
 	return mage.Redirect{Status: http.StatusOK}
 }
 
-func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
-
+func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput, prop string) mage.Redirect {
+	opts := ListOptions{}
+	opts.Property = prop
+	return controller.BuildPaging(ctx, out, opts, controller.Manager.ListOfProperties)
 }
 
 func (controller *Controller) HandleList(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+	opts := ListOptions{}
+	return controller.BuildPaging(ctx, out, opts, controller.Manager.ListOf)
+}
+
+func (controller *Controller) BuildPaging(ctx context.Context, out *mage.ResponseOutput, opts ListOptions, list func(context.Context, ListOptions) ([]interface{}, error)) mage.Redirect {
 	// build paging
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-	opts := ListOptions{}
 	opts.Size = 20
 	opts.Page = 0
 
@@ -161,11 +175,9 @@ func (controller *Controller) HandleList(ctx context.Context, out *mage.Response
 		}
 	}
 
-	// todo: handle property
-
-	results, err := controller.manager.ListOf(ctx, opts)
+	results, err := list(ctx, opts)
 	if err != nil {
-		return mage.Redirect{Status:http.StatusInternalServerError}
+		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
 
 	l := len(results)
@@ -186,7 +198,7 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-	resource, err := controller.manager.NewResource(ctx)
+	resource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
 		if _, ok := err.(validators.FieldError); ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -212,6 +224,9 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 	}
 
 	if err = resource.Create(ctx); err != nil {
+		if _, ok := err.(PermissionError); ok {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
 		errs.AddFieldError(err.(validators.FieldError))
 	}
 
@@ -222,7 +237,7 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
-	if err = controller.manager.Save(ctx, resource); err != nil {
+	if err = controller.Manager.Save(ctx, resource); err != nil {
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
 
@@ -241,7 +256,7 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
-	resource, err := controller.manager.FromId(ctx, key)
+	resource, err := controller.Manager.FromId(ctx, key)
 	if err != nil {
 		if _, ok := err.(validators.FieldError); ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -253,7 +268,7 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 	}
 
 	errs := validators.Errors{}
-	jresource, err := controller.manager.NewResource(ctx)
+	jresource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
@@ -274,7 +289,10 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
-	if err = controller.manager.Save(ctx, resource); err != nil {
+	if err = controller.Manager.Save(ctx, resource); err != nil {
+		if _, ok := err.(PermissionError); ok {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
 
@@ -287,7 +305,7 @@ func (controller *Controller) HandleDelete(ctx context.Context, key string, out 
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-	resource, err := controller.manager.NewResource(ctx)
+	resource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
 		if _, ok := err.(validators.FieldError); ok {
 			return mage.Redirect{Status: http.StatusBadRequest}
@@ -295,13 +313,15 @@ func (controller *Controller) HandleDelete(ctx context.Context, key string, out 
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
 
-	if err = controller.manager.Delete(ctx, resource); err != nil {
+	if err = controller.Manager.Delete(ctx, resource); err != nil {
+		if _, ok := err.(PermissionError); ok {
+			return mage.Redirect{Status: http.StatusForbidden}
+		}
 		return mage.Redirect{Status: http.StatusInternalServerError}
 	}
 
 	return mage.Redirect{Status: http.StatusOK}
 }
-
 
 func (controller *Controller) OnDestroy(ctx context.Context) {
 

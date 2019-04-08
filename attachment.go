@@ -3,6 +3,7 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
+	"distudio.com/page/resource/attachment"
 	"distudio.com/page/resource/content"
 	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
@@ -43,8 +44,8 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		errs := validators.Errors{}
-		attachment := content.Attachment{}
-		err := json.Unmarshal([]byte(j.Value()), &attachment)
+		att := attachment.Attachment{}
+		err := json.Unmarshal([]byte(j.Value()), &att)
 		if err != nil {
 			msg := fmt.Sprintf("bad json input: %s", err.Error())
 			errs.AddError("", errors.New(msg))
@@ -52,8 +53,8 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 
 		// attachment parent is required.
 		// if not attachment is to be specified the default value must be used
-		if attachment.Parent == "" {
-			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", resource.AttachmentGlobalParent)
+		if att.Parent == "" {
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", attachment.AttachmentGlobalParent)
 			errs.AddError("Parent", errors.New(msg))
 		}
 
@@ -65,12 +66,12 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		attachment.Created = time.Now().UTC()
-		attachment.Uploader = user.Username()
+		att.Created = time.Now().UTC()
+		att.Uploader = user.Username()
 
-		err = model.Create(ctx, &attachment)
+		err = model.Create(ctx, &att)
 		if err != nil {
-			log.Errorf(ctx, "error creating attachment %s: %s", attachment.Name, err)
+			log.Errorf(ctx, "error creating attachment %s: %s", att.Name, err)
 			errs.AddError("", err)
 			renderer := mage.JSONRenderer{}
 			renderer.Data = errs
@@ -79,7 +80,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &attachment
+		renderer.Data = &att
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
@@ -119,8 +120,8 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 				l = len(properties)
 				result = properties[:controller.GetCorrectCountForPaging(size, l)]
 			} else {
-				var attachments []*content.Attachment
-				q := model.NewQuery(&content.Attachment{})
+				var attachments []*attachment.Attachment
+				q := model.NewQuery(&attachment.Attachment{})
 				q = q.OffsetBy(page * size)
 				// get one more so we know if we are done
 				q = q.Limit(size + 1)
@@ -145,7 +146,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		id := param.Value()
-		item := content.Attachment{}
+		item := attachment.Attachment{}
 		err := model.FromStringID(ctx, &item, id, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
@@ -157,7 +158,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		}
 
 		response := struct {
-			*content.Attachment
+			*attachment.Attachment
 		}{&item}
 
 		renderer := mage.JSONRenderer{}
@@ -186,7 +187,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 		// handle the json request
 		jdata := j.Value()
 
-		jatt := content.Attachment{}
+		jatt := attachment.Attachment{}
 		err := json.Unmarshal([]byte(jdata), &jatt)
 		if err != nil {
 			log.Errorf(ctx, "malformed json: %s", err.Error())
@@ -200,15 +201,15 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			log.Errorf(ctx, "error convert id %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
-		attachment := content.Attachment{}
-		err = model.FromIntID(ctx, &attachment, idInt, nil)
+		att := attachment.Attachment{}
+		err = model.FromIntID(ctx, &att, idInt, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}
 		}
 
 		errs := validators.Errors{}
-		if attachment.Parent == "" {
-			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", content.AttachmentGlobalParent)
+		if att.Parent == "" {
+			msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", attachment.AttachmentGlobalParent)
 			errs.AddError("parent", errors.New(msg))
 		}
 
@@ -223,20 +224,20 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
 
-		attachment.Name = jatt.Name
-		attachment.Description = jatt.Description
-		attachment.ResourceUrl = jatt.ResourceUrl
-		attachment.Group = jatt.Group
-		attachment.Updated = time.Now().UTC()
+		att.Name = jatt.Name
+		att.Description = jatt.Description
+		att.ResourceUrl = jatt.ResourceUrl
+		att.Group = jatt.Group
+		att.Updated = time.Now().UTC()
 
-		err = model.Update(ctx, &attachment)
+		err = model.Update(ctx, &att)
 		if err != nil {
 			log.Errorf(ctx, "error updating multimedia %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
 		}
 
 		renderer := mage.JSONRenderer{}
-		renderer.Data = &attachment
+		renderer.Data = &att
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 
@@ -263,7 +264,7 @@ func (controller *AttachmentController) Process(ctx context.Context, out *mage.R
 			log.Errorf(ctx, "error convert id %s: %s", id, err.Error())
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
-		attachment := content.Attachment{}
+		attachment := attachment.Attachment{}
 		err = model.FromIntID(ctx, &attachment, idInt, nil)
 		if err == datastore.ErrNoSuchEntity {
 			return mage.Redirect{Status: http.StatusNotFound}

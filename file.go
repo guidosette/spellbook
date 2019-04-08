@@ -3,12 +3,13 @@ package page
 import (
 	"cloud.google.com/go/storage"
 	"distudio.com/mage"
-	"distudio.com/page/resource"
+	"distudio.com/page/resource/file"
+	"distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
-	"google.golang.org/appengine/file"
+	appengineFile "google.golang.org/appengine/file"
 	"google.golang.org/appengine/log"
 	"io/ioutil"
 	"net/http"
@@ -27,13 +28,13 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
 	case http.MethodPost:
-		u := ctx.Value(resource.KeyUser)
-		user, ok := u.(resource.User)
+		u := ctx.Value(identity.KeyUser)
+		user, ok := u.(identity.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(resource.PermissionLoadFiles) {
+		if !user.HasPermission(identity.PermissionLoadFiles) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -99,7 +100,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		filename := fmt.Sprintf("%s%s/%s", typ, namespace, name)
 
 		// handle the upload to Google Cloud Storage
-		bucket, err := file.DefaultBucketName(ctx)
+		bucket, err := appengineFile.DefaultBucketName(ctx)
 		if err != nil {
 			log.Errorf(ctx, "can't retrieve bucket name: %s", err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
@@ -139,19 +140,19 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(resource.KeyUser)
-		current, ok := me.(resource.User)
+		me := ctx.Value(identity.KeyUser)
+		current, ok := me.(identity.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(resource.PermissionReadContent) {
+		if !current.HasPermission(identity.PermissionReadContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
 		// handle the upload to Google Cloud Storage
-		bucket, err := file.DefaultBucketName(ctx)
+		bucket, err := appengineFile.DefaultBucketName(ctx)
 		if err != nil {
 			log.Errorf(ctx, "can't retrieve bucket name: %s", err.Error())
 			return mage.Redirect{Status: http.StatusInternalServerError}
@@ -183,7 +184,7 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 			var result interface{}
 			l := 0
 
-			files := make([]resource.File, 0, 0)
+			files := make([]file.File, 0, 0)
 			query := &storage.Query{}
 			it := handle.Objects(ctx, query)
 			for {
@@ -200,8 +201,8 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 				if len(s) > 0 {
 					name = s[len(s)-1]
 				}
-				file := resource.File{Name: name, ResourceUrl: obj.MediaLink}
-				files = append(files, file)
+				f := file.File{Name: name, ResourceUrl: obj.MediaLink}
+				files = append(files, f)
 			}
 
 			l = len(files)
