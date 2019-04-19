@@ -1,4 +1,4 @@
-package attachment
+package identity
 
 import (
 	"context"
@@ -13,19 +13,18 @@ import (
 type Manager struct{}
 
 func (manager Manager) NewResource(ctx context.Context) (resource.Resource, error) {
-	return &Attachment{}, nil
+	return &User{}, nil
 }
 
 func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource, error) {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionReadUser) {
+		return nil, resource.NewPermissionError(PermissionReadUser)
+	}
 
-	att := Attachment{}
+	att := User{}
 	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
-		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, err.Error())
+		log.Errorf(ctx, "could not retrieve user %s: %s", id, err.Error())
 		return nil, err
 	}
 
@@ -33,14 +32,13 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 }
 
 func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]resource.Resource, error) {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionReadUser) {
+		return nil, resource.NewPermissionError(PermissionReadUser)
+	}
 
-	var attachments []*Attachment
-	q := model.NewQuery(&Attachment{})
+	var users []*User
+	q := model.NewQuery(&User{})
 	q = q.OffsetBy(opts.Page * opts.Size)
 
 	if opts.Order != "" {
@@ -57,27 +55,26 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 
 	// get one more so we know if we are done
 	q = q.Limit(opts.Size + 1)
-	err := q.GetMulti(ctx, &attachments)
+	err := q.GetMulti(ctx, &users)
 	if err != nil {
 		return nil, err
 	}
 
-	resources := make([]resource.Resource, len(attachments))
-	for i := range attachments {
-		resources[i] = resource.Resource(attachments[i])
+	resources := make([]resource.Resource, len(users))
+	for i := range users {
+		resources[i] = resource.Resource(users[i])
 	}
 
 	return resources, nil
 }
 
 func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]string, error) {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionReadUser) {
+		return nil, resource.NewPermissionError(PermissionReadUser)
+	}
 
-	a := []string{"Group"} // list property accepted
+	a := []string{"group"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -87,8 +84,8 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 		return nil, errors.New("no property found")
 	}
 
-	var conts []*Attachment
-	q := model.NewQuery(&Attachment{})
+	var conts []*User
+	q := model.NewQuery(&User{})
 	q = q.OffsetBy(opts.Page * opts.Size)
 
 	if opts.Order != "" {
@@ -102,7 +99,6 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	if opts.FilterField != "" {
 		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
 	}
-
 
 	q = q.Distinct(name)
 	q = q.Limit(opts.Size + 1)
@@ -122,17 +118,18 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 }
 
 func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionEditContent) {
-	//	return resource.NewPermissionError(identity.PermissionEditContent)
-	//}
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionEditUser) {
+		return resource.NewPermissionError(PermissionEditUser)
+	}
 
-	attachment := res.(*Attachment)
+	user := res.(*User)
+	opts := model.CreateOptions{}
+	opts.WithStringId(user.Username())
 
-	err := model.Create(ctx, attachment)
+	err := model.CreateWithOptions(ctx, user, &opts)
 	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", attachment.Name, err)
+		log.Errorf(ctx, "error creating post %s: %s", user.Name, err)
 		return err
 	}
 
@@ -140,16 +137,15 @@ func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
 }
 
 func (manager Manager) Delete(ctx context.Context, res resource.Resource) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionEditContent) {
-	//	return resource.NewPermissionError(identity.PermissionEditContent)
-	//}
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionEditUser) {
+		return resource.NewPermissionError(PermissionEditUser)
+	}
 
-	attachment := res.(*Attachment)
-	err := model.Delete(ctx, attachment, nil)
+	user := res.(*User)
+	err := model.Delete(ctx, user, nil)
 	if err != nil {
-		log.Errorf(ctx, "error deleting attachment %s: %s", attachment.Name, err.Error())
+		log.Errorf(ctx, "error deleting user %s: %s", user.Name, err.Error())
 		return err
 	}
 

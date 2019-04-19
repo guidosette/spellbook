@@ -5,7 +5,7 @@ import (
 	"distudio.com/mage/model"
 	"distudio.com/page/resource/attachment"
 	"distudio.com/page/resource/content"
-	"distudio.com/page/resource/identity"
+	user2 "distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -31,13 +31,13 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
 	case http.MethodPost:
-		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
+		u := ctx.Value(user2.KeyUser)
+		user, ok := u.(user2.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionCreateContent) {
+		if !user.HasPermission(user2.PermissionCreateContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -136,14 +136,14 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(identity.KeyUser)
-		current, ok := me.(identity.User)
+		me := ctx.Value(user2.KeyUser)
+		current, ok := me.(user2.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionReadContent) {
+		if !current.HasPermission(user2.PermissionReadContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -291,13 +291,13 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 			return mage.Redirect{Status: http.StatusOK}
 		}
 	case http.MethodPut:
-		me := ctx.Value(identity.KeyUser)
-		current, ok := me.(identity.User)
+		me := ctx.Value(user2.KeyUser)
+		current, ok := me.(user2.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionEditContent) {
+		if !current.HasPermission(user2.PermissionEditContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -376,13 +376,13 @@ func (controller *ContentController) Process(ctx context.Context, out *mage.Resp
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusOK}
 	case http.MethodDelete:
-		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
+		u := ctx.Value(user2.KeyUser)
+		user, ok := u.(user2.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionEditContent) {
+		if !user.HasPermission(user2.PermissionEditContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 

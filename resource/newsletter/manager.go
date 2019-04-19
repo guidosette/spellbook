@@ -1,4 +1,4 @@
-package attachment
+package newsletter
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 type Manager struct{}
 
 func (manager Manager) NewResource(ctx context.Context) (resource.Resource, error) {
-	return &Attachment{}, nil
+	return &Newsletter{}, nil
 }
 
 func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource, error) {
@@ -23,9 +23,9 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
 	//}
 
-	att := Attachment{}
+	att := Newsletter{}
 	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
-		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, err.Error())
+		log.Errorf(ctx, "could not retrieve newsletter %s: %s", id, err.Error())
 		return nil, err
 	}
 
@@ -39,8 +39,8 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
 	//}
 
-	var attachments []*Attachment
-	q := model.NewQuery(&Attachment{})
+	var newsletters []*Newsletter
+	q := model.NewQuery(&Newsletter{})
 	q = q.OffsetBy(opts.Page * opts.Size)
 
 	if opts.Order != "" {
@@ -57,14 +57,14 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 
 	// get one more so we know if we are done
 	q = q.Limit(opts.Size + 1)
-	err := q.GetMulti(ctx, &attachments)
+	err := q.GetMulti(ctx, &newsletters)
 	if err != nil {
 		return nil, err
 	}
 
-	resources := make([]resource.Resource, len(attachments))
-	for i := range attachments {
-		resources[i] = resource.Resource(attachments[i])
+	resources := make([]resource.Resource, len(newsletters))
+	for i := range newsletters {
+		resources[i] = resource.Resource(newsletters[i])
 	}
 
 	return resources, nil
@@ -77,7 +77,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
 	//}
 
-	a := []string{"Group"} // list property accepted
+	a := []string{"Email"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -87,8 +87,8 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 		return nil, errors.New("no property found")
 	}
 
-	var conts []*Attachment
-	q := model.NewQuery(&Attachment{})
+	var conts []*Newsletter
+	q := model.NewQuery(&Newsletter{})
 	q = q.OffsetBy(opts.Page * opts.Size)
 
 	if opts.Order != "" {
@@ -102,7 +102,6 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	if opts.FilterField != "" {
 		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
 	}
-
 
 	q = q.Distinct(name)
 	q = q.Limit(opts.Size + 1)
@@ -128,11 +127,13 @@ func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
 	//	return resource.NewPermissionError(identity.PermissionEditContent)
 	//}
 
-	attachment := res.(*Attachment)
+	newsletter := res.(*Newsletter)
+	opts := model.CreateOptions{}
+	opts.WithStringId(newsletter.Email)
 
-	err := model.Create(ctx, attachment)
+	err := model.CreateWithOptions(ctx, newsletter, &opts)
 	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", attachment.Name, err)
+		log.Errorf(ctx, "error creating post %s: %s", newsletter.Name, err)
 		return err
 	}
 
@@ -146,10 +147,10 @@ func (manager Manager) Delete(ctx context.Context, res resource.Resource) error 
 	//	return resource.NewPermissionError(identity.PermissionEditContent)
 	//}
 
-	attachment := res.(*Attachment)
-	err := model.Delete(ctx, attachment, nil)
+	newsletter := res.(*Newsletter)
+	err := model.Delete(ctx, newsletter, nil)
 	if err != nil {
-		log.Errorf(ctx, "error deleting attachment %s: %s", attachment.Name, err.Error())
+		log.Errorf(ctx, "error deleting newsletter %s: %s", newsletter.Name, err.Error())
 		return err
 	}
 

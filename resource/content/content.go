@@ -21,7 +21,7 @@ type ByOrder []*Content
 
 /**
 ByOrder start
- */
+*/
 func (content ByOrder) Len() int {
 	return len(content)
 }
@@ -36,10 +36,10 @@ func (content ByOrder) Less(i, j int) bool {
 
 /**
 ByOrder end
- */
+*/
 
 type Content struct {
-	model.Model
+	model.Model `json:"-"`
 	resource.Resource
 	Slug        string
 	Name        string `model:"search"`

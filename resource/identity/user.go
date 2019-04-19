@@ -4,10 +4,14 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"distudio.com/mage/model"
+	"distudio.com/page/resource"
+	"distudio.com/page/validators"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/net/context"
+	"google.golang.org/appengine/datastore"
 	guser "google.golang.org/appengine/user"
 	"strings"
 	"time"
@@ -16,13 +20,15 @@ import (
 
 const (
 	tokenSeparator = "|"
-	hashLen = 28
+	hashLen        = 28
 	UsernameMaxLen = 32
 	UsernameMinLen = 4
+	salt           = "AnticmS"
 )
 
 type User struct {
-	model.Model
+	model.Model `json:"-"`
+	resource.Resource
 	Name       string
 	Surname    string
 	Email      string
@@ -31,15 +37,15 @@ type User struct {
 	Locale     string
 	Permission Permission
 	LastLogin  time.Time
-	gUser      *guser.User`model:"-",json:"-"`
+	gUser      *guser.User `model:"-",json:"-"`
 }
 
 func (user *User) UnmarshalJSON(data []byte) error {
 	// username (alias StringID) must be handled by the consumer of the model
 	alias := struct {
-		Name string `json:"name"`
-		Surname string `json:"surname"`
-		Email string `json:"email"`
+		Name        string   `json:"name"`
+		Surname     string   `json:"surname"`
+		Email       string   `json:"email"`
 		Permissions []string `json:"permissions"`
 	}{}
 
@@ -57,10 +63,10 @@ func (user *User) UnmarshalJSON(data []byte) error {
 
 func (user *User) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Name    string    `json:"name"`
-		Surname string    `json:"surname"`
-		Email   string    `json:"email"`
-		Permissions   []string `json:"permissions"`
+		Name        string   `json:"name"`
+		Surname     string   `json:"surname"`
+		Email       string   `json:"email"`
+		Permissions []string `json:"permissions"`
 	}
 
 	return json.Marshal(&struct {
@@ -69,10 +75,10 @@ func (user *User) MarshalJSON() ([]byte, error) {
 	}{
 		user.Username(),
 		Alias{
-			Name:    user.Name,
-			Surname: user.Surname,
-			Email:   user.Email,
-			Permissions:  user.Permissions(),
+			Name:        user.Name,
+			Surname:     user.Surname,
+			Email:       user.Email,
+			Permissions: user.Permissions(),
 		},
 	})
 }
@@ -114,7 +120,7 @@ func SanitizeUserName(username string) string {
 
 func (user User) hash() string {
 	now := time.Now().UTC().Unix()
-	s := fmt.Sprintf("%s%s%s%s%d",user.StringID(), tokenSeparator, user.Password, tokenSeparator, now)
+	s := fmt.Sprintf("%s%s%s%s%d", user.StringID(), tokenSeparator, user.Password, tokenSeparator, now)
 	hasher := sha1.New()
 	hasher.Write([]byte(s))
 	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
@@ -146,5 +152,104 @@ func (user User) GenerateToken() (string, error) {
 		return "", errors.New("can't generate token. User does not exists")
 	}
 	hash := user.hash()
-	return fmt.Sprintf("%s%s",hash, user.EncodedKey()), nil
+	return fmt.Sprintf("%s%s", hash, user.EncodedKey()), nil
+}
+
+func (user *User) Create(ctx context.Context) error {
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionCreateUser) {
+		return resource.NewPermissionError(PermissionCreateUser)
+	}
+
+	//if file.Parent == "" {
+	//	msg := fmt.Sprintf("file parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
+	//	return validators.NewFieldError("parent", errors.New(msg))
+	//}
+
+	username := SanitizeUserName(user.Username())
+	uf := validators.NewRawField("username", true, username)
+	uf.AddValidator(validators.DatastoreKeyNameValidator{})
+	if err := uf.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid username %s", user.Username)
+		return validators.NewFieldError("username", errors.New(msg))
+	}
+
+	pf := validators.NewRawField("password", true, user.Password)
+	pf.AddValidator(validators.LenValidator{MinLen: 8})
+
+	if err := pf.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid password %s for username %s", user.Password, username)
+		return validators.NewFieldError("password", errors.New(msg))
+	}
+
+	if !current.HasPermission(PermissionEditPermissions) {
+		// if you don't have PermissionEditPermissions, you can modify only PermissionEnabled
+		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
+			msg := fmt.Sprintf("you cannot modify permissions")
+			return validators.NewFieldError("permissions", errors.New(msg))
+		}
+	}
+
+	// check for user existence
+	err := model.FromStringID(ctx, &User{}, username, nil)
+	if err == nil {
+		// user already exists
+		msg := fmt.Sprintf("user %s already exists.", username)
+		return validators.NewFieldError("user", errors.New(msg))
+	}
+
+	if err != datastore.ErrNoSuchEntity {
+		// user already exists
+		msg := fmt.Sprintf("error retrieving user with username %s: %s.", username, err)
+		return validators.NewFieldError("user", errors.New(msg))
+	}
+
+	user.Password = HashPassword(user.Password, salt)
+
+	return nil
+}
+
+func (user *User) Update(ctx context.Context, res resource.Resource) error {
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionEditUser) {
+		return resource.NewPermissionError(PermissionEditUser)
+	}
+
+	other := res.(*User)
+	user.Name = other.Name
+
+	if other.Password != "" {
+		pf := validators.NewRawField("password", true, other.Password)
+		pf.AddValidator(validators.LenValidator{MinLen: 8})
+
+		if err := pf.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid password %s for username %s", other.Password, other.Username())
+			return validators.NewFieldError("user", errors.New(msg))
+		}
+		user.Password = other.Password
+	}
+
+	if other.Email != "" {
+		ef := validators.NewRawField("email", true, other.Email)
+		if err := ef.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid email address: %s", other.Email)
+			return validators.NewFieldError("user", errors.New(msg))
+		}
+		user.Email = other.Email
+	}
+
+	if !current.HasPermission(PermissionEditPermissions) && other.ChangedPermission(*user) {
+		msg := fmt.Sprintf("you cannot modify permissions")
+		return validators.NewFieldError("user", errors.New(msg))
+	}
+
+	user.Name = other.Name
+	user.Surname = other.Surname
+	user.Permission = other.Permission
+
+	return nil
+}
+
+func (user *User) Id() string {
+	return user.StringID()
 }

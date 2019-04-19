@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"distudio.com/mage"
 	"distudio.com/page/resource/file"
-	"distudio.com/page/resource/identity"
+	user2 "distudio.com/page/resource/identity"
 	"distudio.com/page/validators"
 	"fmt"
 	"golang.org/x/net/context"
@@ -28,13 +28,13 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 	method := ins[mage.KeyRequestMethod].Value()
 	switch method {
 	case http.MethodPost:
-		u := ctx.Value(identity.KeyUser)
-		user, ok := u.(identity.User)
+		u := ctx.Value(user2.KeyUser)
+		user, ok := u.(user2.User)
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !user.HasPermission(identity.PermissionLoadFiles) {
+		if !user.HasPermission(user2.PermissionLoadFiles) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
@@ -140,14 +140,14 @@ func (controller *FileController) Process(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusCreated}
 	case http.MethodGet:
 		// check if current user has permission
-		me := ctx.Value(identity.KeyUser)
-		current, ok := me.(identity.User)
+		me := ctx.Value(user2.KeyUser)
+		current, ok := me.(user2.User)
 
 		if !ok {
 			return mage.Redirect{Status: http.StatusUnauthorized}
 		}
 
-		if !current.HasPermission(identity.PermissionReadContent) {
+		if !current.HasPermission(user2.PermissionReadContent) {
 			return mage.Redirect{Status: http.StatusForbidden}
 		}
 
