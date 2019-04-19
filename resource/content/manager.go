@@ -58,6 +58,10 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 		q = q.OrderBy(opts.Order, dir)
 	}
 
+	if opts.FilterField != "" {
+		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+	}
+
 	// get one more so we know if we are done
 	q = q.Limit(opts.Size + 1)
 	err := q.GetMulti(ctx, &conts)
@@ -99,6 +103,10 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 			dir = model.DESC
 		}
 		q = q.OrderBy(opts.Order, dir)
+	}
+
+	if opts.FilterField != "" {
+		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
 	}
 
 	q = q.Distinct(name)

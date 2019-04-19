@@ -12,14 +12,17 @@ import (
 	"google.golang.org/appengine/log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type ListOptions struct {
-	Size       int
-	Page       int
-	Order      string
-	Descending bool
-	Property   string
+	Size        int
+	Page        int
+	Order       string // field
+	Descending  bool   // if -Order = desc
+	Property    string
+	FilterField string
+	FilterValue string
 }
 
 type Manager interface {
@@ -134,7 +137,7 @@ func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mag
 	}
 	results, err := controller.Manager.ListOfProperties(ctx, *opts)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
 	// output
@@ -188,7 +191,9 @@ func (controller *Controller) BuildOptions(ctx context.Context, out *mage.Respon
 	ins := mage.InputsFromContext(ctx)
 	if pin, ok := ins["page"]; ok {
 		if num, err := strconv.Atoi(pin.Value()); err == nil {
-			opts.Page = num
+			if num > 0 {
+				opts.Page = num
+			}
 		} else {
 			msg := fmt.Sprintf("invalid page value : %s. page must be an integer", pin)
 			return nil, errors.New(msg)
@@ -197,7 +202,9 @@ func (controller *Controller) BuildOptions(ctx context.Context, out *mage.Respon
 
 	if sin, ok := ins["results"]; ok {
 		if num, err := strconv.Atoi(sin.Value()); err == nil {
-			opts.Size = num
+			if num > 0 {
+				opts.Size = num
+			}
 		} else {
 			msg := fmt.Sprintf("invalid result size value : %s. results must be an integer", sin)
 			return nil, errors.New(msg)
@@ -213,6 +220,16 @@ func (controller *Controller) BuildOptions(ctx context.Context, out *mage.Respon
 			opts.Order = oins[1:]
 		} else {
 			opts.Order = oins
+		}
+	}
+
+	// filter is not mandatory
+	if fin, ok := ins["filter"]; ok {
+		filter := fin.Value()
+		filters := strings.Split(filter, "=")
+		if len(filter) > 1 {
+			opts.FilterField = filters[0]
+			opts.FilterValue = filters[1]
 		}
 	}
 
