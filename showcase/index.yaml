@@ -12,6 +12,22 @@ indexes:
 - kind: Content
   properties:
   - name: Locale
+  - name: Name
+
+- kind: Content
+  properties:
+  - name: Locale
+  - name: Name
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: Locale
+  - name: Order
+
+- kind: Content
+  properties:
+  - name: Locale
   - name: asc
 
 - kind: Content
