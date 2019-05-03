@@ -4,7 +4,8 @@ import (
 	"cloud.google.com/go/storage"
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
+	"distudio.com/page"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"errors"
 	"fmt"
@@ -14,17 +15,16 @@ import (
 
 type File struct {
 	model.Model `json:"-"`
-	resource.Resource
 	Name        string `json:"name"`
 	ResourceUrl string `json:"resourceUrl"`
 }
 
 func (file *File) Create(ctx context.Context) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionCreateContent) {
-	//	return resource.NewPermissionError(identity.PermissionCreateContent)
-	//}
+
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionLoadFiles) {
+		return validators.NewPermissionError(identity.PermissionLoadFiles)
+	}
 
 	ins := mage.InputsFromContext(ctx)
 
@@ -84,6 +84,7 @@ func (file *File) Create(ctx context.Context) error {
 	filename := fmt.Sprintf("%s%s/%s", typ, namespace, name)
 
 	// handle the upload to Google Cloud Storage
+	// todo: use account service json from configuration
 	bucket, err := appengineFile.DefaultBucketName(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("can't retrieve bucket name: %s", err.Error())
@@ -121,12 +122,12 @@ func (file *File) Create(ctx context.Context) error {
 	return nil
 }
 
-func (file *File) Update(ctx context.Context, res resource.Resource) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionEditContent) {
-	//	return resource.NewPermissionError(identity.PermissionEditContent)
-	//}
+func (file *File) Update(ctx context.Context, res page.Resource) error {
+
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionLoadFiles) {
+		return validators.NewPermissionError(identity.PermissionLoadFiles)
+	}
 
 	other := res.(*File)
 	file.Name = other.Name

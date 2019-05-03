@@ -3,9 +3,10 @@ package content
 import (
 	"context"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
-	"distudio.com/page/resource/attachment"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page"
+	"distudio.com/page/attachment"
+	"distudio.com/page/identity"
+	"distudio.com/page/validators"
 	"errors"
 	"google.golang.org/appengine/log"
 	"reflect"
@@ -14,14 +15,14 @@ import (
 
 type Manager struct{}
 
-func (manager Manager) NewResource(ctx context.Context) (resource.Resource, error) {
+func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Content{}, nil
 }
 
-func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource, error) {
+func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	cont := Content{}
@@ -40,10 +41,11 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 	return &cont, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]resource.Resource, error) {
+func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	var conts []*Content
@@ -69,18 +71,19 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]resource.Resource, len(conts))
+	resources := make([]page.Resource, len(conts))
 	for i := range conts {
-		resources[i] = resource.Resource(conts[i])
+		resources[i] = page.Resource(conts[i])
 	}
 
 	return resources, nil
 }
 
-func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]string, error) {
+func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	a := []string{"Category", "Topic", "Name"} // list property accepted
@@ -126,10 +129,11 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Save(ctx context.Context, res page.Resource) error {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return resource.NewPermissionError(identity.PermissionEditContent)
+		return validators.NewPermissionError(identity.PermissionEditContent)
 	}
 
 	content := res.(*Content)
@@ -153,10 +157,11 @@ func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
 	return nil
 }
 
-func (manager Manager) Delete(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return resource.NewPermissionError(identity.PermissionEditContent)
+		return validators.NewPermissionError(identity.PermissionEditContent)
 	}
 
 	content := res.(*Content)
@@ -176,10 +181,10 @@ func (manager Manager) Delete(ctx context.Context, res resource.Resource) error 
 		return err
 	}
 
-	for _, attachment := range attachments {
-		err = model.Delete(ctx, attachment, nil)
+	for _, att := range attachments {
+		err = model.Delete(ctx, att, nil)
 		if err != nil {
-			log.Errorf(ctx, "error deleting attachment %+v: %s", attachment, err.Error())
+			log.Errorf(ctx, "error deleting attachment %s: %s", att.Name, err.Error())
 			return err
 		}
 	}

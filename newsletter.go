@@ -3,9 +3,9 @@ package page
 import (
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource/content"
-	"distudio.com/page/resource/identity"
-	"distudio.com/page/resource/newsletter"
+	"distudio.com/page/content"
+	"distudio.com/page/identity"
+	"distudio.com/page/newsletter"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"

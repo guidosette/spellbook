@@ -2,7 +2,7 @@ package newsletter
 
 import (
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
+	"distudio.com/page"
 	"distudio.com/page/validators"
 	"errors"
 	"fmt"
@@ -15,7 +15,7 @@ var ZeroTime = time.Time{}
 
 type Newsletter struct {
 	model.Model `json:"-"`
-	resource.Resource
+	page.Resource
 	Email string `json:"email"`
 }
 
@@ -52,7 +52,7 @@ func (newsletter *Newsletter) Create(ctx context.Context) error {
 	return nil
 }
 
-func (newsletter *Newsletter) Update(ctx context.Context, res resource.Resource) error {
+func (newsletter *Newsletter) Update(ctx context.Context, res page.Resource) error {
 	//// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionEditContent) {

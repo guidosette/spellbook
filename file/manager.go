@@ -3,9 +3,11 @@ package file
 import (
 	"context"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page"
+	"distudio.com/page/identity"
+	"distudio.com/page/validators"
 	"errors"
+	"fmt"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
@@ -13,14 +15,15 @@ import (
 
 type Manager struct{}
 
-func (manager Manager) NewResource(ctx context.Context) (resource.Resource, error) {
+func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &File{}, nil
 }
 
-func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource, error) {
+func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	att := File{}
@@ -32,10 +35,11 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 	return &att, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]resource.Resource, error) {
+func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	var files []*File
@@ -51,7 +55,7 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 	}
 
 	if opts.FilterField != "" {
-		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+		q = q.WithField(fmt.Sprintf("%s =", opts.FilterField), opts.FilterValue)
 	}
 
 	// get one more so we know if we are done
@@ -61,18 +65,18 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]resource.Resource, len(files))
+	resources := make([]page.Resource, len(files))
 	for i := range files {
-		resources[i] = resource.Resource(files[i])
+		resources[i] = page.Resource(files[i])
 	}
 
 	return resources, nil
 }
 
-func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]string, error) {
+func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, resource.NewPermissionError(identity.PermissionReadContent)
+		return nil, validators.NewPermissionError(identity.PermissionReadContent)
 	}
 
 	a := []string{"Name"} // list property accepted
@@ -101,7 +105,6 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
 	}
 
-
 	q = q.Distinct(name)
 	q = q.Limit(opts.Size + 1)
 	err := q.GetAll(ctx, &conts)
@@ -119,10 +122,10 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return resource.NewPermissionError(identity.PermissionEditContent)
+		return validators.NewPermissionError(identity.PermissionEditContent)
 	}
 
 	file := res.(*File)
@@ -136,10 +139,11 @@ func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
 	return nil
 }
 
-func (manager Manager) Delete(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
+
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return resource.NewPermissionError(identity.PermissionEditContent)
+		return validators.NewPermissionError(identity.PermissionEditContent)
 	}
 
 	file := res.(*File)

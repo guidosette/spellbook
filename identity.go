@@ -4,7 +4,7 @@ import (
 	"context"
 	"distudio.com/mage"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"

@@ -44,7 +44,6 @@ handlers:
 - url: /api/superuser/.*
   script: _go_app
   login: required
-  secure: always
 
 - url: /.*
   script: _go_app

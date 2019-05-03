@@ -3,7 +3,7 @@ package attachment
 import (
 	"context"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
+	"distudio.com/page"
 	"errors"
 	"google.golang.org/appengine/log"
 	"reflect"
@@ -12,11 +12,11 @@ import (
 
 type Manager struct{}
 
-func (manager Manager) NewResource(ctx context.Context) (resource.Resource, error) {
+func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Attachment{}, nil
 }
 
-func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource, error) {
+func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -32,7 +32,7 @@ func (manager Manager) FromId(ctx context.Context, id string) (resource.Resource
 	return &att, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([]resource.Resource, error) {
+func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -62,15 +62,15 @@ func (manager Manager) ListOf(ctx context.Context, opts resource.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]resource.Resource, len(attachments))
+	resources := make([]page.Resource, len(attachments))
 	for i := range attachments {
-		resources[i] = resource.Resource(attachments[i])
+		resources[i] = page.Resource(attachments[i])
 	}
 
 	return resources, nil
 }
 
-func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListOptions) ([]string, error) {
+func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -121,7 +121,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts resource.ListO
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionEditContent) {
@@ -139,7 +139,7 @@ func (manager Manager) Save(ctx context.Context, res resource.Resource) error {
 	return nil
 }
 
-func (manager Manager) Delete(ctx context.Context, res resource.Resource) error {
+func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionEditContent) {

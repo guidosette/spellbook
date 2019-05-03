@@ -3,6 +3,7 @@ package page
 import (
 	"context"
 	"distudio.com/mage"
+	"distudio.com/page/internal/page"
 	"fmt"
 	"golang.org/x/text/language"
 	"net/http"
@@ -51,7 +52,7 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 		}
 	})
 
-	for _, l := range application().options.Languages {
+	for _, l := range page.Application().Options().Languages {
 		// else a language has been specified, prepend the url with the language param
 		lurl := fmt.Sprintf("/%s%s", l.String(), url)
 		// add the language-corrected route to the router

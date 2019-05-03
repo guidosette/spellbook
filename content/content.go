@@ -3,9 +3,9 @@ package content
 import (
 	"context"
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
-	"distudio.com/page/resource/attachment"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page"
+	"distudio.com/page/attachment"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -40,7 +40,6 @@ ByOrder end
 
 type Content struct {
 	model.Model `json:"-"`
-	resource.Resource
 	Slug        string
 	Name        string `model:"search"`
 	Title       string `model:"search"`
@@ -176,7 +175,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 func (content *Content) Create(ctx context.Context) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionCreateContent) {
-		return resource.NewPermissionError(identity.PermissionCreateContent)
+		return validators.NewPermissionError(identity.PermissionCreateContent)
 	}
 
 	content.Created = time.Now().UTC()
@@ -216,10 +215,10 @@ func (content *Content) Create(ctx context.Context) error {
 	return nil
 }
 
-func (content *Content) Update(ctx context.Context, res resource.Resource) error {
+func (content *Content) Update(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return resource.NewPermissionError(identity.PermissionEditContent)
+		return validators.NewPermissionError(identity.PermissionEditContent)
 	}
 
 	other := res.(*Content)

@@ -1,12 +1,11 @@
-package distudiodesign
+package showcase
 
 import (
 	"context"
 	"distudio.com/mage"
 	"distudio.com/page"
-	"distudio.com/page/resource"
-	"distudio.com/page/resource/content"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page/content"
+	"distudio.com/page/identity"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -46,14 +45,17 @@ func init() {
 	}, nil)
 
 	instance.Router.SetUniversalRoute("/api/content", func(ctx context.Context) mage.Controller {
-		c := &resource.Controller{}
+		c := &page.Controller{}
 		m := content.Manager{}
 		c.Manager = m
 		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/content/:slug", func(ctx context.Context) mage.Controller {
-		return &page.ContentController{}
+		c := &page.Controller{}
+		m := content.Manager{}
+		c.Manager = m
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/languages", func(ctx context.Context) mage.Controller {

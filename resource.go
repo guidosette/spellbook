@@ -1,9 +1,9 @@
-package resource
+package page
 
 import (
 	"context"
 	"distudio.com/mage"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
@@ -41,21 +41,12 @@ type Resource interface {
 	Update(ctx context.Context, other Resource) error
 }
 
-type PermissionError struct {
-	error
-	message string
-}
-
-func NewPermissionError(permission identity.Permission) PermissionError {
-	msg := fmt.Sprintf("%s", identity.Permissions[permission])
-	return PermissionError{errors.New(msg), msg}
-}
-
 type Controller struct {
 	mage.Controller
 	Manager Manager
 }
 
+// todo: find an elegant way to handle authentication
 func (controller *Controller) IsPublicMethod(method string) bool {
 	return true
 }
@@ -112,22 +103,16 @@ func (controller *Controller) HandleGet(ctx context.Context, key string, out *ma
 
 	resource, err := controller.Manager.FromId(ctx, key)
 	if err != nil {
-		if _, ok := err.(PermissionError); ok {
-			return mage.Redirect{Status: http.StatusForbidden}
-		}
-		if _, ok := err.(validators.FieldError); ok {
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-		if err == datastore.ErrNoSuchEntity {
-			return mage.Redirect{Status: http.StatusNotFound}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	renderer.Data = resource
 	return mage.Redirect{Status: http.StatusOK}
 }
 
+// Called on GET requests.
+// This handler is called when the available values of one property of a resource are requested
+// Returns a list of the values that the requested property can assume
 func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput, prop string) mage.Redirect {
 	opts := &ListOptions{}
 	opts.Property = prop
@@ -135,9 +120,10 @@ func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mag
 	if err != nil {
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
+
 	results, err := controller.Manager.ListOfProperties(ctx, *opts)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return controller.ErrorToStatus(err)
 	}
 
 	// output
@@ -147,24 +133,31 @@ func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mag
 		count = l
 	}
 
+
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 	renderer.Data = struct {
 		Items interface{} `json:"items"`
 		More  bool        `json:"more"`
 	}{results[:count], l > opts.Size}
+
 	return mage.Redirect{Status: http.StatusOK}
 }
 
+
+// Called on GET requests
+// This handler is called when a list of resources is requested.
+// Returns a paged result
 func (controller *Controller) HandleList(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 	opts := &ListOptions{}
 	opts, err := controller.BuildOptions(ctx, out, opts)
 	if err != nil {
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
+
 	results, err := controller.Manager.ListOf(ctx, *opts)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	// output
@@ -180,9 +173,11 @@ func (controller *Controller) HandleList(ctx context.Context, out *mage.Response
 		Items interface{} `json:"items"`
 		More  bool        `json:"more"`
 	}{results[:count], l > opts.Size}
+
 	return mage.Redirect{Status: http.StatusOK}
 }
 
+// Builds the paging options, ordering and standard inputs of a given request
 func (controller *Controller) BuildOptions(ctx context.Context, out *mage.ResponseOutput, opts *ListOptions) (*ListOptions, error) {
 	// build paging
 	opts.Size = 20
@@ -236,17 +231,14 @@ func (controller *Controller) BuildOptions(ctx context.Context, out *mage.Respon
 	return opts, nil
 }
 
-// handles a post request, ensuring the creation of the resourse
+// handles a POST request, ensuring the creation of the resource.
 func (controller *Controller) HandlePost(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
 	resource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
-		if _, ok := err.(validators.FieldError); ok {
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	errs := validators.Errors{}
@@ -267,10 +259,11 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 	}
 
 	if err = resource.Create(ctx); err != nil {
-		if _, ok := err.(PermissionError); ok {
-			return mage.Redirect{Status: http.StatusForbidden}
+		if fe, ok := err.(validators.FieldError); !ok {
+			errs.AddFieldError(fe)
+		} else {
+			return controller.ErrorToStatus(err)
 		}
-		errs.AddFieldError(err.(validators.FieldError))
 	}
 
 	// check for client input erros
@@ -281,7 +274,7 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 	}
 
 	if err = controller.Manager.Save(ctx, resource); err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	renderer.Data = resource
@@ -301,19 +294,13 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 
 	resource, err := controller.Manager.FromId(ctx, key)
 	if err != nil {
-		if _, ok := err.(validators.FieldError); ok {
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-		if err == datastore.ErrNoSuchEntity {
-			return mage.Redirect{Status: http.StatusNotFound}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	errs := validators.Errors{}
 	jresource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	err = json.Unmarshal([]byte(j.Value()), &jresource)
@@ -333,34 +320,25 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 	}
 
 	if err = controller.Manager.Save(ctx, resource); err != nil {
-		if _, ok := err.(PermissionError); ok {
-			return mage.Redirect{Status: http.StatusForbidden}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	renderer.Data = resource
 	return mage.Redirect{Status: http.StatusOK}
 }
 
-// Handles delete requests
+// Handles DELETE requests over a Resource type
 func (controller *Controller) HandleDelete(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
 	resource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
-		if _, ok := err.(validators.FieldError); ok {
-			return mage.Redirect{Status: http.StatusBadRequest}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	if err = controller.Manager.Delete(ctx, resource); err != nil {
-		if _, ok := err.(PermissionError); ok {
-			return mage.Redirect{Status: http.StatusForbidden}
-		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return controller.ErrorToStatus(err)
 	}
 
 	return mage.Redirect{Status: http.StatusOK}
@@ -368,4 +346,21 @@ func (controller *Controller) HandleDelete(ctx context.Context, key string, out 
 
 func (controller *Controller) OnDestroy(ctx context.Context) {
 
+}
+
+// Converts an error to its equivalent HTTP representation
+func (controller *Controller) ErrorToStatus(err error) mage.Redirect {
+	switch err.(type) {
+	case validators.UnsupportedError:
+		return mage.Redirect{Status: http.StatusMethodNotAllowed}
+	case validators.FieldError:
+		return mage.Redirect{Status: http.StatusBadRequest}
+	case validators.PermissionError:
+		return mage.Redirect{Status: http.StatusForbidden}
+	default:
+		if err == datastore.ErrNoSuchEntity {
+			return mage.Redirect{Status: http.StatusNotFound}
+		}
+		return mage.Redirect{Status: http.StatusInternalServerError}
+	}
 }

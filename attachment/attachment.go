@@ -2,8 +2,8 @@ package attachment
 
 import (
 	"distudio.com/mage/model"
-	"distudio.com/page/resource"
-	"distudio.com/page/resource/identity"
+	"distudio.com/page"
+	"distudio.com/page/identity"
 	"distudio.com/page/validators"
 	"encoding/json"
 	"fmt"
@@ -24,7 +24,6 @@ const (
 
 type Attachment struct {
 	model.Model `json:"-"`
-	resource.Resource
 	Name        string    `json:"name"`
 	Description string    `json:"description";model:"noindex"`
 	ResourceUrl string    `json:"resourceUrl";model:"noindex"`
@@ -122,7 +121,7 @@ func (attachment *Attachment) Create(ctx context.Context) error {
 	return nil
 }
 
-func (attachment *Attachment) Update(ctx context.Context, res resource.Resource) error {
+func (attachment *Attachment) Update(ctx context.Context, res page.Resource) error {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionEditContent) {
