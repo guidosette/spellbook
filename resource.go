@@ -3,8 +3,6 @@ package page
 import (
 	"context"
 	"distudio.com/mage"
-	"distudio.com/page/identity"
-	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,23 +44,11 @@ type Controller struct {
 	Manager Manager
 }
 
-// todo: find an elegant way to handle authentication
-func (controller *Controller) IsPublicMethod(method string) bool {
-	return true
-}
-
 func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
 
 	ins := mage.InputsFromContext(ctx)
 
 	method := ins[mage.KeyRequestMethod].Value()
-	if !controller.IsPublicMethod(method) {
-		_, ok := ctx.Value(identity.KeyUser).(identity.User)
-		if !ok {
-			log.Errorf(ctx, "non public controller requires authenticated user")
-			return mage.Redirect{Status: http.StatusUnauthorized}
-		}
-	}
 
 	params := mage.RoutingParams(ctx)
 	key, hasKey := params["key"]
@@ -241,7 +227,7 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 		return controller.ErrorToStatus(err)
 	}
 
-	errs := validators.Errors{}
+	errs := Errors{}
 	// get the content data
 	ins := mage.InputsFromContext(ctx)
 	j, ok := ins[mage.KeyRequestJSON]
@@ -259,7 +245,7 @@ func (controller *Controller) HandlePost(ctx context.Context, out *mage.Response
 	}
 
 	if err = resource.Create(ctx); err != nil {
-		if fe, ok := err.(validators.FieldError); !ok {
+		if fe, ok := err.(FieldError); !ok {
 			errs.AddFieldError(fe)
 		} else {
 			return controller.ErrorToStatus(err)
@@ -297,7 +283,7 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 		return controller.ErrorToStatus(err)
 	}
 
-	errs := validators.Errors{}
+	errs := Errors{}
 	jresource, err := controller.Manager.NewResource(ctx)
 	if err != nil {
 		return controller.ErrorToStatus(err)
@@ -310,7 +296,7 @@ func (controller *Controller) HandlePut(ctx context.Context, key string, out *ma
 	}
 
 	if err = resource.Update(ctx, jresource); err != nil {
-		errs.AddFieldError(err.(validators.FieldError))
+		errs.AddFieldError(err.(FieldError))
 	}
 
 	if errs.HasErrors() {
@@ -351,11 +337,11 @@ func (controller *Controller) OnDestroy(ctx context.Context) {
 // Converts an error to its equivalent HTTP representation
 func (controller *Controller) ErrorToStatus(err error) mage.Redirect {
 	switch err.(type) {
-	case validators.UnsupportedError:
+	case UnsupportedError:
 		return mage.Redirect{Status: http.StatusMethodNotAllowed}
-	case validators.FieldError:
+	case FieldError:
 		return mage.Redirect{Status: http.StatusBadRequest}
-	case validators.PermissionError:
+	case PermissionError:
 		return mage.Redirect{Status: http.StatusForbidden}
 	default:
 		if err == datastore.ErrNoSuchEntity {

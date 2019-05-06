@@ -6,7 +6,6 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/attachment"
 	"distudio.com/page/identity"
-	"distudio.com/page/validators"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -175,7 +174,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 func (content *Content) Create(ctx context.Context) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionCreateContent) {
-		return validators.NewPermissionError(identity.PermissionCreateContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
 	}
 
 	content.Created = time.Now().UTC()
@@ -186,7 +185,7 @@ func (content *Content) Create(ctx context.Context) error {
 
 	if content.Title == "" || content.Name == "" {
 		msg := fmt.Sprintf(" title and name can't be empty")
-		return validators.NewFieldError("title", errors.New(msg))
+		return page.NewFieldError("title", errors.New(msg))
 	}
 
 	if content.Slug == "" {
@@ -200,12 +199,12 @@ func (content *Content) Create(ctx context.Context) error {
 	count, err := q.Count(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("error verifying slug uniqueness: %s", err.Error())
-		return validators.NewFieldError("slug", errors.New(msg))
+		return page.NewFieldError("slug", errors.New(msg))
 	}
 
 	if count > 0 {
 		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
-		return validators.NewFieldError("slug", errors.New(msg))
+		return page.NewFieldError("slug", errors.New(msg))
 	}
 
 	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
@@ -218,7 +217,7 @@ func (content *Content) Create(ctx context.Context) error {
 func (content *Content) Update(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return validators.NewPermissionError(identity.PermissionEditContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	other := res.(*Content)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/validators"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
@@ -22,7 +21,7 @@ func (manager UserManager) FromId(ctx context.Context, id string) (page.Resource
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
-		return nil, validators.NewPermissionError(PermissionReadUser)
+		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
 	}
 
 	att := User{}
@@ -38,7 +37,7 @@ func (manager UserManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
-		return nil, validators.NewPermissionError(PermissionReadUser)
+		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
 	}
 
 	var users []*User
@@ -75,7 +74,7 @@ func (manager UserManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 func (manager UserManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
-		return nil, validators.NewPermissionError(PermissionReadUser)
+		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
 	}
 
 	a := []string{"group"}
@@ -125,7 +124,7 @@ func (manager UserManager) Save(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
-		return validators.NewPermissionError(PermissionEditUser)
+		return page.NewPermissionError(PermissionName(PermissionEditUser))
 	}
 
 	user := res.(*User)
@@ -144,7 +143,7 @@ func (manager UserManager) Save(ctx context.Context, res page.Resource) error {
 func (manager UserManager) Delete(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
-		return validators.NewPermissionError(PermissionEditUser)
+		return page.NewPermissionError(PermissionName(PermissionEditUser))
 	}
 
 	user := res.(*User)

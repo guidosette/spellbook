@@ -3,7 +3,6 @@ package page
 import (
 	"context"
 	"distudio.com/mage"
-	"distudio.com/page/internal/page"
 	"fmt"
 	"golang.org/x/text/language"
 	"net/http"
@@ -24,17 +23,17 @@ func NewInternationalRouter() InternationalRouter {
 	return router
 }
 
-func (router *InternationalRouter) SetRoutes(urls []string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
+func (router InternationalRouter) SetRoutes(urls []string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
 	for _, v := range urls {
 		router.SetRoute(v, handler, authenticator)
 	}
 }
 
-func (router *InternationalRouter) SetUniversalRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
+func (router InternationalRouter) SetUniversalRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
 	router.DefaultRouter.SetRoute(url, handler, authenticator)
 }
 
-func (router *InternationalRouter) SetRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
+func (router InternationalRouter) SetRoute(url string, handler func(ctx context.Context) mage.Controller, authenticator mage.Authenticator) {
 
 	// if no language is specified, redirect to the default language
 	router.Router.SetRoute(url, func(ctx context.Context) (interface{}, context.Context) {
@@ -52,7 +51,7 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 		}
 	})
 
-	for _, l := range page.Application().Options().Languages {
+	for _, l := range Application().Options().Languages {
 		// else a language has been specified, prepend the url with the language param
 		lurl := fmt.Sprintf("/%s%s", l.String(), url)
 		// add the language-corrected route to the router
@@ -85,7 +84,7 @@ func (router *InternationalRouter) SetRoute(url string, handler func(ctx context
 	}
 }
 
-func (router *InternationalRouter) RouteForPath(ctx context.Context, path string) (context.Context, error, mage.Controller) {
+func (router InternationalRouter) RouteForPath(ctx context.Context, path string) (context.Context, error, mage.Controller) {
 	c, err, controller := router.Router.RouteForPath(ctx, path)
 	if err != nil {
 		return c, err, nil

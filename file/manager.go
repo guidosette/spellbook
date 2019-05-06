@@ -5,7 +5,6 @@ import (
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"distudio.com/page/identity"
-	"distudio.com/page/validators"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
@@ -23,7 +22,7 @@ func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, er
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	att := File{}
@@ -39,7 +38,7 @@ func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]pag
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	var files []*File
@@ -76,7 +75,7 @@ func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]pag
 func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	a := []string{"Name"} // list property accepted
@@ -125,7 +124,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return validators.NewPermissionError(identity.PermissionEditContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	file := res.(*File)
@@ -143,7 +142,7 @@ func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return validators.NewPermissionError(identity.PermissionEditContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	file := res.(*File)

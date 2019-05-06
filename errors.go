@@ -1,7 +1,6 @@
-package validators
+package page
 
 import (
-	"distudio.com/page/identity"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,14 +56,14 @@ func (err FieldError) MarshalJSON() ([]byte, error) {
 // Permission error denotes that the requested action cannot be performed
 // because the requestor lacks the required permission to do so
 type PermissionError struct {
-	identity.Permission
+	permission string
 }
 
 func (err PermissionError) Error() string {
-	return fmt.Sprintf("missing permission: %s", err.Permission)
+	return fmt.Sprintf("missing permission: %s", err.permission)
 }
 
-func NewPermissionError(permission identity.Permission) PermissionError {
+func NewPermissionError(permission string) PermissionError {
 	return PermissionError{permission}
 }
 

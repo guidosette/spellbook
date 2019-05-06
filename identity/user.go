@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/validators"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -33,7 +32,7 @@ type User struct {
 	Surname    string
 	Email      string
 	Password   string
-	Token      Token
+	Token      string
 	Locale     string
 	Permission Permission
 	LastLogin  time.Time
@@ -167,32 +166,32 @@ func (user *User) Id() string {
 func (user *User) Create(ctx context.Context) error {
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionCreateUser) {
-		return validators.NewPermissionError(PermissionCreateUser)
+		return page.NewPermissionError(PermissionName(PermissionCreateUser))
 	}
 
 	username := SanitizeUserName(user.Username())
 
-	uf := validators.NewRawField("username", true, username)
-	uf.AddValidator(validators.DatastoreKeyNameValidator{})
+	uf := page.NewRawField("username", true, username)
+	uf.AddValidator(page.DatastoreKeyNameValidator{})
 
 	// validate the username. Accepted values for the username are implementation dependent
 	if err := uf.Validate(); err != nil {
 		msg := fmt.Sprintf("invalid username %s", user.Username())
-		return validators.NewFieldError("username", errors.New(msg))
+		return page.NewFieldError("username", errors.New(msg))
 	}
 
-	pf := validators.NewRawField("password", true, user.Password)
-	pf.AddValidator(validators.LenValidator{MinLen: 8})
+	pf := page.NewRawField("password", true, user.Password)
+	pf.AddValidator(page.LenValidator{MinLen: 8})
 
 	if err := pf.Validate(); err != nil {
 		msg := fmt.Sprintf("invalid password %s for username %s", user.Password, username)
-		return validators.NewFieldError("password", errors.New(msg))
+		return page.NewFieldError("password", errors.New(msg))
 	}
 
 	if !current.HasPermission(PermissionEditPermissions) {
 		// user without the EditPermission perm can only enable or disable a user
 		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
-			return validators.NewPermissionError(PermissionEditPermissions)
+			return page.NewPermissionError(PermissionName(PermissionEditPermissions))
 		}
 	}
 
@@ -202,7 +201,7 @@ func (user *User) Create(ctx context.Context) error {
 	if err == nil {
 		// user already exists
 		msg := fmt.Sprintf("user %s already exists.", username)
-		return validators.NewFieldError("user", errors.New(msg))
+		return page.NewFieldError("user", errors.New(msg))
 	}
 
 	if err != datastore.ErrNoSuchEntity {
@@ -220,34 +219,34 @@ func (user *User) Update(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
-		return validators.NewPermissionError(PermissionEditUser)
+		return page.NewPermissionError(PermissionName(PermissionEditUser))
 	}
 
 	other := res.(*User)
 	user.Name = other.Name
 
 	if other.Password != "" {
-		pf := validators.NewRawField("password", true, other.Password)
-		pf.AddValidator(validators.LenValidator{MinLen: 8})
+		pf := page.NewRawField("password", true, other.Password)
+		pf.AddValidator(page.LenValidator{MinLen: 8})
 
 		if err := pf.Validate(); err != nil {
 			msg := fmt.Sprintf("invalid password %s for username %s", other.Password, other.Username())
-			return validators.NewFieldError("user", errors.New(msg))
+			return page.NewFieldError("user", errors.New(msg))
 		}
 		user.Password = other.Password
 	}
 
 	if other.Email != "" {
-		ef := validators.NewRawField("email", true, other.Email)
+		ef := page.NewRawField("email", true, other.Email)
 		if err := ef.Validate(); err != nil {
 			msg := fmt.Sprintf("invalid email address: %s", other.Email)
-			return validators.NewFieldError("user", errors.New(msg))
+			return page.NewFieldError("user", errors.New(msg))
 		}
 		user.Email = other.Email
 	}
 
 	if !current.HasPermission(PermissionEditPermissions) && other.ChangedPermission(*user) {
-		return validators.NewPermissionError(PermissionEditPermissions)
+		return page.NewPermissionError(PermissionName(PermissionEditPermissions))
 	}
 
 	user.Name = other.Name

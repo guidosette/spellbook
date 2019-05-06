@@ -6,7 +6,6 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/attachment"
 	"distudio.com/page/identity"
-	"distudio.com/page/validators"
 	"errors"
 	"google.golang.org/appengine/log"
 	"reflect"
@@ -22,7 +21,7 @@ func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
 func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	cont := Content{}
@@ -45,7 +44,7 @@ func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]pag
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	var conts []*Content
@@ -83,7 +82,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, validators.NewPermissionError(identity.PermissionReadContent)
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
 	a := []string{"Category", "Topic", "Name"} // list property accepted
@@ -133,7 +132,7 @@ func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return validators.NewPermissionError(identity.PermissionEditContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	content := res.(*Content)
@@ -161,7 +160,7 @@ func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
-		return validators.NewPermissionError(identity.PermissionEditContent)
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	content := res.(*Content)

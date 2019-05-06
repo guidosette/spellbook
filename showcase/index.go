@@ -4,7 +4,10 @@ import (
 	"context"
 	"distudio.com/mage"
 	"distudio.com/page"
+	"distudio.com/page/attachment"
+	"distudio.com/page/configuration"
 	"distudio.com/page/content"
+	"distudio.com/page/file"
 	"distudio.com/page/identity"
 	"golang.org/x/text/language"
 	"net/http"
@@ -24,24 +27,34 @@ func init() {
 
 	// superuser endpoints
 	instance.Router.SetUniversalRoute("/api/me", func(ctx context.Context) mage.Controller {
-		return &page.IdentityController{}
+		c := &page.Controller{}
+		c.Manager = identity.UserManager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/file", func(ctx context.Context) mage.Controller {
-		return &page.FileController{}
+		c := &page.Controller{}
+		c.Manager = file.Manager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	// superuser endpoints
 	instance.Router.SetUniversalRoute("/api/users", func(ctx context.Context) mage.Controller {
-		return &page.UserController{}
+		c := &page.Controller{}
+		c.Manager = identity.UserManager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/users/:username", func(ctx context.Context) mage.Controller {
-		return &page.UserController{}
+		c := &page.Controller{}
+		c.Manager = identity.UserManager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 	// backend
 	instance.Router.SetUniversalRoute("/api/tokens", func(ctx context.Context) mage.Controller {
-		return &page.TokenController{}
+		c := &page.Controller{}
+		c.Manager = identity.TokenManager{}
+		return c
 	}, nil)
 
 	instance.Router.SetUniversalRoute("/api/content", func(ctx context.Context) mage.Controller {
@@ -59,15 +72,21 @@ func init() {
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/languages", func(ctx context.Context) mage.Controller {
-		return &page.LocaleController{}
+		c := &page.Controller{}
+		c.Manager = configuration.LocaleManager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/attachment", func(ctx context.Context) mage.Controller {
-		return &page.AttachmentController{}
+		c := &page.Controller{}
+		c.Manager = attachment.Manager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/attachment/:id", func(ctx context.Context) mage.Controller {
-		return &page.AttachmentController{}
+		c := &page.Controller{}
+		c.Manager = attachment.Manager{}
+		return c
 	}, &identity.GSupportAuthenticator{})
 
 	m.Router = &instance.Router

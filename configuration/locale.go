@@ -3,39 +3,42 @@ package configuration
 import (
 	"context"
 	"distudio.com/page"
-	internal "distudio.com/page/internal/page"
-	"distudio.com/page/validators"
 	"golang.org/x/text/language"
 )
 
 type Locale language.Tag
+
+func (locale *Locale) MarshalJSON() ([]byte, error) {
+	tag := language.Tag(*locale)
+	return []byte(tag.String()), nil
+}
 
 func (locale Locale) Id() string {
 	return ""
 }
 
 func (locale Locale) Create(ctx context.Context) error {
-	return validators.NewUnsupportedError()
+	return page.NewUnsupportedError()
 }
 
 func (locale Locale) Update(ctx context.Context, other page.Resource) error {
-	return validators.NewUnsupportedError()
+	return page.NewUnsupportedError()
 }
 
 
 type LocaleManager struct{}
 
 func (manager LocaleManager) NewResource(ctx context.Context) (page.Resource, error) {
-	return nil, validators.NewUnsupportedError()
+	return nil, page.NewUnsupportedError()
 }
 
 func (manager LocaleManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	return nil, validators.NewUnsupportedError()
+	return nil, page.NewUnsupportedError()
 }
 
 func (manager LocaleManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
-	ws := internal.Application()
+	ws := page.Application()
 
 	langs := ws.Options().Languages
 
@@ -62,13 +65,13 @@ func (manager LocaleManager) ListOf(ctx context.Context, opts page.ListOptions) 
 }
 
 func (manager LocaleManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, validators.NewUnsupportedError()
+	return nil, page.NewUnsupportedError()
 }
 
 func (manager LocaleManager) Save(ctx context.Context, res page.Resource) error {
-	return validators.NewUnsupportedError()
+	return page.NewUnsupportedError()
 }
 
 func (manager LocaleManager) Delete(ctx context.Context, res page.Resource) error {
-	return validators.NewUnsupportedError()
+	return page.NewUnsupportedError()
 }

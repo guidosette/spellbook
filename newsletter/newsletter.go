@@ -3,15 +3,12 @@ package newsletter
 import (
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/validators"
+	"distudio.com/page/identity"
 	"errors"
 	"fmt"
 	"golang.org/x/net/context"
 	"strings"
-	"time"
 )
-
-var ZeroTime = time.Time{}
 
 type Newsletter struct {
 	model.Model `json:"-"`
@@ -20,19 +17,19 @@ type Newsletter struct {
 }
 
 func (newsletter *Newsletter) Create(ctx context.Context) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionCreateContent) {
-	//	return resource.NewPermissionError(identity.PermissionCreateContent)
-	//}
+
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionEditNewsletter) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditNewsletter))
+	}
 
 	if newsletter.Email == "" {
 		msg := fmt.Sprintf("Email can't be empty")
-		return validators.NewFieldError("Email", errors.New(msg))
+		return page.NewFieldError("Email", errors.New(msg))
 	}
 	if !strings.Contains(newsletter.Email, "@") || !strings.Contains(newsletter.Email, ".") {
 		msg := fmt.Sprintf("Email not valid")
-		return validators.NewFieldError("Email", errors.New(msg))
+		return page.NewFieldError("Email", errors.New(msg))
 	}
 
 	// list newsletter
@@ -42,22 +39,22 @@ func (newsletter *Newsletter) Create(ctx context.Context) error {
 	err := q.GetMulti(ctx, &emails)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving list newsletter %+v", err)
-		return validators.NewFieldError("Email", errors.New(msg))
+		return page.NewFieldError("Email", errors.New(msg))
 	}
 	if len(emails) > 0 {
 		msg := fmt.Sprintf("Email already exist")
-		return validators.NewFieldError("Email", errors.New(msg))
+		return page.NewFieldError("Email", errors.New(msg))
 	}
 
 	return nil
 }
 
 func (newsletter *Newsletter) Update(ctx context.Context, res page.Resource) error {
-	//// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionEditContent) {
-	//	return resource.NewPermissionError(identity.PermissionEditContent)
-	//}
+
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionEditNewsletter) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditNewsletter))
+	}
 
 	other := res.(*Newsletter)
 	newsletter.Email = other.Email

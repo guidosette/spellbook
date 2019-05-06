@@ -34,6 +34,10 @@ var Permissions = map[Permission]string{
 	PermissionEditNewsletter:  "PERMISSION_EDIT_NEWSLETTER",
 }
 
+func PermissionName(permission Permission) string {
+	return Permissions[permission]
+}
+
 func NamedPermissionToPermission(name string) Permission {
 	for permission, n := range Permissions {
 		if n == name {

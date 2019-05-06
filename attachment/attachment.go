@@ -4,7 +4,6 @@ import (
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"distudio.com/page/identity"
-	"distudio.com/page/validators"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -112,7 +111,7 @@ func (attachment *Attachment) Create(ctx context.Context) error {
 	// if not attachment is to be specified the default value must be used
 	if attachment.Parent == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
-		return validators.NewFieldError("parent", errors.New(msg))
+		return page.NewFieldError("parent", errors.New(msg))
 	}
 
 	attachment.Created = time.Now().UTC()
@@ -138,7 +137,7 @@ func (attachment *Attachment) Update(ctx context.Context, res page.Resource) err
 
 	if attachment.Parent == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
-		return validators.NewFieldError("parent", errors.New(msg))
+		return page.NewFieldError("parent", errors.New(msg))
 	}
 
 	return nil
