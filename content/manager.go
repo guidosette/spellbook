@@ -6,10 +6,12 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/attachment"
 	"distudio.com/page/identity"
-	"errors"
+	"fmt"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 type Manager struct{}
@@ -85,16 +87,19 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
-	a := []string{"Category", "Topic", "Name"} // list property accepted
+	a := []string{"category", "topic", "name"} // list property accepted
 	name := opts.Property
 
-	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
-	if i < len(a) && a[i] == name {
-		// found
-	} else {
-		return nil, errors.New("no property found")
+	if name == "" {
+		return nil, page.NewFieldError("property", fmt.Errorf("empty property"))
 	}
 
+	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
+	if i == len(a) {
+		return nil, datastore.ErrNoSuchEntity
+	}
+
+	name = fmt.Sprintf("%s%s", strings.ToUpper(string(name[0])), name[1:])
 	var conts []*Content
 	q := model.NewQuery(&Content{})
 	q = q.OffsetBy(opts.Page * opts.Size)
@@ -108,7 +113,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 	}
 
 	if opts.FilterField != "" {
-		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+		q = q.WithField(fmt.Sprintf("%s =", opts.FilterField), opts.FilterValue)
 	}
 
 	q = q.Distinct(name)
