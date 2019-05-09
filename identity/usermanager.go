@@ -24,6 +24,10 @@ func (manager UserManager) FromId(ctx context.Context, id string) (page.Resource
 		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
 	}
 
+	if id == current.Id() {
+		return &current, nil
+	}
+
 	att := User{}
 	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve user %s: %s", id, err.Error())

@@ -45,8 +45,8 @@ type Resource interface {
 }
 
 type Controller struct {
-	mage.Controller
 	Manager Manager
+	Key string
 }
 
 func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
@@ -54,9 +54,7 @@ func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOut
 	ins := mage.InputsFromContext(ctx)
 
 	method := ins[mage.KeyRequestMethod].Value()
-
-	params := mage.RoutingParams(ctx)
-	key, hasKey := params["key"]
+	hasKey := controller.Key != ""
 	prop, hasProperty := ins["property"]
 
 	switch method {
@@ -69,19 +67,19 @@ func (controller *Controller) Process(ctx context.Context, out *mage.ResponseOut
 			}
 			return controller.HandleList(ctx, out)
 		}
-		return controller.HandleGet(ctx, key.Value(), out)
+		return controller.HandleGet(ctx, controller.Key, out)
 	case http.MethodPut:
 		if !hasKey {
 			log.Errorf(ctx, "no item was specify for put method")
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
-		return controller.HandlePut(ctx, key.Value(), out)
+		return controller.HandlePut(ctx, controller.Key, out)
 	case http.MethodDelete:
 		if !hasKey {
 			log.Errorf(ctx, "no item was specify for delete method")
 			return mage.Redirect{Status: http.StatusBadRequest}
 		}
-		return controller.HandleDelete(ctx, key.Value(), out)
+		return controller.HandleDelete(ctx, controller.Key, out)
 	}
 
 	return mage.Redirect{Status: http.StatusNotImplemented}

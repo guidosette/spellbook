@@ -159,7 +159,7 @@ func (user User) GenerateToken() (string, error) {
  */
 
 func (user *User) Id() string {
-	return user.StringID()
+	return user.Username()
 }
 
 // populates the user struct.
