@@ -3,14 +3,15 @@ package configuration
 import (
 	"context"
 	"distudio.com/page"
+	"encoding/json"
 	"golang.org/x/text/language"
 )
 
 type Locale language.Tag
 
-func (locale *Locale) MarshalJSON() ([]byte, error) {
-	tag := language.Tag(*locale)
-	return []byte(tag.String()), nil
+func (locale Locale) MarshalJSON() ([]byte, error) {
+	tag := language.Tag(locale)
+	return json.Marshal(tag.String())
 }
 
 func (locale Locale) Id() string {

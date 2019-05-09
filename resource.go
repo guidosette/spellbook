@@ -23,6 +23,11 @@ type ListOptions struct {
 	FilterValue string
 }
 
+type ListResponse struct {
+	Items interface{} `json:"items"`
+	More  bool        `json:"more"`
+}
+
 type Manager interface {
 	NewResource(ctx context.Context) (Resource, error)
 	FromId(ctx context.Context, id string) (Resource, error)
@@ -121,11 +126,9 @@ func (controller *Controller) HandlePropertyValues(ctx context.Context, out *mag
 
 
 	renderer := mage.JSONRenderer{}
+	renderer.Data = ListResponse {results[:count], l > opts.Size}
+
 	out.Renderer = &renderer
-	renderer.Data = struct {
-		Items interface{} `json:"items"`
-		More  bool        `json:"more"`
-	}{results[:count], l > opts.Size}
 
 	return mage.Redirect{Status: http.StatusOK}
 }
@@ -154,11 +157,9 @@ func (controller *Controller) HandleList(ctx context.Context, out *mage.Response
 	}
 
 	renderer := mage.JSONRenderer{}
+	renderer.Data = ListResponse{results[:count], l > opts.Size}
+
 	out.Renderer = &renderer
-	renderer.Data = struct {
-		Items interface{} `json:"items"`
-		More  bool        `json:"more"`
-	}{results[:count], l > opts.Size}
 
 	return mage.Redirect{Status: http.StatusOK}
 }
