@@ -141,23 +141,38 @@ func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 	}
 
 	content := res.(*Content)
-	// input is valid, create the resource
-	opts := model.CreateOptions{}
-	opts.WithStringId(content.Slug)
+	if content.Id() == "" {
+		// input is valid, create the resource
+		opts := model.CreateOptions{}
+		opts.WithStringId(content.Slug)
 
-	// // WARNING: the volatile field Multimedia because Memcache (Gob)
-	//	can't ignore field
-	tmp := content.Attachments
-	content.Attachments = nil
+		// // WARNING: the volatile field Multimedia because Memcache (Gob)
+		//	can't ignore field
+		tmp := content.Attachments
+		content.Attachments = nil
 
-	err := model.CreateWithOptions(ctx, content, &opts)
-	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
-		return err
+		err := model.CreateWithOptions(ctx, content, &opts)
+		if err != nil {
+			log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
+			return err
+		}
+
+		// return the swapped multimedia value
+		content.Attachments = tmp
+	} else {
+		tmp := content.Attachments
+		content.Attachments = nil
+
+		err := model.Update(ctx, content)
+		if err != nil {
+			log.Errorf(ctx, "error updating post %s: %s", content.Slug, err)
+			return err
+		}
+
+		// return the swapped multimedia value
+		content.Attachments = tmp
 	}
 
-	// return the swapped multimedia value
-	content.Attachments = tmp
 	return nil
 }
 
