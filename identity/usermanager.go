@@ -11,13 +11,26 @@ import (
 	"sort"
 )
 
-type UserManager struct{}
+type userManager struct{}
 
-func (manager UserManager) NewResource(ctx context.Context) (page.Resource, error) {
+func NewUserController() *page.RestController {
+	return NewUserControllerWithKey("")
+}
+
+func NewUserControllerWithKey(key string) *page.RestController {
+	manager := userManager{}
+	handler := page.BaseRestHandler{Manager: manager}
+	c := page.NewRestController(handler)
+	c.Key = key
+	return c
+}
+
+
+func (manager userManager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &User{}, nil
 }
 
-func (manager UserManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager userManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
@@ -37,7 +50,7 @@ func (manager UserManager) FromId(ctx context.Context, id string) (page.Resource
 	return &att, nil
 }
 
-func (manager UserManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
@@ -75,7 +88,7 @@ func (manager UserManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 	return resources, nil
 }
 
-func (manager UserManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionReadUser) {
 		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
@@ -124,7 +137,7 @@ func (manager UserManager) ListOfProperties(ctx context.Context, opts page.ListO
 	return result, nil
 }
 
-func (manager UserManager) Save(ctx context.Context, res page.Resource) error {
+func (manager userManager) Save(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
@@ -144,7 +157,7 @@ func (manager UserManager) Save(ctx context.Context, res page.Resource) error {
 	return nil
 }
 
-func (manager UserManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager userManager) Delete(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
 		return page.NewPermissionError(PermissionName(PermissionEditUser))

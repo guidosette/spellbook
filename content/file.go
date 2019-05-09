@@ -1,4 +1,4 @@
-package file
+package content
 
 import (
 	"cloud.google.com/go/storage"

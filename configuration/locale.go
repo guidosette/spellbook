@@ -27,17 +27,22 @@ func (locale Locale) Update(ctx context.Context, other page.Resource) error {
 }
 
 
-type LocaleManager struct{}
+func NewLocaleController() *page.RestController {
+	man := localeManager{}
+	return page.NewRestController(page.BaseRestHandler{Manager: man})
+}
 
-func (manager LocaleManager) NewResource(ctx context.Context) (page.Resource, error) {
+type localeManager struct{}
+
+func (manager localeManager) NewResource(ctx context.Context) (page.Resource, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager LocaleManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager localeManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager LocaleManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager localeManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
 	ws := page.Application()
 
@@ -65,14 +70,14 @@ func (manager LocaleManager) ListOf(ctx context.Context, opts page.ListOptions) 
 	return resources, nil
 }
 
-func (manager LocaleManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager localeManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager LocaleManager) Save(ctx context.Context, res page.Resource) error {
+func (manager localeManager) Save(ctx context.Context, res page.Resource) error {
 	return page.NewUnsupportedError()
 }
 
-func (manager LocaleManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager localeManager) Delete(ctx context.Context, res page.Resource) error {
 	return page.NewUnsupportedError()
 }

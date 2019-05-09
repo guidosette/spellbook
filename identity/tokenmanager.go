@@ -8,25 +8,31 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-type TokenManager struct{}
+func NewTokenController() *page.RestController {
+	handler := page.BaseRestHandler{}
+	handler.Manager = tokenManager{}
+	return page.NewRestController(handler)
+}
 
-func (manager TokenManager) NewResource(ctx context.Context) (page.Resource, error) {
+type tokenManager struct{}
+
+func (manager tokenManager ) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Token{}, nil
 }
 
-func (manager TokenManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager tokenManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager TokenManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager tokenManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager TokenManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager tokenManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager TokenManager) Save(ctx context.Context, res page.Resource) error {
+func (manager tokenManager) Save(ctx context.Context, res page.Resource) error {
 
 	token := res.(Token)
 	u := User{}
@@ -57,7 +63,7 @@ func (manager TokenManager) Save(ctx context.Context, res page.Resource) error {
 	return nil
 }
 
-func (manager TokenManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager tokenManager) Delete(ctx context.Context, res page.Resource) error {
 
 	u := ctx.Value(KeyUser)
 	user, ok := u.(User)

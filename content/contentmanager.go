@@ -4,7 +4,6 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/attachment"
 	"distudio.com/page/identity"
 	"fmt"
 	"google.golang.org/appengine/datastore"
@@ -14,13 +13,24 @@ import (
 	"strings"
 )
 
-type Manager struct{}
+func NewContentController() *page.RestController {
+	return NewContentControllerWithKey("")
+}
 
-func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
+func NewContentControllerWithKey(key string) *page.RestController {
+	handler := page.BaseRestHandler{Manager:contentManager{}}
+	c := page.NewRestController(handler)
+	c.Key = key
+	return c
+}
+
+type contentManager struct{}
+
+func (manager contentManager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Content{}, nil
 }
 
-func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager contentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
@@ -32,7 +42,7 @@ func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, er
 		return nil, err
 	}
 
-	q := model.NewQuery((*attachment.Attachment)(nil))
+	q := model.NewQuery((*Attachment)(nil))
 	q = q.WithField("Parent =", cont.Slug)
 	if err := q.GetMulti(ctx, &cont.Attachments); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s attachments: %s", id, err.Error())
@@ -42,7 +52,7 @@ func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, er
 	return &cont, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager contentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
@@ -80,7 +90,7 @@ func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]pag
 	return resources, nil
 }
 
-func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager contentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
@@ -133,7 +143,7 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res page.Resource) error {
+func (manager contentManager) Save(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
@@ -176,7 +186,7 @@ func (manager Manager) Save(ctx context.Context, res page.Resource) error {
 	return nil
 }
 
-func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
+func (manager contentManager) Delete(ctx context.Context, res page.Resource) error {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
@@ -191,8 +201,8 @@ func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
 	}
 
 	// delete attachments with parent = slug
-	attachments := make([]*attachment.Attachment, 0, 0)
-	q := model.NewQuery(&attachment.Attachment{})
+	attachments := make([]*Attachment, 0, 0)
+	q := model.NewQuery(&Attachment{})
 	q.WithField("Parent =", content.Slug)
 	err = q.GetMulti(ctx, &attachments)
 	if err != nil {

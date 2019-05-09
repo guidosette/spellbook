@@ -1,16 +1,17 @@
 package identity
 
 import (
-	"appengine/datastore"
 	"context"
 	"crypto/sha1"
 	"crypto/sha256"
+	"distudio.com/mage"
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"google.golang.org/appengine/datastore"
 	guser "google.golang.org/appengine/user"
 	"strings"
 	"time"
@@ -169,7 +170,21 @@ func (user *User) Create(ctx context.Context) error {
 		return page.NewPermissionError(PermissionName(PermissionCreateUser))
 	}
 
-	username := SanitizeUserName(user.Username())
+	ins := mage.InputsFromContext(ctx)
+	j := ins[mage.KeyRequestJSON].Value()
+
+	meta := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+
+	err := json.Unmarshal([]byte(j), &meta)
+	if err != nil {
+		return page.NewFieldError("json", fmt.Errorf("invalid json: %s", j))
+	}
+
+	username := meta.Username
+	username = SanitizeUserName(username)
 
 	uf := page.NewRawField("username", true, username)
 	uf.AddValidator(page.DatastoreKeyNameValidator{})
@@ -180,7 +195,7 @@ func (user *User) Create(ctx context.Context) error {
 		return page.NewFieldError("username", errors.New(msg))
 	}
 
-	pf := page.NewRawField("password", true, user.Password)
+	pf := page.NewRawField("password", true, meta.Password)
 	pf.AddValidator(page.LenValidator{MinLen: 8})
 
 	if err := pf.Validate(); err != nil {
@@ -196,7 +211,7 @@ func (user *User) Create(ctx context.Context) error {
 	}
 
 	// check for user existence
-	err := model.FromStringID(ctx, &User{}, username, nil)
+	err = model.FromStringID(ctx, &User{}, username, nil)
 
 	if err == nil {
 		// user already exists
@@ -206,7 +221,8 @@ func (user *User) Create(ctx context.Context) error {
 
 	if err != datastore.ErrNoSuchEntity {
 		// generic datastore error
-		return fmt.Errorf("error retrieving user with username %s: %s", username, err.Error())
+		msg := fmt.Sprintf("error retrieving user with username %s: %s", username, err.Error())
+		return page.NewFieldError("user", errors.New(msg))
 	}
 
 	user.Password = HashPassword(user.Password, salt)

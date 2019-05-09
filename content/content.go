@@ -4,7 +4,6 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/attachment"
 	"distudio.com/page/identity"
 	"encoding/json"
 	"errors"
@@ -52,7 +51,7 @@ type Content struct {
 	Cover       string
 	Revision    int
 	Order       int
-	Attachments []*attachment.Attachment `model:"-"`
+	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
 	Created   time.Time
@@ -75,7 +74,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Description string                   `json:"description"`
 		Revision    int                      `json:"revision"`
 		Order       int                      `json:"order"`
-		Attachments []*attachment.Attachment `json:"attachments"`
+		Attachments []*Attachment `json:"attachments"`
 		Author      string                   `json:"author"`
 		Cover       string                   `json:"cover"`
 		Created     time.Time                `json:"created"`
@@ -127,7 +126,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Description string                   `json:"description"`
 		Revision    int                      `json:"revision"`
 		Order       int                      `json:"order"`
-		Attachments []*attachment.Attachment `json:"attachments"`
+		Attachments []*Attachment `json:"attachments"`
 		Author      string                   `json:"author"`
 		Cover       string                   `json:"cover"`
 		Created     time.Time                `json:"created"`

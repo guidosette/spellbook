@@ -1,4 +1,4 @@
-package file
+package content
 
 import (
 	"context"
@@ -6,90 +6,53 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/identity"
 	"errors"
-	"fmt"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
 )
 
-type Manager struct{}
-
-func (manager Manager) NewResource(ctx context.Context) (page.Resource, error) {
-	return &File{}, nil
+func NewAttachmentController() *page.RestController {
+	return NewContentControllerWithKey("")
 }
 
-func (manager Manager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func NewAttachmentControllerWithKey(key string) *page.RestController {
+	man := attachmentManager{}
+	handler := page.BaseRestHandler{Manager:man}
+	c := page.NewRestController(handler)
+	c.Key = key
+	return c
+}
+
+type attachmentManager struct{}
+
+func (manager attachmentManager) NewResource(ctx context.Context) (page.Resource, error) {
+	return &Attachment{}, nil
+}
+
+func (manager attachmentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
-	att := File{}
+	att := Attachment{}
 	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
-		log.Errorf(ctx, "could not retrieve file %s: %s", id, err.Error())
+		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, err.Error())
 		return nil, err
 	}
 
 	return &att, nil
 }
 
-func (manager Manager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-
+func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionReadContent) {
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
-	var files []*File
-	q := model.NewQuery(&File{})
-	q = q.OffsetBy(opts.Page * opts.Size)
-
-	if opts.Order != "" {
-		dir := model.ASC
-		if opts.Descending {
-			dir = model.DESC
-		}
-		q = q.OrderBy(opts.Order, dir)
-	}
-
-	if opts.FilterField != "" {
-		q = q.WithField(fmt.Sprintf("%s =", opts.FilterField), opts.FilterValue)
-	}
-
-	// get one more so we know if we are done
-	q = q.Limit(opts.Size + 1)
-	err := q.GetMulti(ctx, &files)
-	if err != nil {
-		return nil, err
-	}
-
-	resources := make([]page.Resource, len(files))
-	for i := range files {
-		resources[i] = page.Resource(files[i])
-	}
-
-	return resources, nil
-}
-
-func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
-	}
-
-	a := []string{"Name"} // list property accepted
-	name := opts.Property
-
-	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
-	if i < len(a) && a[i] == name {
-		// found
-	} else {
-		return nil, errors.New("no property found")
-	}
-
-	var conts []*File
-	q := model.NewQuery(&File{})
+	var attachments []*Attachment
+	q := model.NewQuery(&Attachment{})
 	q = q.OffsetBy(opts.Page * opts.Size)
 
 	if opts.Order != "" {
@@ -103,6 +66,54 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 	if opts.FilterField != "" {
 		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
 	}
+
+	// get one more so we know if we are done
+	q = q.Limit(opts.Size + 1)
+	err := q.GetMulti(ctx, &attachments)
+	if err != nil {
+		return nil, err
+	}
+
+	resources := make([]page.Resource, len(attachments))
+	for i := range attachments {
+		resources[i] = page.Resource(attachments[i])
+	}
+
+	return resources, nil
+}
+
+func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionReadContent) {
+		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	}
+
+	a := []string{"Group"} // list property accepted
+	name := opts.Property
+
+	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
+	if i < len(a) && a[i] == name {
+		// found
+	} else {
+		return nil, errors.New("no property found")
+	}
+
+	var conts []*Attachment
+	q := model.NewQuery(&Attachment{})
+	q = q.OffsetBy(opts.Page * opts.Size)
+
+	if opts.Order != "" {
+		dir := model.ASC
+		if opts.Descending {
+			dir = model.DESC
+		}
+		q = q.OrderBy(opts.Order, dir)
+	}
+
+	if opts.FilterField != "" {
+		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+	}
+
 
 	q = q.Distinct(name)
 	q = q.Limit(opts.Size + 1)
@@ -121,34 +132,33 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res page.Resource) error {
+func (manager attachmentManager) Save(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
 		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
-	file := res.(*File)
+	attachment := res.(*Attachment)
 
-	err := model.Create(ctx, file)
+	err := model.Create(ctx, attachment)
 	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", file.Name, err)
+		log.Errorf(ctx, "error creating post %s: %s", attachment.Name, err)
 		return err
 	}
 
 	return nil
 }
 
-func (manager Manager) Delete(ctx context.Context, res page.Resource) error {
-
+func (manager attachmentManager) Delete(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
 		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
-	file := res.(*File)
-	err := model.Delete(ctx, file, nil)
+	attachment := res.(*Attachment)
+	err := model.Delete(ctx, attachment, nil)
 	if err != nil {
-		log.Errorf(ctx, "error deleting file %s: %s", file.Name, err.Error())
+		log.Errorf(ctx, "error deleting attachment %s: %s", attachment.Name, err.Error())
 		return err
 	}
 
