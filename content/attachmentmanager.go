@@ -63,8 +63,10 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptio
 		q = q.OrderBy(opts.Order, dir)
 	}
 
-	if opts.FilterField != "" {
-		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+	for _, filter := range opts.Filters {
+		if filter.Field != "" {
+			q = q.WithField(filter.Field+" =", filter.Value)
+		}
 	}
 
 	// get one more so we know if we are done
@@ -110,8 +112,10 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 		q = q.OrderBy(opts.Order, dir)
 	}
 
-	if opts.FilterField != "" {
-		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+	for _, filter := range opts.Filters {
+		if filter.Field != "" {
+			q = q.WithField(filter.Field+" =", filter.Value)
+		}
 	}
 
 

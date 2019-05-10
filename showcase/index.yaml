@@ -11,6 +11,30 @@ indexes:
 
 - kind: Content
   properties:
+  - name: Category
+  - name: Locale
+  - name: Name
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: Category
+  - name: Locale
+  - name: Order
+
+- kind: Content
+  properties:
+  - name: Category
+  - name: Name
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: Category
+  - name: Order
+
+- kind: Content
+  properties:
   - name: Locale
   - name: Name
 
@@ -24,6 +48,11 @@ indexes:
   properties:
   - name: Locale
   - name: Order
+
+- kind: Content
+  properties:
+  - name: Locale
+  - name: Slug
 
 - kind: Content
   properties:

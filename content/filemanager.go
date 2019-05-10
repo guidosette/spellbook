@@ -6,14 +6,13 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/identity"
 	"errors"
-	"fmt"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
 )
 
 func NewFileController() *page.RestController {
-	handler := page.BaseRestHandler{Manager:fileManager{}}
+	handler := page.BaseRestHandler{Manager: fileManager{}}
 	return page.NewRestController(handler)
 }
 
@@ -58,8 +57,10 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		q = q.OrderBy(opts.Order, dir)
 	}
 
-	if opts.FilterField != "" {
-		q = q.WithField(fmt.Sprintf("%s =", opts.FilterField), opts.FilterValue)
+	for _, filter := range opts.Filters {
+		if filter.Field != "" {
+			q = q.WithField(filter.Field+" =", filter.Value)
+		}
 	}
 
 	// get one more so we know if we are done
@@ -105,8 +106,10 @@ func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListO
 		q = q.OrderBy(opts.Order, dir)
 	}
 
-	if opts.FilterField != "" {
-		q = q.WithField(opts.FilterField+" =", opts.FilterValue)
+	for _, filter := range opts.Filters {
+		if filter.Field != "" {
+			q = q.WithField(filter.Field+" =", filter.Value)
+		}
 	}
 
 	q = q.Distinct(name)

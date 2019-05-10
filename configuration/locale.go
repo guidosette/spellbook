@@ -26,7 +26,6 @@ func (locale Locale) Update(ctx context.Context, other page.Resource) error {
 	return page.NewUnsupportedError()
 }
 
-
 func NewLocaleController() *page.RestController {
 	man := localeManager{}
 	return page.NewRestController(page.BaseRestHandler{Manager: man})
@@ -57,7 +56,6 @@ func (manager localeManager) ListOf(ctx context.Context, opts page.ListOptions) 
 	if to > len(langs) {
 		to = len(langs)
 	}
-
 
 	items := langs[from:to]
 	resources := make([]page.Resource, len(items))

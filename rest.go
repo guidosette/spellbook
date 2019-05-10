@@ -38,7 +38,6 @@ type BaseRestHandler struct {
 	Manager Manager
 }
 
-
 // Builds the paging options, ordering and standard inputs of a given request
 func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.ResponseOutput, opts *ListOptions) (*ListOptions, error) {
 	// build paging
@@ -52,7 +51,7 @@ func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.Respo
 				opts.Page = num
 			}
 		} else {
-			msg := fmt.Sprintf("invalid page value : %s. page must be an integer", pin)
+			msg := fmt.Sprintf("invalid page value : %v. page must be an integer", pin)
 			return nil, errors.New(msg)
 		}
 	}
@@ -63,7 +62,7 @@ func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.Respo
 				opts.Size = num
 			}
 		} else {
-			msg := fmt.Sprintf("invalid result size value : %s. results must be an integer", sin)
+			msg := fmt.Sprintf("invalid result size value : %v. results must be an integer", sin)
 			return nil, errors.New(msg)
 		}
 	}
@@ -82,12 +81,16 @@ func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.Respo
 
 	// filter is not mandatory
 	if fin, ok := ins["filter"]; ok {
-		filter := fin.Value()
-		filters := strings.Split(filter, "=")
-		if len(filter) > 1 {
-			opts.FilterField = filters[0]
-			opts.FilterValue = filters[1]
+		finv := fin.Value()
+		filters := strings.Split(finv, "^")
+		opts.Filters = make([]Filter, len(filters), cap(filters))
+		for i, filter := range filters {
+			farray := strings.Split(filter, "=")
+			if len(farray) > 1 {
+				opts.Filters[i] = Filter{farray[0], farray[1]}
+			}
 		}
+
 	}
 
 	return opts, nil
@@ -130,15 +133,13 @@ func (handler BaseRestHandler) HandlePropertyValues(ctx context.Context, out *ma
 		count = l
 	}
 
-
 	renderer := mage.JSONRenderer{}
-	renderer.Data = ListResponse {results[:count], l > opts.Size}
+	renderer.Data = ListResponse{results[:count], l > opts.Size}
 
 	out.Renderer = &renderer
 
 	return mage.Redirect{Status: http.StatusOK}
 }
-
 
 // Called on GET requests
 // This handler is called when a list of resources is requested.

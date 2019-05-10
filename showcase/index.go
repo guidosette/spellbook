@@ -20,6 +20,10 @@ func init() {
 		language.Italian,
 		language.English,
 	}
+	opts.Categories = []page.Category{
+		"services",
+		"news",
+	}
 
 	instance := page.NewWebsite(&opts)
 
@@ -64,6 +68,10 @@ func init() {
 
 	instance.Router.SetUniversalRoute("/api/languages", func(ctx context.Context) mage.Controller {
 		return configuration.NewLocaleController()
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/categories", func(ctx context.Context) mage.Controller {
+		return configuration.NewCategoryController()
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/attachment", func(ctx context.Context) mage.Controller {

@@ -44,7 +44,10 @@ func (app Website) Options() Options {
 
 type Options struct {
 	Languages []language.Tag
+	Categories []Category
 }
+
+type Category string
 
 func NewWebsite(opts *Options) *Website {
 	ws := Application()

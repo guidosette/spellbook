@@ -8,13 +8,17 @@ import (
 )
 
 type ListOptions struct {
-	Size        int
-	Page        int
-	Order       string // field
-	Descending  bool   // if -Order = desc
-	Property    string
-	FilterField string
-	FilterValue string
+	Size       int
+	Page       int
+	Order      string // field
+	Descending bool   // if -Order = desc
+	Property   string
+	Filters    []Filter // example url: &filter=Locale=it^Category=services
+}
+
+type Filter struct {
+	Field string
+	Value string
 }
 
 type ListResponse struct {
@@ -86,6 +90,5 @@ func (controller *RestController) Process(ctx context.Context, out *mage.Respons
 
 	return mage.Redirect{Status: http.StatusNotImplemented}
 }
-
 
 func (controller *RestController) OnDestroy(ctx context.Context) {}

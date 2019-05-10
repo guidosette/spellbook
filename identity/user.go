@@ -31,6 +31,7 @@ type User struct {
 	//Resource
 	Name       string
 	Surname    string
+	username    string `model:"-"`
 	Email      string
 	Password   string
 	Token      string
@@ -45,6 +46,7 @@ func (user *User) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Name        string   `json:"name"`
 		Surname     string   `json:"surname"`
+		Username     string   `json:"username"`
 		Email       string   `json:"email"`
 		Permissions []string `json:"permissions"`
 	}{}
@@ -57,6 +59,7 @@ func (user *User) UnmarshalJSON(data []byte) error {
 	user.Name = alias.Name
 	user.Surname = alias.Surname
 	user.Email = alias.Email
+	user.username = alias.Username
 	user.GrantNamedPermissions(alias.Permissions)
 	return nil
 }
@@ -135,6 +138,9 @@ func (user User) Username() string {
 	if user.IsGUser() {
 		return user.gUser.String()
 	}
+	if user.StringID() == "" {
+		return user.username
+	}
 	return user.StringID()
 }
 
@@ -157,7 +163,7 @@ func (user User) GenerateToken() (string, error) {
 
 /**
 -- Resource implementation
- */
+*/
 
 func (user *User) Id() string {
 	return user.Username()
@@ -229,7 +235,6 @@ func (user *User) Create(ctx context.Context) error {
 
 	return nil
 }
-
 
 func (user *User) Update(ctx context.Context, res page.Resource) error {
 
