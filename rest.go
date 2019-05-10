@@ -103,7 +103,7 @@ func (handler BaseRestHandler) HandleGet(ctx context.Context, key string, out *m
 
 	resource, err := handler.Manager.FromId(ctx, key)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	renderer.Data = resource
@@ -123,7 +123,7 @@ func (handler BaseRestHandler) HandlePropertyValues(ctx context.Context, out *ma
 
 	results, err := handler.Manager.ListOfProperties(ctx, *opts)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	// output
@@ -153,7 +153,7 @@ func (handler BaseRestHandler) HandleList(ctx context.Context, out *mage.Respons
 
 	results, err := handler.Manager.ListOf(ctx, *opts)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	// output
@@ -178,7 +178,7 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 
 	resource, err := handler.Manager.NewResource(ctx)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	errs := Errors{}
@@ -202,7 +202,7 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 		if fe, ok := err.(FieldError); !ok {
 			errs.AddFieldError(fe)
 		} else {
-			return handler.errorToStatus(err)
+			return handler.ErrorToStatus(ctx, err)
 		}
 	}
 
@@ -214,11 +214,11 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 	}
 
 	if err = handler.Manager.Save(ctx, resource); err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	renderer.Data = resource
-	return mage.Redirect{Status: http.StatusOK}
+	return mage.Redirect{Status: http.StatusCreated}
 }
 
 // Handles put requests, ensuring the update of the requested resource
@@ -234,13 +234,13 @@ func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *m
 
 	resource, err := handler.Manager.FromId(ctx, key)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	errs := Errors{}
 	jresource, err := handler.Manager.NewResource(ctx)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	err = json.Unmarshal([]byte(j.Value()), &jresource)
@@ -260,7 +260,7 @@ func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *m
 	}
 
 	if err = handler.Manager.Save(ctx, resource); err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	renderer.Data = resource
@@ -274,17 +274,18 @@ func (handler BaseRestHandler) HandleDelete(ctx context.Context, key string, out
 
 	resource, err := handler.Manager.NewResource(ctx)
 	if err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 
 	if err = handler.Manager.Delete(ctx, resource); err != nil {
-		return handler.errorToStatus(err)
+		return handler.ErrorToStatus(ctx, err)
 	}
 	return mage.Redirect{Status: http.StatusOK}
 }
 
 // Converts an error to its equivalent HTTP representation
-func (handler BaseRestHandler) errorToStatus(err error) mage.Redirect {
+func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error) mage.Redirect {
+	log.Errorf(ctx, "%s", err.Error())
 	switch err.(type) {
 	case UnsupportedError:
 		return mage.Redirect{Status: http.StatusMethodNotAllowed}

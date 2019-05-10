@@ -1,19 +1,26 @@
 package content
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
-	"distudio.com/mage/model"
 	"distudio.com/page"
 	"distudio.com/page/identity"
-	"errors"
+	"fmt"
+	"google.golang.org/api/iterator"
+	"google.golang.org/appengine/file"
 	"google.golang.org/appengine/log"
-	"reflect"
-	"sort"
+	"strings"
 )
 
 func NewFileController() *page.RestController {
-	handler := page.BaseRestHandler{Manager: fileManager{}}
-	return page.NewRestController(handler)
+	return NewFileControllerWithKey("")
+}
+
+func NewFileControllerWithKey(key string) *page.RestController {
+	handler := fileHandler{page.BaseRestHandler{Manager: fileManager{}}}
+	c := page.NewRestController(handler)
+	c.Key = key
+	return c
 }
 
 type fileManager struct{}
@@ -29,13 +36,32 @@ func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
-	att := File{}
-	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
-		log.Errorf(ctx, "could not retrieve file %s: %s", id, err.Error())
-		return nil, err
+	//todo: set bucket name in configuration
+	bucket, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving default bucket %s", err.Error())
 	}
 
-	return &att, nil
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %s", err.Error())
+	}
+	defer client.Close()
+
+	handle := client.Bucket(bucket)
+
+	reader, err := handle.Object(id).NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	res, _ := manager.NewResource(ctx)
+	f := res.(*File)
+	f.Name = id
+	f.ResourceUrl = fmt.Sprintf(publicURL, bucket, id)
+
+	return f, nil
 }
 
 func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
@@ -45,29 +71,46 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
 	}
 
-	var files []*File
-	q := model.NewQuery(&File{})
-	q = q.OffsetBy(opts.Page * opts.Size)
-
-	if opts.Order != "" {
-		dir := model.ASC
-		if opts.Descending {
-			dir = model.DESC
-		}
-		q = q.OrderBy(opts.Order, dir)
-	}
-
-	for _, filter := range opts.Filters {
-		if filter.Field != "" {
-			q = q.WithField(filter.Field+" =", filter.Value)
-		}
-	}
-
-	// get one more so we know if we are done
-	q = q.Limit(opts.Size + 1)
-	err := q.GetMulti(ctx, &files)
+	//todo: set bucket name in configuration
+	bucket, err := file.DefaultBucketName(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error retrieving default bucket %s", err.Error())
+	}
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %s", err.Error())
+	}
+	defer client.Close()
+
+	var files []*File
+
+	handle := client.Bucket(bucket)
+
+	q := &storage.Query{}
+	q.Versions = false
+
+	it := handle.Objects(ctx, q)
+	// todo: handle pagination (https://godoc.org/google.golang.org/api/iterator)
+	for {
+		obj, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Errorf(ctx, "listBucket: unable to list bucket %q: %v", bucket, err)
+			break
+		}
+		name := obj.Name
+		s := strings.Split(obj.Name, "/")
+		if len(s) > 0 {
+			name = s[len(s)-1]
+		}
+		res, _ := manager.NewResource(ctx)
+		f := res.(*File)
+		f.Name = name
+		f.ResourceUrl = obj.MediaLink
+		files = append(files, f)
 	}
 
 	resources := make([]page.Resource, len(files))
@@ -79,67 +122,16 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 }
 
 func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
-	}
-
-	a := []string{"Name"} // list property accepted
-	name := opts.Property
-
-	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
-	if i < len(a) && a[i] == name {
-		// found
-	} else {
-		return nil, errors.New("no property found")
-	}
-
-	var conts []*File
-	q := model.NewQuery(&File{})
-	q = q.OffsetBy(opts.Page * opts.Size)
-
-	if opts.Order != "" {
-		dir := model.ASC
-		if opts.Descending {
-			dir = model.DESC
-		}
-		q = q.OrderBy(opts.Order, dir)
-	}
-
-	for _, filter := range opts.Filters {
-		if filter.Field != "" {
-			q = q.WithField(filter.Field+" =", filter.Value)
-		}
-	}
-
-	q = q.Distinct(name)
-	q = q.Limit(opts.Size + 1)
-	err := q.GetAll(ctx, &conts)
-	if err != nil {
-		log.Errorf(ctx, "Error retrieving result: %+v", err)
-		return nil, err
-	}
-	var result []string
-	for _, c := range conts {
-		value := reflect.ValueOf(c).Elem().FieldByName(name).String()
-		if len(value) > 0 {
-			result = append(result, value)
-		}
-	}
-	return result, nil
+	return nil, page.NewUnsupportedError()
 }
 
 func (manager fileManager) Save(ctx context.Context, res page.Resource) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
+	if !current.HasPermission(identity.PermissionLoadFiles) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionLoadFiles))
 	}
 
-	file := res.(*File)
-
-	err := model.Create(ctx, file)
-	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", file.Name, err)
+	if err := res.Create(ctx); err != nil {
 		return err
 	}
 
@@ -147,18 +139,5 @@ func (manager fileManager) Save(ctx context.Context, res page.Resource) error {
 }
 
 func (manager fileManager) Delete(ctx context.Context, res page.Resource) error {
-
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
-	}
-
-	file := res.(*File)
-	err := model.Delete(ctx, file, nil)
-	if err != nil {
-		log.Errorf(ctx, "error deleting file %s: %s", file.Name, err.Error())
-		return err
-	}
-
-	return nil
+	return page.NewUnsupportedError()
 }
