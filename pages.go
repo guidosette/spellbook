@@ -233,6 +233,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	out.AddCookie(lcookie)
 
 	//create the link creator function
+	t := page.FuncHandler.AssignFuncMap(ctx)
 	funcMap := template.FuncMap{
 		"LocalizedUrl": func(url string) string {
 			return fmt.Sprintf("%s?hl=%s", url, lang)
@@ -241,7 +242,9 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 			j, _ := json.Marshal(data)
 			return template.HTML(j)
 		},
+		//"customFuncMap", t, //custom funcMap
 	}
+	funcMap = t // todo
 
 	files := make([]string, 0, 0)
 	files = append(files, page.Bases...)
@@ -394,10 +397,9 @@ func (page *SendMailPage) OnDestroy(ctx context.Context) {
 
 }
 
-
 /**
-	REDIRECT StatusMovedPermanently
- */
+REDIRECT StatusMovedPermanently
+*/
 type MovedController struct {
 	mage.Controller
 	To string
@@ -409,10 +411,9 @@ func (controller *MovedController) Process(ctx context.Context, out *mage.Respon
 
 func (controller *MovedController) OnDestroy(ctx context.Context) {}
 
-
 /**
-	REDIRECT StatusFound
- */
+REDIRECT StatusFound
+*/
 type FoundController struct {
 	mage.Controller
 	To string
