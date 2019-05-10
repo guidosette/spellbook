@@ -3,7 +3,6 @@ package content
 import (
 	"cloud.google.com/go/storage"
 	"distudio.com/mage"
-	"distudio.com/mage/model"
 	"distudio.com/page"
 	"distudio.com/page/identity"
 	"errors"
@@ -12,18 +11,19 @@ import (
 	appengineFile "google.golang.org/appengine/file"
 )
 
+// return the file data
+const publicURL = "https://storage.googleapis.com/%s/%s"
+
 type File struct {
-	model.Model `json:"-"`
 	Name        string `json:"name"`
 	ResourceUrl string `json:"resourceUrl"`
 }
 
-func (file *File) Create(ctx context.Context) error {
+func (file *File) Id() string {
+	return file.Name
+}
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionLoadFiles) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionLoadFiles))
-	}
+func (file *File) Create(ctx context.Context) error {
 
 	ins := mage.InputsFromContext(ctx)
 
@@ -111,8 +111,6 @@ func (file *File) Create(ctx context.Context) error {
 		return page.NewFieldError("parent", errors.New(msg))
 	}
 
-	// return the file data
-	const publicURL = "https://storage.googleapis.com/%s/%s"
 	uri := fmt.Sprintf(publicURL, bucket, filename)
 
 	file.ResourceUrl = uri
@@ -132,8 +130,4 @@ func (file *File) Update(ctx context.Context, res page.Resource) error {
 	file.Name = other.Name
 
 	return nil
-}
-
-func (file *File) Id() string {
-	return file.StringID()
 }
