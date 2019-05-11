@@ -1,14 +1,9 @@
 package content
 
 import (
-	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
-	"distudio.com/page/identity"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -170,88 +165,26 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (content *Content) Create(ctx context.Context) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionCreateContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
-	}
-
-	content.Created = time.Now().UTC()
-	content.Revision = 1
-	if !content.Published.IsZero() {
-		content.Published = time.Now().UTC()
-	}
-
-	if content.Title == "" || content.Name == "" {
-		msg := fmt.Sprintf(" title and name can't be empty")
-		return page.NewFieldError("title", errors.New(msg))
-	}
-
-	if content.Slug == "" {
-		content.Slug = url.PathEscape(content.Title)
-	}
-
-	// if the same slug already exists, we must return
-	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
-	q := model.NewQuery((*Content)(nil))
-	q = q.WithField("Slug =", content.Slug)
-	count, err := q.Count(ctx)
-	if err != nil {
-		msg := fmt.Sprintf("error verifying slug uniqueness: %s", err.Error())
-		return page.NewFieldError("slug", errors.New(msg))
-	}
-
-	if count > 0 {
-		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
-		return page.NewFieldError("slug", errors.New(msg))
-	}
-
-	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
-		content.Author = user.Username()
-	}
-
-	return nil
-}
-
-func (content *Content) Update(ctx context.Context, res page.Resource) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
-	}
-
-	other := res.(*Content)
-	content.Name = other.Name
-	content.Title = other.Title
-	content.Subtitle = other.Subtitle
-	content.Category = other.Category
-	content.Topic = other.Topic
-	content.Locale = other.Locale
-	content.Description = other.Description
-	content.Body = other.Body
-	content.Cover = other.Cover
-	content.Revision = other.Revision
-	content.Order = other.Order
-	content.Updated = time.Now().UTC()
-	content.Tags = other.Tags
-
-	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
-		content.Author = user.Username()
-	}
-
-	if other.Published.IsZero() {
-		// not setted
-		content.Published = time.Time{}
-	} else {
-		// setted
-		// check previous data
-		if content.Published.IsZero() {
-			content.Published = time.Now().UTC()
-		}
-	}
-
-	return nil
-}
+/**
+* Resource representation
+ */
 
 func (content *Content) Id() string {
 	return content.StringID()
+}
+
+func (content *Content) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Unmarshal(data, content)
+	}
+	return page.NewUnsupportedError()
+}
+
+func (content *Content) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Marshal(content)
+	}
+	return nil, page.NewUnsupportedError()
 }

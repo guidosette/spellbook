@@ -3,7 +3,6 @@ package page
 import (
 	"context"
 	"distudio.com/mage"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
@@ -189,7 +188,7 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
-	err = json.Unmarshal([]byte(j.Value()), resource)
+	err = resource.FromRepresentation(RepresentationTypeJSON, []byte(j.Value()))
 	if err != nil {
 		msg := fmt.Sprintf("bad json: %s", err.Error())
 		errs.AddError("", errors.New(msg))
@@ -198,22 +197,7 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 		return mage.Redirect{Status: http.StatusBadRequest}
 	}
 
-	if err = resource.Create(ctx); err != nil {
-		if fe, ok := err.(FieldError); !ok {
-			errs.AddFieldError(fe)
-		} else {
-			return handler.ErrorToStatus(ctx, err)
-		}
-	}
-
-	// check for client input erros
-	if errs.HasErrors() {
-		log.Errorf(ctx, "invalid request")
-		renderer.Data = errs
-		return mage.Redirect{Status: http.StatusBadRequest}
-	}
-
-	if err = handler.Manager.Save(ctx, resource); err != nil {
+	if err = handler.Manager.Create(ctx, resource, []byte(j.Value())); err != nil {
 		return handler.ErrorToStatus(ctx, err)
 	}
 
@@ -237,29 +221,7 @@ func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *m
 		return handler.ErrorToStatus(ctx, err)
 	}
 
-	errs := Errors{}
-	jresource, err := handler.Manager.NewResource(ctx)
-	if err != nil {
-		return handler.ErrorToStatus(ctx, err)
-	}
-
-	err = json.Unmarshal([]byte(j.Value()), &jresource)
-	if err != nil {
-		log.Errorf(ctx, "malformed json: %s", err.Error())
-		return mage.Redirect{Status: http.StatusBadRequest}
-	}
-
-	if err = resource.Update(ctx, jresource); err != nil {
-		errs.AddFieldError(err.(FieldError))
-	}
-
-	if errs.HasErrors() {
-		log.Errorf(ctx, "invalid request")
-		renderer.Data = errs
-		return mage.Redirect{Status: http.StatusBadRequest}
-	}
-
-	if err = handler.Manager.Save(ctx, resource); err != nil {
+	if err = handler.Manager.Update(ctx, resource, []byte(j.Value())); err != nil {
 		return handler.ErrorToStatus(ctx, err)
 	}
 

@@ -1,17 +1,14 @@
 package identity
 
 import (
-	"context"
 	"crypto/sha1"
 	"crypto/sha256"
-	"distudio.com/mage"
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"google.golang.org/appengine/datastore"
 	guser "google.golang.org/appengine/user"
 	"strings"
 	"time"
@@ -31,7 +28,7 @@ type User struct {
 	//Resource
 	Name       string
 	Surname    string
-	username    string `model:"-"`
+	//username    string `model:"-"`
 	Email      string
 	Password   string
 	Token      string
@@ -59,7 +56,7 @@ func (user *User) UnmarshalJSON(data []byte) error {
 	user.Name = alias.Name
 	user.Surname = alias.Surname
 	user.Email = alias.Email
-	user.username = alias.Username
+	//user.username = alias.Username
 	user.GrantNamedPermissions(alias.Permissions)
 	return nil
 }
@@ -138,9 +135,6 @@ func (user User) Username() string {
 	if user.IsGUser() {
 		return user.gUser.String()
 	}
-	if user.StringID() == "" {
-		return user.username
-	}
 	return user.StringID()
 }
 
@@ -169,110 +163,18 @@ func (user *User) Id() string {
 	return user.Username()
 }
 
-// populates the user struct.
-func (user *User) Create(ctx context.Context) error {
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionCreateUser) {
-		return page.NewPermissionError(PermissionName(PermissionCreateUser))
+func (user *User) FromRepresentation(rtype page.RepresentationType, data[]byte) error {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Unmarshal(data, user)
 	}
-
-	ins := mage.InputsFromContext(ctx)
-	j := ins[mage.KeyRequestJSON].Value()
-
-	meta := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}{}
-
-	err := json.Unmarshal([]byte(j), &meta)
-	if err != nil {
-		return page.NewFieldError("json", fmt.Errorf("invalid json: %s", j))
-	}
-
-	username := meta.Username
-	username = SanitizeUserName(username)
-
-	uf := page.NewRawField("username", true, username)
-	uf.AddValidator(page.DatastoreKeyNameValidator{})
-
-	// validate the username. Accepted values for the username are implementation dependent
-	if err := uf.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid username %s", user.Username())
-		return page.NewFieldError("username", errors.New(msg))
-	}
-
-	pf := page.NewRawField("password", true, meta.Password)
-	pf.AddValidator(page.LenValidator{MinLen: 8})
-
-	if err := pf.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid password %s for username %s", user.Password, username)
-		return page.NewFieldError("password", errors.New(msg))
-	}
-
-	if !current.HasPermission(PermissionEditPermissions) {
-		// user without the EditPermission perm can only enable or disable a user
-		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
-			return page.NewPermissionError(PermissionName(PermissionEditPermissions))
-		}
-	}
-
-	// check for user existence
-	err = model.FromStringID(ctx, &User{}, username, nil)
-
-	if err == nil {
-		// user already exists
-		msg := fmt.Sprintf("user %s already exists.", username)
-		return page.NewFieldError("user", errors.New(msg))
-	}
-
-	if err != datastore.ErrNoSuchEntity {
-		// generic datastore error
-		msg := fmt.Sprintf("error retrieving user with username %s: %s", username, err.Error())
-		return page.NewFieldError("user", errors.New(msg))
-	}
-
-	user.Password = HashPassword(user.Password, salt)
-
-	return nil
+	return page.NewUnsupportedError()
 }
 
-func (user *User) Update(ctx context.Context, res page.Resource) error {
-
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionEditUser) {
-		return page.NewPermissionError(PermissionName(PermissionEditUser))
+func (user *User) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Marshal(user)
 	}
-
-	other := res.(*User)
-	user.Name = other.Name
-
-	if other.Password != "" {
-		pf := page.NewRawField("password", true, other.Password)
-		pf.AddValidator(page.LenValidator{MinLen: 8})
-
-		if err := pf.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid password %s for username %s", other.Password, other.Username())
-			return page.NewFieldError("user", errors.New(msg))
-		}
-		user.Password = other.Password
-	}
-
-	if other.Email != "" {
-		ef := page.NewRawField("email", true, other.Email)
-		if err := ef.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid email address: %s", other.Email)
-			return page.NewFieldError("user", errors.New(msg))
-		}
-		user.Email = other.Email
-	}
-
-	if !current.HasPermission(PermissionEditPermissions) && other.ChangedPermission(*user) {
-		return page.NewPermissionError(PermissionName(PermissionEditPermissions))
-	}
-
-	user.Name = other.Name
-	user.Surname = other.Surname
-	user.Permission = other.Permission
-
-	return nil
+	return nil, page.NewUnsupportedError()
 }

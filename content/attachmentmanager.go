@@ -6,9 +6,11 @@ import (
 	"distudio.com/page"
 	"distudio.com/page/identity"
 	"errors"
+	"fmt"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
+	"time"
 )
 
 func NewAttachmentController() *page.RestController {
@@ -136,13 +138,23 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 	return result, nil
 }
 
-func (manager attachmentManager) Save(ctx context.Context, res page.Resource) error {
+func (manager attachmentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
+	if !current.HasPermission(identity.PermissionCreateContent) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
 	}
 
 	attachment := res.(*Attachment)
+
+	// attachment parent is required.
+	// if not attachment is to be specified the default value must be used
+	if attachment.Parent == "" {
+		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
+		return page.NewFieldError("parent", errors.New(msg))
+	}
+
+	attachment.Created = time.Now().UTC()
+	attachment.Uploader = current.Username()
 
 	err := model.Create(ctx, attachment)
 	if err != nil {
@@ -151,6 +163,29 @@ func (manager attachmentManager) Save(ctx context.Context, res page.Resource) er
 	}
 
 	return nil
+}
+
+func (manager attachmentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+
+	other := Attachment{}
+	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
+		return page.NewFieldError("", fmt.Errorf("bad json %s", string(bundle)))
+	}
+
+	attachment := res.(*Attachment)
+	attachment.Name = other.Name
+	attachment.Description = other.Description
+	attachment.ResourceUrl = other.ResourceUrl
+	attachment.Group = other.Group
+	attachment.Parent = other.Parent
+	attachment.Updated = time.Now().UTC()
+
+	if attachment.Parent == "" {
+		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
+		return page.NewFieldError("parent", errors.New(msg))
+	}
+
+	return model.Update(ctx, attachment)
 }
 
 func (manager attachmentManager) Delete(ctx context.Context, res page.Resource) error {

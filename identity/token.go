@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"context"
 	"distudio.com/page"
 	"encoding/json"
 )
@@ -31,27 +30,26 @@ func (token *Token) MarshalJSON() ([]byte, error) {
 	return []byte(token.Value), nil
 }
 
-func (token Token) Id() string {
+/**
+* Resource implementation
+ */
+func (token *Token) Id() string {
 	return token.Value
 }
 
-func (token Token) Create(ctx context.Context) error {
-	// checks the provided credentials. If correct creates a token, saves the user and returns the token
-	nick := page.NewRawField("username", true, token.Username)
-	if _, err := nick.Value(); err != nil {
-		return page.NewFieldError("username", err)
+func (token *Token) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Unmarshal(data, token)
 	}
-
-	password := page.NewRawField("password", true, token.Password)
-	password.AddValidator(page.LenValidator{MinLen: 8})
-	if _, err := password.Value(); err != nil {
-		return page.NewFieldError("password", err)
-	}
-
-	return nil
+	return page.NewUnsupportedError()
 }
 
-func (token Token) Update(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (token *Token) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Marshal(token)
+	}
+	return nil, page.NewUnsupportedError()
 }
 

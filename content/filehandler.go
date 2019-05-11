@@ -20,7 +20,7 @@ func (handler fileHandler) HandlePost(ctx context.Context, out *mage.ResponseOut
 		return handler.ErrorToStatus(ctx, err)
 	}
 
-	if err = handler.Manager.Save(ctx, res); err != nil {
+	if err = handler.Manager.Create(ctx, res, nil); err != nil {
 		return handler.ErrorToStatus(ctx, err)
 	}
 

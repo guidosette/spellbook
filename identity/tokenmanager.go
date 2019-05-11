@@ -32,9 +32,22 @@ func (manager tokenManager) ListOfProperties(ctx context.Context, opts page.List
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager tokenManager) Save(ctx context.Context, res page.Resource) error {
+func (manager tokenManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
-	token := res.(Token)
+	token := res.(*Token)
+
+	// checks the provided credentials. If correct creates a token, saves the user and returns the token
+	nick := page.NewRawField("username", true, token.Username)
+	if _, err := nick.Value(); err != nil {
+		return page.NewFieldError("username", err)
+	}
+
+	password := page.NewRawField("password", true, token.Password)
+	password.AddValidator(page.LenValidator{MinLen: 8})
+	if _, err := password.Value(); err != nil {
+		return page.NewFieldError("password", err)
+	}
+
 	u := User{}
 	err := model.FromStringID(ctx, &u, token.Username, nil)
 
@@ -61,6 +74,10 @@ func (manager tokenManager) Save(ctx context.Context, res page.Resource) error {
 	}
 
 	return nil
+}
+
+func (manager tokenManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+	return page.NewUnsupportedError()
 }
 
 func (manager tokenManager) Delete(ctx context.Context, res page.Resource) error {

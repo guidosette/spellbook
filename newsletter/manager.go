@@ -4,10 +4,13 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
+	"distudio.com/page/identity"
 	"errors"
+	"fmt"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 type Manager struct{}
@@ -124,24 +127,64 @@ func (manager Manager) ListOfProperties(ctx context.Context, opts page.ListOptio
 	return result, nil
 }
 
-func (manager Manager) Save(ctx context.Context, res page.Resource) error {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionEditContent) {
-	//	return resource.NewPermissionError(identity.PermissionEditContent)
-	//}
+func (manager Manager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionEditNewsletter) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditNewsletter))
+	}
 
 	newsletter := res.(*Newsletter)
+
+	if newsletter.Email == "" {
+		msg := fmt.Sprintf("Email can't be empty")
+		return page.NewFieldError("Email", errors.New(msg))
+	}
+	if !strings.Contains(newsletter.Email, "@") || !strings.Contains(newsletter.Email, ".") {
+		msg := fmt.Sprintf("Email not valid")
+		return page.NewFieldError("Email", errors.New(msg))
+	}
+
+	// list newsletter
+	var emails []*Newsletter
+	q := model.NewQuery(&Newsletter{})
+	q = q.WithField("Email =", newsletter.Email)
+	err := q.GetMulti(ctx, &emails)
+	if err != nil {
+		msg := fmt.Sprintf("Error retrieving list newsletter %+v", err)
+		return page.NewFieldError("Email", errors.New(msg))
+	}
+	if len(emails) > 0 {
+		msg := fmt.Sprintf("Email already exist")
+		return page.NewFieldError("Email", errors.New(msg))
+	}
+
 	opts := model.CreateOptions{}
 	opts.WithStringId(newsletter.Email)
 
-	err := model.CreateWithOptions(ctx, newsletter, &opts)
+	err = model.CreateWithOptions(ctx, newsletter, &opts)
 	if err != nil {
 		log.Errorf(ctx, "error creating post %s: %s", newsletter.Name, err)
 		return err
 	}
 
 	return nil
+}
+
+func (manager Manager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionEditNewsletter) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditNewsletter))
+	}
+
+	other := Newsletter{}
+	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
+		return page.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
+	}
+
+	newsletter := res.(*Newsletter)
+	newsletter.Email = other.Email
+	return model.Update(ctx, newsletter)
 }
 
 func (manager Manager) Delete(ctx context.Context, res page.Resource) error {

@@ -9,21 +9,25 @@ import (
 
 type Locale language.Tag
 
-func (locale Locale) MarshalJSON() ([]byte, error) {
-	tag := language.Tag(locale)
+func (locale *Locale) MarshalJSON() ([]byte, error) {
+	tag := language.Tag(*locale)
 	return json.Marshal(tag.String())
 }
 
-func (locale Locale) Id() string {
-	return ""
+func (locale *Locale) Id() string {
+	return language.Tag(*locale).String()
 }
 
-func (locale Locale) Create(ctx context.Context) error {
+func (locale *Locale) FromRepresentation(rtype page.RepresentationType, data []byte) error {
 	return page.NewUnsupportedError()
 }
 
-func (locale Locale) Update(ctx context.Context, other page.Resource) error {
-	return page.NewUnsupportedError()
+func (locale *Locale) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+	switch rtype {
+	case page.RepresentationTypeJSON:
+		return json.Marshal(locale)
+	}
+	return nil, page.NewUnsupportedError()
 }
 
 func NewLocaleController() *page.RestController {
@@ -62,7 +66,7 @@ func (manager localeManager) ListOf(ctx context.Context, opts page.ListOptions) 
 
 	for i := range items {
 		locale := Locale(items[i])
-		resources[i] = page.Resource(locale)
+		resources[i] = page.Resource(&locale)
 	}
 
 	return resources, nil
@@ -72,7 +76,11 @@ func (manager localeManager) ListOfProperties(ctx context.Context, opts page.Lis
 	return nil, page.NewUnsupportedError()
 }
 
-func (manager localeManager) Save(ctx context.Context, res page.Resource) error {
+func (manager localeManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+	return page.NewUnsupportedError()
+}
+
+func (manager localeManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 	return page.NewUnsupportedError()
 }
 

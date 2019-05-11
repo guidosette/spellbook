@@ -5,12 +5,15 @@ import (
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"distudio.com/page/identity"
+	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"net/url"
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 )
 
 func NewContentController() *page.RestController {
@@ -146,45 +149,119 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 	return result, nil
 }
 
-func (manager contentManager) Save(ctx context.Context, res page.Resource) error {
+func (manager contentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
+	current, _ := ctx.Value(identity.KeyUser).(identity.User)
+	if !current.HasPermission(identity.PermissionCreateContent) {
+		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
+	}
+
+	content := res.(*Content)
+
+	content.Created = time.Now().UTC()
+	content.Revision = 1
+	if !content.Published.IsZero() {
+		content.Published = time.Now().UTC()
+	}
+
+	if content.Title == "" || content.Name == "" {
+		return page.NewFieldError("title", errors.New("title and name can't be empty"))
+	}
+
+	if content.Slug == "" {
+		content.Slug = url.PathEscape(content.Title)
+	}
+
+	// if the same slug already exists, we must return
+	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
+	q := model.NewQuery((*Content)(nil))
+	q = q.WithField("Slug =", content.Slug)
+	count, err := q.Count(ctx)
+	if err != nil {
+		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+	}
+
+	if count > 0 {
+		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
+		return page.NewFieldError("slug", errors.New(msg))
+	}
+
+	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
+		content.Author = user.Username()
+	}
+
+	// input is valid, create the resource
+	opts := model.CreateOptions{}
+	opts.WithStringId(content.Slug)
+
+	// // WARNING: the volatile field Multimedia because Memcache (Gob)
+	//	can't ignore field
+	tmp := content.Attachments
+	content.Attachments = nil
+
+	err = model.CreateWithOptions(ctx, content, &opts)
+	if err != nil {
+		log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
+		return err
+	}
+
+	// return the swapped multimedia value
+	content.Attachments = tmp
+
+	return nil
+}
+
+func (manager contentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 	current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	if !current.HasPermission(identity.PermissionEditContent) {
 		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
 	}
 
 	content := res.(*Content)
-	if content.Id() == "" {
-		// input is valid, create the resource
-		opts := model.CreateOptions{}
-		opts.WithStringId(content.Slug)
 
-		// // WARNING: the volatile field Multimedia because Memcache (Gob)
-		//	can't ignore field
-		tmp := content.Attachments
-		content.Attachments = nil
-
-		err := model.CreateWithOptions(ctx, content, &opts)
-		if err != nil {
-			log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
-			return err
-		}
-
-		// return the swapped multimedia value
-		content.Attachments = tmp
-	} else {
-		tmp := content.Attachments
-		content.Attachments = nil
-
-		err := model.Update(ctx, content)
-		if err != nil {
-			log.Errorf(ctx, "error updating post %s: %s", content.Slug, err)
-			return err
-		}
-
-		// return the swapped multimedia value
-		content.Attachments = tmp
+	other := Content{}
+	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
+		return page.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
+
+	content.Name = other.Name
+	content.Title = other.Title
+	content.Subtitle = other.Subtitle
+	content.Category = other.Category
+	content.Topic = other.Topic
+	content.Locale = other.Locale
+	content.Description = other.Description
+	content.Body = other.Body
+	content.Cover = other.Cover
+	content.Revision = other.Revision
+	content.Order = other.Order
+	content.Updated = time.Now().UTC()
+	content.Tags = other.Tags
+
+	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
+		content.Author = user.Username()
+	}
+
+	if other.Published.IsZero() {
+		// not setted
+		content.Published = time.Time{}
+	} else {
+		// setted
+		// check previous data
+		if content.Published.IsZero() {
+			content.Published = time.Now().UTC()
+		}
+	}
+
+	tmp := content.Attachments
+	content.Attachments = nil
+
+	if err := model.Update(ctx, content); err != nil {
+		return fmt.Errorf("error updating post %s: %s", content.Slug, err)
+	}
+
+	// return the swapped multimedia value
+	content.Attachments = tmp
 
 	return nil
 }

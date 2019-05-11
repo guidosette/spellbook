@@ -31,15 +31,22 @@ type Manager interface {
 	FromId(ctx context.Context, id string) (Resource, error)
 	ListOf(ctx context.Context, opts ListOptions) ([]Resource, error)
 	ListOfProperties(ctx context.Context, opts ListOptions) ([]string, error)
-	Save(ctx context.Context, resource Resource) error
+	Create(ctx context.Context, resource Resource, bundle []byte) error
+	Update(ctx context.Context, resource Resource, bundle []byte) error
 	Delete(ctx context.Context, resource Resource) error
 }
 
+type RepresentationType int
+const (
+	RepresentationTypeJSON = iota
+	RepresentationTypeUrlencoded
+)
+
+
 type Resource interface {
 	Id() string
-	Create(ctx context.Context) error
-	// todo: other should be a general serializable object, like a bundle
-	Update(ctx context.Context, other Resource) error
+	ToRepresentation(rtype RepresentationType) ([]byte, error)
+	FromRepresentation(rtype RepresentationType, data []byte) error
 }
 
 type RestController struct {

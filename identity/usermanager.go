@@ -4,7 +4,10 @@ import (
 	"context"
 	"distudio.com/mage/model"
 	"distudio.com/page"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
@@ -126,7 +129,6 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 	q = q.Limit(opts.Size + 1)
 	err := q.GetAll(ctx, &conts)
 	if err != nil {
-		log.Errorf(ctx, "Error retrieving result: %+v", err)
 		return nil, err
 	}
 	var result []string
@@ -139,7 +141,7 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 	return result, nil
 }
 
-func (manager userManager) Save(ctx context.Context, res page.Resource) error {
+func (manager userManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
 	current, _ := ctx.Value(KeyUser).(User)
 	if !current.HasPermission(PermissionEditUser) {
@@ -147,16 +149,121 @@ func (manager userManager) Save(ctx context.Context, res page.Resource) error {
 	}
 
 	user := res.(*User)
-	opts := model.CreateOptions{}
-	opts.WithStringId(user.Username())
 
-	err := model.CreateWithOptions(ctx, user, &opts)
+	if user.StringID() != "" {
+		return page.NewFieldError("username", fmt.Errorf("user already exists"))
+	}
+
+	meta := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+
+	err := json.Unmarshal(bundle, &meta)
 	if err != nil {
-		log.Errorf(ctx, "error creating post %s: %s", user.Name, err)
-		return err
+		return page.NewFieldError("json", fmt.Errorf("invalid json: %s", string(bundle)))
+	}
+
+	username := meta.Username
+	username = SanitizeUserName(username)
+
+	uf := page.NewRawField("username", true, username)
+	uf.AddValidator(page.DatastoreKeyNameValidator{})
+
+	// validate the username. Accepted values for the username are implementation dependent
+	if err := uf.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid username %s", user.Username())
+		return page.NewFieldError("username", errors.New(msg))
+	}
+
+	pf := page.NewRawField("password", true, meta.Password)
+	pf.AddValidator(page.LenValidator{MinLen: 8})
+
+	if err := pf.Validate(); err != nil {
+		msg := fmt.Sprintf("invalid password %s for username %s", user.Password, username)
+		return page.NewFieldError("password", errors.New(msg))
+	}
+
+	if !current.HasPermission(PermissionEditPermissions) {
+		// user without the EditPermission perm can only enable or disable a user
+		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
+			return page.NewPermissionError(PermissionName(PermissionEditPermissions))
+		}
+	}
+
+	// check for user existence
+	err = model.FromStringID(ctx, &User{}, username, nil)
+
+	if err == nil {
+		// user already exists
+		msg := fmt.Sprintf("user %s already exists.", username)
+		return page.NewFieldError("user", errors.New(msg))
+	}
+
+	if err != datastore.ErrNoSuchEntity {
+		// generic datastore error
+		msg := fmt.Sprintf("error retrieving user with username %s: %s", username, err.Error())
+		return page.NewFieldError("user", errors.New(msg))
+	}
+
+	user.Password = HashPassword(user.Password, salt)
+
+
+	opts := model.CreateOptions{}
+	opts.WithStringId(username)
+
+	err = model.CreateWithOptions(ctx, user, &opts)
+	if err != nil {
+		return fmt.Errorf("error creating post %s: %s", user.Name, err)
 	}
 
 	return nil
+}
+
+func (manager userManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+	current, _ := ctx.Value(KeyUser).(User)
+	if !current.HasPermission(PermissionEditUser) {
+		return page.NewPermissionError(PermissionName(PermissionEditUser))
+	}
+
+	o, _ := manager.NewResource(ctx)
+	if err := o.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
+		return page.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
+	}
+
+	other := o.(*User)
+	user := res.(*User)
+	user.Name = other.Name
+
+	if other.Password != "" {
+		pf := page.NewRawField("password", true, other.Password)
+		pf.AddValidator(page.LenValidator{MinLen: 8})
+
+		if err := pf.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid password %s for username %s", other.Password, other.Username())
+			return page.NewFieldError("user", errors.New(msg))
+		}
+		user.Password = other.Password
+	}
+
+	if other.Email != "" {
+		ef := page.NewRawField("email", true, other.Email)
+		if err := ef.Validate(); err != nil {
+			msg := fmt.Sprintf("invalid email address: %s", other.Email)
+			return page.NewFieldError("user", errors.New(msg))
+		}
+		user.Email = other.Email
+	}
+
+	if !current.HasPermission(PermissionEditPermissions) && other.ChangedPermission(*user) {
+		return page.NewPermissionError(PermissionName(PermissionEditPermissions))
+	}
+
+	user.Name = other.Name
+	user.Surname = other.Surname
+	user.Permission = other.Permission
+
+	return model.Update(ctx, user)
 }
 
 func (manager userManager) Delete(ctx context.Context, res page.Resource) error {
@@ -168,8 +275,7 @@ func (manager userManager) Delete(ctx context.Context, res page.Resource) error 
 	user := res.(*User)
 	err := model.Delete(ctx, user, nil)
 	if err != nil {
-		log.Errorf(ctx, "error deleting user %s: %s", user.Name, err.Error())
-		return err
+		return fmt.Errorf("error deleting user %s: %s", user.Name, err.Error())
 	}
 
 	return nil
