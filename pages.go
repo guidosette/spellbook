@@ -221,9 +221,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	}
 
 	_, lok = inputs["hl"]
-
 	if lok {
 		lang = inputs["hl"].Value()
+	}
+	_, lok = inputs["lang"]
+	if lok {
+		lang = inputs["lang"].Value()
 	}
 
 	lcookie := http.Cookie{}
