@@ -233,11 +233,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	out.AddCookie(lcookie)
 
 	//create the link creator function
-	var funcMap template.FuncMap
-	if page.FuncHandler != nil {
-		funcMap = page.FuncHandler.AssignFuncMap(ctx)
-	}
-	/*funcMap = template.FuncMap{
+	funcMap := template.FuncMap{
 		"LocalizedUrl": func(url string) string {
 			return fmt.Sprintf("%s?hl=%s", url, lang)
 		},
@@ -245,8 +241,13 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 			j, _ := json.Marshal(data)
 			return template.HTML(j)
 		},
-		//"customFuncMap", t, //custom funcMap
-	}*/
+	}
+	if page.FuncHandler != nil {
+		customFuncMap := page.FuncHandler.AssignFuncMap(ctx)
+		for k, v := range customFuncMap {
+			funcMap[k] = v
+		}
+	}
 
 	files := make([]string, 0, 0)
 	files = append(files, page.Bases...)
