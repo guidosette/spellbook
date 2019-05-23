@@ -27,7 +27,7 @@ func (token *Token) UnmarshalJSON(data []byte) error {
 }
 
 func (token *Token) MarshalJSON() ([]byte, error) {
-	return []byte(token.Value), nil
+	return json.Marshal(token.Value)
 }
 
 /**

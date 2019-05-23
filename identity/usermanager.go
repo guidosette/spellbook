@@ -32,14 +32,14 @@ func (manager userManager) NewResource(ctx context.Context) (page.Resource, erro
 }
 
 func (manager userManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionReadUser) {
-		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionReadUser) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
-	if id == current.Id() {
-		return &current, nil
+	user, ok := current.(User)
+	if ok && id == user.Id() {
+		return &user, nil
 	}
 
 	att := User{}
@@ -53,9 +53,8 @@ func (manager userManager) FromId(ctx context.Context, id string) (page.Resource
 
 func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionReadUser) {
-		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadUser) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
 	var users []*User
@@ -92,9 +91,8 @@ func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 }
 
 func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionReadUser) {
-		return nil, page.NewPermissionError(PermissionName(PermissionReadUser))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadUser) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
 	a := []string{"group"}
@@ -143,9 +141,9 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 
 func (manager userManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionEditUser) {
-		return page.NewPermissionError(PermissionName(PermissionEditUser))
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionCreateUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionCreateUser))
 	}
 
 	user := res.(*User)
@@ -184,10 +182,10 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 		return page.NewFieldError("password", errors.New(msg))
 	}
 
-	if !current.HasPermission(PermissionEditPermissions) {
+	if !current.HasPermission(page.PermissionEditPermissions) {
 		// user without the EditPermission perm can only enable or disable a user
 		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
-			return page.NewPermissionError(PermissionName(PermissionEditPermissions))
+			return page.NewPermissionError(page.PermissionName(page.PermissionEditPermissions))
 		}
 	}
 
@@ -221,9 +219,9 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 }
 
 func (manager userManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionEditUser) {
-		return page.NewPermissionError(PermissionName(PermissionEditUser))
+	current := page.IdentityFromContext(ctx)
+	if !current.HasPermission(page.PermissionEditUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditUser))
 	}
 
 	o, _ := manager.NewResource(ctx)
@@ -235,15 +233,19 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 	user := res.(*User)
 	user.Name = other.Name
 
-	if other.Password != "" {
-		pf := page.NewRawField("password", true, other.Password)
-		pf.AddValidator(page.LenValidator{MinLen: 8})
+	tkn, _ := tokenManager{}.NewResource(ctx)
+	token := tkn.(*Token)
+	if err := token.FromRepresentation(page.RepresentationTypeJSON, bundle); err == nil {
+		if token.Password != "" {
+			pf := page.NewRawField("password", true, token.Password)
+			pf.AddValidator(page.LenValidator{MinLen: 8})
 
-		if err := pf.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid password %s for username %s", other.Password, other.Username())
-			return page.NewFieldError("user", errors.New(msg))
+			if err := pf.Validate(); err != nil {
+				msg := fmt.Sprintf("invalid password %s for username %s", token.Password, other.Username())
+				return page.NewFieldError("user", errors.New(msg))
+			}
+			user.Password = HashPassword(token.Password, salt)
 		}
-		user.Password = other.Password
 	}
 
 	if other.Email != "" {
@@ -255,8 +257,8 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 		user.Email = other.Email
 	}
 
-	if !current.HasPermission(PermissionEditPermissions) && other.ChangedPermission(*user) {
-		return page.NewPermissionError(PermissionName(PermissionEditPermissions))
+	if !current.HasPermission(page.PermissionEditPermissions) && other.ChangedPermission(*user) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditPermissions))
 	}
 
 	user.Name = other.Name
@@ -267,9 +269,9 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 }
 
 func (manager userManager) Delete(ctx context.Context, res page.Resource) error {
-	current, _ := ctx.Value(KeyUser).(User)
-	if !current.HasPermission(PermissionEditUser) {
-		return page.NewPermissionError(PermissionName(PermissionEditUser))
+	current := page.IdentityFromContext(ctx)
+	if !current.HasPermission(page.PermissionEditUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditUser))
 	}
 
 	user := res.(*User)

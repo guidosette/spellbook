@@ -5,7 +5,6 @@ import (
 	"context"
 	"distudio.com/mage"
 	"distudio.com/page"
-	"distudio.com/page/identity"
 	"errors"
 	"fmt"
 	"google.golang.org/api/iterator"
@@ -32,10 +31,8 @@ func (manager fileManager) NewResource(ctx context.Context) (page.Resource, erro
 }
 
 func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	//todo: set bucket name in configuration
@@ -68,9 +65,8 @@ func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource
 
 func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	//todo: set bucket name in configuration
@@ -128,9 +124,10 @@ func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListO
 }
 
 func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionLoadFiles) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionLoadFiles))
+
+
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionLoadFiles) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionLoadFiles))
 	}
 
 	rfile := res.(*File)

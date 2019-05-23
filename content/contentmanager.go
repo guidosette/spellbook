@@ -34,9 +34,9 @@ func (manager contentManager) NewResource(ctx context.Context) (page.Resource, e
 }
 
 func (manager contentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	cont := Content{}
@@ -57,9 +57,8 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 
 func (manager contentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	var conts []*Content
@@ -96,9 +95,8 @@ func (manager contentManager) ListOf(ctx context.Context, opts page.ListOptions)
 
 func (manager contentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	a := []string{"category", "topic", "name"} // list property accepted
@@ -151,9 +149,9 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 
 func (manager contentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionCreateContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionCreateContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionCreateContent))
 	}
 
 	content := res.(*Content)
@@ -186,7 +184,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("slug", errors.New(msg))
 	}
 
-	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
+	if user, ok := current.(identity.User); ok {
 		content.Author = user.Username()
 	}
 
@@ -212,9 +210,11 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 }
 
 func (manager contentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
+
+	current := page.IdentityFromContext(ctx)
+
+	if current == nil || !current.HasPermission(page.PermissionEditContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
 	}
 
 	content := res.(*Content)
@@ -238,15 +238,15 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 
-	if user, ok := ctx.Value(identity.KeyUser).(identity.User); ok {
+	if user, ok := current.(identity.User); ok {
 		content.Author = user.Username()
 	}
 
 	if other.Published.IsZero() {
-		// not setted
+		// not set
 		content.Published = time.Time{}
 	} else {
-		// setted
+		// set
 		// check previous data
 		if content.Published.IsZero() {
 			content.Published = time.Now().UTC()
@@ -268,9 +268,8 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 
 func (manager contentManager) Delete(ctx context.Context, res page.Resource) error {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionEditContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
 	}
 
 	content := res.(*Content)

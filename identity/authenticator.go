@@ -4,12 +4,8 @@ import (
 	"context"
 	"distudio.com/mage"
 	"distudio.com/mage/model"
+	"distudio.com/page"
 	"google.golang.org/appengine/user"
-)
-
-const (
-	HeaderToken string = "X-Authentication"
-	KeyUser string = "__pUser__"
 )
 
 type UserAuthenticator struct{
@@ -18,7 +14,7 @@ type UserAuthenticator struct{
 
 func (authenticator UserAuthenticator) Authenticate(ctx context.Context) context.Context {
 	inputs := mage.InputsFromContext(ctx)
-	if tkn, ok := inputs[HeaderToken]; ok {
+	if tkn, ok := inputs[page.HeaderToken]; ok {
 		token := tkn.Value()
 		// grab the last chars after hashLength
 		encoded := token[hashLen:]
@@ -32,7 +28,7 @@ func (authenticator UserAuthenticator) Authenticate(ctx context.Context) context
 			return ctx
 		}
 
-		return context.WithValue(ctx, KeyUser, u)
+		return page.ContextWithIdentity(ctx, u)
 	}
 
 	return ctx
@@ -56,7 +52,7 @@ func (authenticator GSupportAuthenticator) Authenticate(ctx context.Context) con
 	u.Email = guser.Email
 	// if admin, grant all permissions
 	u.GrantAll()
-	return context.WithValue(ctx, KeyUser, u)
+	return page.ContextWithIdentity(ctx, u)
 }
 
 

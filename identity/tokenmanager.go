@@ -59,7 +59,8 @@ func (manager tokenManager) Create(ctx context.Context, res page.Resource, bundl
 		return err
 	}
 
-	if u.Password != HashPassword(token.Password, salt) {
+	hp := HashPassword(token.Password, salt)
+	if u.Password != hp {
 		return datastore.ErrNoSuchEntity
 	}
 
@@ -73,6 +74,8 @@ func (manager tokenManager) Create(ctx context.Context, res page.Resource, bundl
 		return fmt.Errorf("error updating user token: %s", err.Error())
 	}
 
+	token.Value = u.Token
+
 	return nil
 }
 
@@ -82,10 +85,10 @@ func (manager tokenManager) Update(ctx context.Context, res page.Resource, bundl
 
 func (manager tokenManager) Delete(ctx context.Context, res page.Resource) error {
 
-	u := ctx.Value(KeyUser)
+	u := page.IdentityFromContext(ctx)
 	user, ok := u.(User)
 	if !ok {
-		return page.NewPermissionError(PermissionName(PermissionEnabled))
+		return page.NewPermissionError(page.PermissionName(page.PermissionEnabled))
 	}
 
 	user.Token = ""

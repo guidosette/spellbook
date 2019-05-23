@@ -33,9 +33,8 @@ func (manager attachmentManager) NewResource(ctx context.Context) (page.Resource
 
 func (manager attachmentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	att := Attachment{}
@@ -48,9 +47,8 @@ func (manager attachmentManager) FromId(ctx context.Context, id string) (page.Re
 }
 
 func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	var attachments []*Attachment
@@ -87,9 +85,8 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptio
 }
 
 func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionReadContent) {
-		return nil, page.NewPermissionError(identity.PermissionName(identity.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	a := []string{"Group"} // list property accepted
@@ -139,10 +136,11 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 }
 
 func (manager attachmentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionCreateContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionCreateContent))
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionCreateContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionCreateContent))
 	}
+
 
 	attachment := res.(*Attachment)
 
@@ -154,7 +152,7 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 	}
 
 	attachment.Created = time.Now().UTC()
-	attachment.Uploader = current.Username()
+	attachment.Uploader = current.(identity.User).Username()
 
 	err := model.Create(ctx, attachment)
 	if err != nil {
@@ -166,6 +164,10 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 }
 
 func (manager attachmentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionEditContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
+	}
 
 	other := Attachment{}
 	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
@@ -189,10 +191,11 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 }
 
 func (manager attachmentManager) Delete(ctx context.Context, res page.Resource) error {
-	current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	if !current.HasPermission(identity.PermissionEditContent) {
-		return page.NewPermissionError(identity.PermissionName(identity.PermissionEditContent))
+	current := page.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(page.PermissionEditContent) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
 	}
+
 
 	attachment := res.(*Attachment)
 	err := model.Delete(ctx, attachment, nil)

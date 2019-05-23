@@ -49,9 +49,15 @@ type Resource interface {
 	FromRepresentation(rtype RepresentationType, data []byte) error
 }
 
+/**
+* Base rest controller
+ */
+
 type RestController struct {
 	Key string
+	Private bool
 	RestHandler
+	extenders map[string][]Extender
 }
 
 func NewBaseRestController() *RestController {
@@ -62,7 +68,22 @@ func NewRestController(handler RestHandler) *RestController {
 	return &RestController{RestHandler: handler}
 }
 
+func (controller *RestController) AddExtender(hook string, extender Extender) {
+	e, ok := controller.extenders[hook]
+	if !ok {
+		e = make([]Extender, 0)
+	}
+	e = append(e, extender)
+	controller.extenders[hook] = e
+}
+
 func (controller *RestController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+
+	u := IdentityFromContext(ctx)
+
+	if controller.Private && u == nil {
+		return mage.Redirect{Status: http.StatusUnauthorized}
+	}
 
 	ins := mage.InputsFromContext(ctx)
 

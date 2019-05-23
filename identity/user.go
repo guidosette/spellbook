@@ -33,7 +33,7 @@ type User struct {
 	Password   string
 	Token      string
 	Locale     string
-	Permission Permission
+	Permission page.Permission
 	LastLogin  time.Time
 	gUser      *guser.User `model:"-",json:"-"`
 }
@@ -85,12 +85,16 @@ func (user *User) MarshalJSON() ([]byte, error) {
 
 func (user User) Permissions() []string {
 	var perms []string
-	for permission, description := range Permissions {
+	for permission, description := range page.Permissions {
 		if user.HasPermission(permission) {
 			perms = append(perms, description)
 		}
 	}
 	return perms
+}
+
+func (user User) HasPermission(permission page.Permission) bool {
+	return user.Permission & permission != 0
 }
 
 // sanitizes a string to be used a username
