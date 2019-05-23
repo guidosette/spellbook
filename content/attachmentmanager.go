@@ -10,11 +10,12 @@ import (
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
+	"strconv"
 	"time"
 )
 
 func NewAttachmentController() *page.RestController {
-	return NewContentControllerWithKey("")
+	return NewAttachmentControllerWithKey("")
 }
 
 func NewAttachmentControllerWithKey(key string) *page.RestController {
@@ -31,14 +32,19 @@ func (manager attachmentManager) NewResource(ctx context.Context) (page.Resource
 	return &Attachment{}, nil
 }
 
-func (manager attachmentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager attachmentManager) FromId(ctx context.Context, strId string) (page.Resource, error) {
 
 	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
+	id, err := strconv.ParseInt(strId, 10, 64)
+	if err != nil {
+		return nil, page.NewFieldError(strId, err)
+	}
+
 	att := Attachment{}
-	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
+	if err := model.FromIntID(ctx, &att, id, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, err.Error())
 		return nil, err
 	}
