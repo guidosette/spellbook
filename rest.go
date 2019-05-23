@@ -234,7 +234,7 @@ func (handler BaseRestHandler) HandleDelete(ctx context.Context, key string, out
 	renderer := mage.JSONRenderer{}
 	out.Renderer = &renderer
 
-	resource, err := handler.Manager.NewResource(ctx)
+	resource, err := handler.Manager.FromId(ctx, key)
 	if err != nil {
 		return handler.ErrorToStatus(ctx, err)
 	}
