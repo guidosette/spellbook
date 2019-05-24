@@ -48,6 +48,12 @@ func (manager placeManager) FromId(ctx context.Context, strId string) (page.Reso
 		return nil, err
 	}
 
+	// todo get website
+	//idAtt := att.Website
+	//if err := model.FromIntID(ctx, att.Website, idAtt, nil); err != nil {
+	//	log.Errorf(ctx, "could not retrieve attachemnt %s: %s", id, err.Error())
+	//	return nil, err
+	//}
 	return &att, nil
 }
 
@@ -148,16 +154,23 @@ func (manager placeManager) Create(ctx context.Context, res page.Resource, bundl
 	place := res.(*Place)
 
 	if place.Address == "" || !place.Position.Valid() {
-		return page.NewFieldError("title", errors.New("address and position can't be empty"))
+		return page.NewFieldError("address", errors.New("address and position can't be empty"))
 	}
 
 	place.Created = time.Now().UTC()
+
+	// todo website
+	//tmp := place.Website
+	//place.Website = nil
 
 	err := model.Create(ctx, place)
 	if err != nil {
 		log.Errorf(ctx, "error creating place %s: %s", place.Name, err)
 		return err
 	}
+
+	// return the swapped multimedia value
+	//place.Website = tmp
 
 	return nil
 }
@@ -182,10 +195,21 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	place.Updated = time.Now().UTC()
 
 	if place.Address == "" || !place.Position.Valid() {
-		return page.NewFieldError("title", errors.New("address and position can't be empty"))
+		return page.NewFieldError("address", errors.New("address and position can't be empty"))
 	}
 
-	return model.Update(ctx, place)
+	// todo website
+	//tmp := place.Website
+	//place.Website = nil
+
+	if err := model.Update(ctx, place); err != nil {
+		return fmt.Errorf("error updating place %s: %s", place.Address, err)
+	}
+
+	// return the swapped multimedia value
+	//place.Website = tmp
+
+	return nil
 }
 
 func (manager placeManager) Delete(ctx context.Context, res page.Resource) error {

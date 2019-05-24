@@ -10,10 +10,10 @@ import (
 
 type Place struct {
 	model.Model `json:"-"`
-	Address     string             `json:"address"`
+	Address     string             `model:"search";json:"address"`
 	Phone       string             `json:"phone";model:"noindex"`
 	Description string             `json:"description";model:"noindex"`
-	Position    datastore.GeoPoint `json:"position"`
+	Position    datastore.GeoPoint `model:"search"`
 	Website     *Attachment        `model:"-"`
 	Created     time.Time          `json:"created"`
 	Updated     time.Time          `json:"updated"`
@@ -22,13 +22,14 @@ type Place struct {
 func (place *Place) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Address     string             `json:"address"`
-		Phone       string             `json:"phone"`
-		Description string             `json:"description"`
-		Position    datastore.GeoPoint `json:"position"`
-		Website     *Attachment        `json:"website"`
-		Created     time.Time          `json:"created"`
-		Updated     time.Time          `json:"updated"`
+		Address     string      `json:"address"`
+		Phone       string      `json:"phone"`
+		Description string      `json:"description"`
+		Lat         float64     `json:"lat"`
+		Lng         float64     `json:"lng"`
+		Website     *Attachment `json:"website"`
+		Created     time.Time   `json:"created"`
+		Updated     time.Time   `json:"updated"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -39,24 +40,25 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 	place.Address = alias.Address
 	place.Phone = alias.Phone
 	place.Description = alias.Description
-	place.Position = alias.Position
 	place.Website = alias.Website
 	place.Created = alias.Created
 	place.Updated = alias.Updated
+	place.Position = datastore.GeoPoint{Lat: alias.Lat, Lng: alias.Lng}
 
 	return nil
 }
 
 func (place *Place) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Address     string             `json:"address"`
-		Phone       string             `json:"phone"`
-		Description string             `json:"description"`
-		Position    datastore.GeoPoint `json:"position"`
-		Website     *Attachment        `json:"website"`
-		Created     time.Time          `json:"created"`
-		Updated     time.Time          `json:"updated"`
-		Id          int64              `json:"id"`
+		Address     string      `json:"address"`
+		Phone       string      `json:"phone"`
+		Description string      `json:"description"`
+		Lat         float64     `json:"lat"`
+		Lng         float64     `json:"lng"`
+		Website     *Attachment `json:"website"`
+		Created     time.Time   `json:"created"`
+		Updated     time.Time   `json:"updated"`
+		Id          int64       `json:"id"`
 	}
 
 	return json.Marshal(&struct {
@@ -66,7 +68,8 @@ func (place *Place) MarshalJSON() ([]byte, error) {
 			Address:     place.Address,
 			Phone:       place.Phone,
 			Description: place.Description,
-			Position:    place.Position,
+			Lat:         place.Position.Lat,
+			Lng:         place.Position.Lng,
 			Website:     place.Website,
 			Created:     place.Created,
 			Updated:     place.Updated,
