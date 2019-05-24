@@ -6,7 +6,7 @@ type Permission int64
 
 const (
 	HeaderToken string = "X-Authentication"
-	keyUser string = "__pUser__"
+	keyUser     string = "__pUser__"
 )
 
 const (
@@ -23,6 +23,9 @@ const (
 	PermissionPublishContent
 	PermissionReadNewsletter
 	PermissionEditNewsletter
+	PermissionReadPlace
+	PermissionCreatePlace
+	PermissionEditPlace
 )
 
 var Permissions = map[Permission]string{
@@ -39,6 +42,9 @@ var Permissions = map[Permission]string{
 	PermissionPublishContent:  "PERMISSION_PUBLISH_CONTENT",
 	PermissionReadNewsletter:  "PERMISSION_READ_NEWSLETTER",
 	PermissionEditNewsletter:  "PERMISSION_EDIT_NEWSLETTER",
+	PermissionReadPlace:       "PERMISSION_READ_CONTENT",
+	PermissionCreatePlace:     "PERMISSION_CREATE_PLACE",
+	PermissionEditPlace:       "PERMISSION_EDIT_PLACE",
 }
 
 func PermissionName(permission Permission) string {
@@ -53,7 +59,6 @@ func NamedPermissionToPermission(name string) Permission {
 	}
 	return Permission(0)
 }
-
 
 type Identity interface {
 	HasPermission(permission Permission) bool

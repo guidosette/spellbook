@@ -104,6 +104,20 @@ func init() {
 		return c
 	}, &identity.GSupportAuthenticator{})
 
+	instance.Router.SetUniversalRoute("/api/place", func(ctx context.Context) mage.Controller {
+		c := content.NewPlaceController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/place/:id", func(ctx context.Context) mage.Controller {
+		params := mage.RoutingParams(ctx)
+		key := params["id"].Value()
+		c := content.NewPlaceControllerWithKey(key)
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
 	m.Router = &instance.Router
 	m.LaunchApp(instance)
 	http.HandleFunc("/", m.Run)

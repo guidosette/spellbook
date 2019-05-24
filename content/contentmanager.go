@@ -224,6 +224,10 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
 
+	if other.Title == "" || other.Name == "" {
+		return page.NewFieldError("title", errors.New("title and name can't be empty"))
+	}
+
 	content.Name = other.Name
 	content.Title = other.Title
 	content.Subtitle = other.Subtitle
