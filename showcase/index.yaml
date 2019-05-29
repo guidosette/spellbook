@@ -19,6 +19,10 @@ indexes:
   properties:
   - name: "Locale"
   - name: "Order"
+- kind: "Attachment"
+  properties:
+  - name: "Type"
+  - name: "Group"
 - kind: "Content"
   properties:
   - name: "Locale"

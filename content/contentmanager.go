@@ -190,7 +190,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 
 	// input is valid, create the resource
 	opts := model.CreateOptions{}
-	opts.WithStringId(content.Slug)
+	//opts.WithStringId(content.Slug)
 
 	// // WARNING: the volatile field Multimedia because Memcache (Gob)
 	//	can't ignore field

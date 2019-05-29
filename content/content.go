@@ -52,6 +52,7 @@ type Content struct {
 	Created   time.Time
 	Updated   time.Time
 	Published time.Time
+	Seo       *Seo `model:"-"`
 }
 
 func (content *Content) UnmarshalJSON(data []byte) error {
@@ -76,6 +77,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Updated     time.Time                `json:"updated"`
 		Published   time.Time                `json:"published"`
 		IsPublished bool                     `json:"isPublished"`
+		Seo         
 	}{}
 
 	err := json.Unmarshal(data, &alias)
