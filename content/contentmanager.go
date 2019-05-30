@@ -170,8 +170,8 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		content.Published = time.Now().UTC()
 	}
 
-	if content.Title == "" || content.Name == "" {
-		return page.NewFieldError("title", errors.New("title and name can't be empty"))
+	if content.Title == "" {
+		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
 	if content.Slug == "" {
@@ -232,11 +232,10 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
 
-	if other.Title == "" || other.Name == "" {
-		return page.NewFieldError("title", errors.New("title and name can't be empty"))
+	if other.Title == "" {
+		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
-	content.Name = other.Name
 	content.Title = other.Title
 	content.Subtitle = other.Subtitle
 	content.Category = other.Category
@@ -249,6 +248,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Order = other.Order
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
+	content.Slug = other.Slug
 
 	if user, ok := current.(identity.User); ok {
 		content.Author = user.Username()
