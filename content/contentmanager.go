@@ -227,7 +227,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 
 	content := res.(*Content)
 
-	other := Content{}
+	other := &Content{}
 	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
 		return page.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
