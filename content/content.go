@@ -77,7 +77,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Updated     time.Time                `json:"updated"`
 		Published   time.Time                `json:"published"`
 		IsPublished bool                     `json:"isPublished"`
-		Seo         
+		Seo
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -139,10 +139,12 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 	isPublished := content.Published != ZeroTime
 
 	return json.Marshal(&struct {
+		Id          int64    `json:"id"`
 		Tags        []string `json:"tags"`
 		IsPublished bool     `json:"isPublished"`
 		Alias
 	}{
+		content.IntID(),
 		tags,
 		isPublished,
 		Alias{

@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,12 +36,19 @@ func (manager contentManager) NewResource(ctx context.Context) (page.Resource, e
 
 func (manager contentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 
+	intid, err := strconv.ParseInt(id, 10, 64)
+
+	if err != nil {
+		err := fmt.Errorf("Invalid ID for content: %s", err.Error())
+		return nil, page.NewFieldError("id", err)
+	}
+
 	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
 	cont := Content{}
-	if err := model.FromStringID(ctx, &cont, id, nil); err != nil {
+	if err := model.FromIntID(ctx, &cont, intid, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s: %s", id, err.Error())
 		return nil, err
 	}

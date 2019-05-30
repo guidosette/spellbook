@@ -70,9 +70,9 @@ func init() {
 		return c
 	}, &identity.GSupportAuthenticator{})
 
-	instance.Router.SetUniversalRoute("/api/content/:slug", func(ctx context.Context) mage.Controller {
+	instance.Router.SetUniversalRoute("/api/content/:id", func(ctx context.Context) mage.Controller {
 		params := mage.RoutingParams(ctx)
-		key := params["slug"].Value()
+		key := params["id"].Value()
 		c := content.NewContentControllerWithKey(key)
 		c.Private = true
 		return c
