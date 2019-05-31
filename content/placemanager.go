@@ -94,7 +94,7 @@ func (manager placeManager) ListOfProperties(ctx context.Context, opts page.List
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPlace))
 	}
 
-	a := []string{"Address"} // list property accepted
+	a := []string{"Name", "City"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -174,7 +174,11 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	}
 
 	place := res.(*Place)
+	place.Name = other.Name
 	place.Address = other.Address
+	place.City = other.City
+	place.PostalCode = other.PostalCode
+	place.Country = other.Country
 	place.Description = other.Description
 	place.Position = other.Position
 	place.Phone = other.Phone

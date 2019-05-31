@@ -10,7 +10,11 @@ import (
 
 type Place struct {
 	model.Model `json:"-"`
+	Name        string             `model:"search";json:"name"`
 	Address     string             `model:"search";json:"address"`
+	City        string             `model:"search";json:"city"`
+	PostalCode  string             `model:"search";json:"postalCode"`
+	Country     string             `model:"search";json:"country"`
 	Phone       string             `json:"phone";model:"noindex"`
 	Description string             `json:"description";model:"noindex"`
 	Position    appengine.GeoPoint `model:"search"`
@@ -22,7 +26,11 @@ type Place struct {
 func (place *Place) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
+		Name        string    `json:"name"`
 		Address     string    `json:"address"`
+		City        string    `json:"city"`
+		PostalCode  string    `json:"postalCode"`
+		Country     string    `json:"country"`
 		Phone       string    `json:"phone"`
 		Description string    `json:"description"`
 		Lat         float64   `json:"lat"`
@@ -37,7 +45,11 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	place.Name = alias.Name
 	place.Address = alias.Address
+	place.City = alias.City
+	place.PostalCode = alias.PostalCode
+	place.Country = alias.Country
 	place.Phone = alias.Phone
 	place.Description = alias.Description
 	place.Website = alias.Website
@@ -50,7 +62,11 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 
 func (place *Place) MarshalJSON() ([]byte, error) {
 	type Alias struct {
+		Name        string    `json:"name"`
 		Address     string    `json:"address"`
+		City        string    `json:"city"`
+		PostalCode  string    `json:"postalCode"`
+		Country     string    `json:"country"`
 		Phone       string    `json:"phone"`
 		Description string    `json:"description"`
 		Lat         float64   `json:"lat"`
@@ -65,7 +81,11 @@ func (place *Place) MarshalJSON() ([]byte, error) {
 		Alias
 	}{
 		Alias{
+			Name:        place.Name,
 			Address:     place.Address,
+			City:        place.City,
+			PostalCode:  place.PostalCode,
+			Country:     place.Country,
 			Phone:       place.Phone,
 			Description: place.Description,
 			Lat:         place.Position.Lat,
