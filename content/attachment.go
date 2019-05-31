@@ -28,6 +28,7 @@ type Attachment struct {
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
 	Uploader    string    `json:"uploader"`
+	AltText     string    `json:"altText"`
 }
 
 func (attachment *Attachment) UnmarshalJSON(data []byte) error {
@@ -42,6 +43,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		Created     time.Time `json:"created"`
 		Updated     time.Time `json:"updated"`
 		Uploader    string    `json:"uploader"`
+		AltText     string    `json:"altText"`
 		//Id          int64     `json:"id"`
 	}{}
 
@@ -59,6 +61,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.Created = alias.Created
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
+	attachment.AltText = alias.AltText
 	//attachment.Id = alias.Id
 
 	return nil
@@ -75,6 +78,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Created     time.Time `json:"created"`
 		Updated     time.Time `json:"updated"`
 		Uploader    string    `json:"uploader"`
+		AltText     string    `json:"altText"`
 		Id          int64     `json:"id"`
 	}
 
@@ -91,6 +95,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			Created:     attachment.Created,
 			Updated:     attachment.Updated,
 			Uploader:    attachment.Uploader,
+			AltText:     attachment.AltText,
 			Id:          attachment.IntID(),
 		},
 	})
