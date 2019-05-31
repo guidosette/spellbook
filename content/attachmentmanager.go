@@ -20,7 +20,7 @@ func NewAttachmentController() *page.RestController {
 
 func NewAttachmentControllerWithKey(key string) *page.RestController {
 	man := attachmentManager{}
-	handler := page.BaseRestHandler{Manager:man}
+	handler := page.BaseRestHandler{Manager: man}
 	c := page.NewRestController(handler)
 	c.Key = key
 	return c
@@ -34,8 +34,13 @@ func (manager attachmentManager) NewResource(ctx context.Context) (page.Resource
 
 func (manager attachmentManager) FromId(ctx context.Context, strId string) (page.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
+		var p page.Permission
+		p = page.PermissionReadContent
+		if !current.HasPermission(page.PermissionReadMedia) {
+			p = page.PermissionReadMedia
+		}
+		return nil, page.NewPermissionError(page.PermissionName(p))
 	}
 
 	id, err := strconv.ParseInt(strId, 10, 64)
@@ -53,8 +58,13 @@ func (manager attachmentManager) FromId(ctx context.Context, strId string) (page
 }
 
 func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
+		var p page.Permission
+		p = page.PermissionReadContent
+		if !current.HasPermission(page.PermissionReadMedia) {
+			p = page.PermissionReadMedia
+		}
+		return nil, page.NewPermissionError(page.PermissionName(p))
 	}
 
 	var attachments []*Attachment
@@ -91,8 +101,13 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptio
 }
 
 func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
+		var p page.Permission
+		p = page.PermissionReadContent
+		if !current.HasPermission(page.PermissionReadMedia) {
+			p = page.PermissionReadMedia
+		}
+		return nil, page.NewPermissionError(page.PermissionName(p))
 	}
 
 	a := []string{"Group"} // list property accepted
@@ -123,7 +138,6 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 		}
 	}
 
-
 	q = q.Distinct(name)
 	q = q.Limit(opts.Size + 1)
 	err := q.GetAll(ctx, &conts)
@@ -143,10 +157,14 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 
 func (manager attachmentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionCreateContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionCreateContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionCreateContent) && !current.HasPermission(page.PermissionCreateMedia)) {
+		var p page.Permission
+		p = page.PermissionCreateContent
+		if !current.HasPermission(page.PermissionCreateMedia) {
+			p = page.PermissionCreateMedia
+		}
+		return page.NewPermissionError(page.PermissionName(p))
 	}
-
 
 	attachment := res.(*Attachment)
 
@@ -170,9 +188,13 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 }
 
 func (manager attachmentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionEditContent) && !current.HasPermission(page.PermissionEditMedia)) {
+		var p page.Permission
+		p = page.PermissionEditContent
+		if !current.HasPermission(page.PermissionEditMedia) {
+			p = page.PermissionEditMedia
+		}
+		return page.NewPermissionError(page.PermissionName(p))
 	}
 
 	other := Attachment{}
@@ -198,11 +220,14 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 }
 
 func (manager attachmentManager) Delete(ctx context.Context, res page.Resource) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionEditContent) && !current.HasPermission(page.PermissionEditMedia)) {
+		var p page.Permission
+		p = page.PermissionEditContent
+		if !current.HasPermission(page.PermissionEditMedia) {
+			p = page.PermissionEditMedia
+		}
+		return page.NewPermissionError(page.PermissionName(p))
 	}
-
 
 	attachment := res.(*Attachment)
 	err := model.Delete(ctx, attachment, nil)

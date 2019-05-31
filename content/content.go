@@ -68,12 +68,12 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Revision    int                      `json:"revision"`
 		Order       int                      `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
-		Author      string                   `json:"author"`
-		Cover       string                   `json:"cover"`
-		Created     time.Time                `json:"created"`
-		Updated     time.Time                `json:"updated"`
-		Published   time.Time                `json:"published"`
-		IsPublished bool                     `json:"isPublished"`
+		Author      string        `json:"author"`
+		Cover       string        `json:"cover"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
+		IsPublished bool          `json:"isPublished"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -118,11 +118,12 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Revision    int                      `json:"revision"`
 		Order       int                      `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
-		Author      string                   `json:"author"`
-		Cover       string                   `json:"cover"`
-		Created     time.Time                `json:"created"`
-		Updated     time.Time                `json:"updated"`
-		Published   time.Time                `json:"published"`
+		Author      string        `json:"author"`
+		Cover       string        `json:"cover"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
+		Id          string        `json:"id"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -158,6 +159,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Created:     content.Created,
 			Updated:     content.Updated,
 			Published:   content.Published,
+			Id:          content.EncodedKey(),
 		},
 	})
 }

@@ -48,12 +48,6 @@ func (manager placeManager) FromId(ctx context.Context, strId string) (page.Reso
 		return nil, err
 	}
 
-	// todo get website
-	//idAtt := att.Website
-	//if err := model.FromIntID(ctx, att.Website, idAtt, nil); err != nil {
-	//	log.Errorf(ctx, "could not retrieve attachemnt %s: %s", id, err.Error())
-	//	return nil, err
-	//}
 	return &att, nil
 }
 
@@ -100,7 +94,7 @@ func (manager placeManager) ListOfProperties(ctx context.Context, opts page.List
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPlace))
 	}
 
-	a := []string{"Address"} // list property accepted
+	a := []string{"Name", "City"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -159,18 +153,11 @@ func (manager placeManager) Create(ctx context.Context, res page.Resource, bundl
 
 	place.Created = time.Now().UTC()
 
-	// todo website
-	//tmp := place.Website
-	//place.Website = nil
-
 	err := model.Create(ctx, place)
 	if err != nil {
 		log.Errorf(ctx, "error creating place %s: %s", place.Name, err)
 		return err
 	}
-
-	// return the swapped multimedia value
-	//place.Website = tmp
 
 	return nil
 }
@@ -187,7 +174,11 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	}
 
 	place := res.(*Place)
+	place.Name = other.Name
 	place.Address = other.Address
+	place.City = other.City
+	place.PostalCode = other.PostalCode
+	place.Country = other.Country
 	place.Description = other.Description
 	place.Position = other.Position
 	place.Phone = other.Phone
@@ -198,16 +189,9 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 		return page.NewFieldError("address", errors.New("address and position can't be empty"))
 	}
 
-	// todo website
-	//tmp := place.Website
-	//place.Website = nil
-
 	if err := model.Update(ctx, place); err != nil {
 		return fmt.Errorf("error updating place %s: %s", place.Address, err)
 	}
-
-	// return the swapped multimedia value
-	//place.Website = tmp
 
 	return nil
 }
