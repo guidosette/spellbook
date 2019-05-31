@@ -134,7 +134,11 @@ func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle 
 		return page.NewFieldError("title", errors.New("title and url can't be empty"))
 	}
 
-	seo.Title = other.Title
+	if len(seo.MetaDesc) > 160 {
+		return page.NewFieldError("metadesc", errors.New("metadesc can be at most 160 characters long"))
+	}
+
+		seo.Title = other.Title
 	seo.MetaDesc = other.MetaDesc
 	seo.Url = other.Url
 
