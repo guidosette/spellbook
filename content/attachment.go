@@ -29,6 +29,7 @@ type Attachment struct {
 	Updated     time.Time `json:"updated"`
 	Uploader    string    `json:"uploader"`
 	AltText     string    `json:"altText"`
+	Seo         int64     `json:"seo"`
 }
 
 func (attachment *Attachment) UnmarshalJSON(data []byte) error {
@@ -44,7 +45,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		Updated     time.Time `json:"updated"`
 		Uploader    string    `json:"uploader"`
 		AltText     string    `json:"altText"`
-		//Id          int64     `json:"id"`
+		Seo         int64     `json:"seo"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -62,7 +63,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
 	attachment.AltText = alias.AltText
-	//attachment.Id = alias.Id
+	attachment.Seo = alias.Seo
 
 	return nil
 }
@@ -80,6 +81,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Uploader    string    `json:"uploader"`
 		AltText     string    `json:"altText"`
 		Id          int64     `json:"id"`
+		Seo         int64     `json:"seo"`
 	}
 
 	return json.Marshal(&struct {
@@ -97,6 +99,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			Uploader:    attachment.Uploader,
 			AltText:     attachment.AltText,
 			Id:          attachment.IntID(),
+			Seo:         attachment.Seo,
 		},
 	})
 }

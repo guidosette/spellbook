@@ -188,6 +188,7 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 	attachment.Parent = other.Parent
 	attachment.Updated = time.Now().UTC()
 	attachment.AltText = other.AltText
+	attachment.Seo = other.Seo
 
 	if attachment.Parent == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
