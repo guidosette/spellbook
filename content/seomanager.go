@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
+	"strconv"
 )
 
 func NewSeoController() *page.RestController {
@@ -28,8 +29,15 @@ func (manager seoManager) NewResource(ctx context.Context) (page.Resource, error
 
 func (manager seoManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 
+	intid, err := strconv.ParseInt(id, 10, 64)
+
+	if err != nil {
+		err := fmt.Errorf("Invalid ID for seo: %s", err.Error())
+		return nil, page.NewFieldError("id", err)
+	}
+
 	cont := Seo{}
-	if err := model.FromStringID(ctx, &cont, id, nil); err != nil {
+	if err := model.FromIntID(ctx, &cont, intid, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve seo %s: %s", id, err.Error())
 		return nil, err
 	}
@@ -103,11 +111,7 @@ func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle 
 		return page.NewFieldError("url", errors.New(msg))
 	}
 
-	// input is valid, create the resource
-	opts := model.CreateOptions{}
-	opts.WithStringId(seo.Url)
-
-	err = model.CreateWithOptions(ctx, seo, &opts)
+	err = model.Create(ctx, seo)
 	if err != nil {
 		log.Errorf(ctx, "error creating seo for url %s: %s", seo.Url, err)
 		return err

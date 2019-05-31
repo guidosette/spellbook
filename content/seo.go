@@ -40,8 +40,10 @@ func (seo *Seo) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
+		Id		int64		`json:"id"`
 		Alias
 	}{
+		seo.IntID(),
 		Alias{
 			Title:		seo.Title,
 			MetaDesc:	seo.MetaDesc,
