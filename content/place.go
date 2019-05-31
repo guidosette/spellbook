@@ -1,10 +1,10 @@
 package content
 
 import (
-	"cloud.google.com/go/datastore"
 	"distudio.com/mage/model"
 	"distudio.com/page"
 	"encoding/json"
+	"google.golang.org/appengine"
 	"time"
 )
 
@@ -13,8 +13,8 @@ type Place struct {
 	Address     string             `model:"search";json:"address"`
 	Phone       string             `json:"phone";model:"noindex"`
 	Description string             `json:"description";model:"noindex"`
-	Position    datastore.GeoPoint `model:"search"`
-	Website     *Attachment        `model:"-"`
+	Position    appengine.GeoPoint `model:"search"`
+	Website     string             `json:"website";model:"noindex"`
 	Created     time.Time          `json:"created"`
 	Updated     time.Time          `json:"updated"`
 }
@@ -22,14 +22,14 @@ type Place struct {
 func (place *Place) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Address     string      `json:"address"`
-		Phone       string      `json:"phone"`
-		Description string      `json:"description"`
-		Lat         float64     `json:"lat"`
-		Lng         float64     `json:"lng"`
-		Website     *Attachment `json:"website"`
-		Created     time.Time   `json:"created"`
-		Updated     time.Time   `json:"updated"`
+		Address     string    `json:"address"`
+		Phone       string    `json:"phone"`
+		Description string    `json:"description"`
+		Lat         float64   `json:"lat"`
+		Lng         float64   `json:"lng"`
+		Website     string    `json:"website"`
+		Created     time.Time `json:"created"`
+		Updated     time.Time `json:"updated"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -43,22 +43,22 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 	place.Website = alias.Website
 	place.Created = alias.Created
 	place.Updated = alias.Updated
-	place.Position = datastore.GeoPoint{Lat: alias.Lat, Lng: alias.Lng}
+	place.Position = appengine.GeoPoint{Lat: alias.Lat, Lng: alias.Lng}
 
 	return nil
 }
 
 func (place *Place) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Address     string      `json:"address"`
-		Phone       string      `json:"phone"`
-		Description string      `json:"description"`
-		Lat         float64     `json:"lat"`
-		Lng         float64     `json:"lng"`
-		Website     *Attachment `json:"website"`
-		Created     time.Time   `json:"created"`
-		Updated     time.Time   `json:"updated"`
-		Id          int64       `json:"id"`
+		Address     string    `json:"address"`
+		Phone       string    `json:"phone"`
+		Description string    `json:"description"`
+		Lat         float64   `json:"lat"`
+		Lng         float64   `json:"lng"`
+		Website     string    `json:"website"`
+		Created     time.Time `json:"created"`
+		Updated     time.Time `json:"updated"`
+		Id          int64     `json:"id"`
 	}
 
 	return json.Marshal(&struct {
