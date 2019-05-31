@@ -31,8 +31,13 @@ func (manager fileManager) NewResource(ctx context.Context) (page.Resource, erro
 }
 
 func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
+		var p page.Permission
+		p = page.PermissionReadContent
+		if !current.HasPermission(page.PermissionReadMedia) {
+			p = page.PermissionReadMedia
+		}
+		return nil, page.NewPermissionError(page.PermissionName(p))
 	}
 
 	//todo: set bucket name in configuration
@@ -65,8 +70,13 @@ func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource
 
 func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
+		var p page.Permission
+		p = page.PermissionReadContent
+		if !current.HasPermission(page.PermissionReadMedia) {
+			p = page.PermissionReadMedia
+		}
+		return nil, page.NewPermissionError(page.PermissionName(p))
 	}
 
 	//todo: set bucket name in configuration
@@ -125,9 +135,13 @@ func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListO
 
 func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
-
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionLoadFiles) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionLoadFiles))
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionCreateContent) && !current.HasPermission(page.PermissionCreateMedia)) {
+		var p page.Permission
+		p = page.PermissionCreateContent
+		if !current.HasPermission(page.PermissionCreateMedia) {
+			p = page.PermissionCreateMedia
+		}
+		return page.NewPermissionError(page.PermissionName(p))
 	}
 
 	rfile := res.(*File)

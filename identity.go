@@ -11,7 +11,6 @@ const (
 
 const (
 	PermissionEnabled = 1 << iota
-	PermissionLoadFiles
 	PermissionReadUser
 	PermissionCreateUser
 	PermissionEditUser
@@ -26,11 +25,16 @@ const (
 	PermissionReadPlace
 	PermissionCreatePlace
 	PermissionEditPlace
+	PermissionReadMedia
+	PermissionCreateMedia
+	PermissionEditMedia
+	PermissionReadSeo
+	PermissionCreateSeo
+	PermissionEditSeo
 )
 
 var Permissions = map[Permission]string{
 	PermissionEnabled:         "PERMISSION_ENABLED",
-	PermissionLoadFiles:       "PERMISSION_LOAD_FILES",
 	PermissionReadUser:        "PERMISSION_READ_USERS",
 	PermissionCreateUser:      "PERMISSION_CREATE_USERS",
 	PermissionEditUser:        "PERMISSION_UPDATE_USERS",
@@ -42,9 +46,15 @@ var Permissions = map[Permission]string{
 	PermissionPublishContent:  "PERMISSION_PUBLISH_CONTENT",
 	PermissionReadNewsletter:  "PERMISSION_READ_NEWSLETTER",
 	PermissionEditNewsletter:  "PERMISSION_EDIT_NEWSLETTER",
-	PermissionReadPlace:       "PERMISSION_READ_CONTENT",
+	PermissionReadPlace:       "PERMISSION_READ_PLACE",
 	PermissionCreatePlace:     "PERMISSION_CREATE_PLACE",
 	PermissionEditPlace:       "PERMISSION_EDIT_PLACE",
+	PermissionReadMedia:       "PERMISSION_READ_MEDIA",
+	PermissionCreateMedia:     "PERMISSION_CREATE_MEDIA",
+	PermissionEditMedia:       "PERMISSION_EDIT_MEDIA",
+	PermissionReadSeo:       "PERMISSION_READ_SEO",
+	PermissionCreateSeo:     "PERMISSION_CREATE_SEO",
+	PermissionEditSeo:       "PERMISSION_EDIT_SEO",
 }
 
 func PermissionName(permission Permission) string {
