@@ -40,13 +40,13 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 	}
 
 	cont := Content{}
-	if err := model.FromStringID(ctx, &cont, id, nil); err != nil {
+	if err := model.FromEncodedKey(ctx, &cont, id); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s: %s", id, err.Error())
 		return nil, err
 	}
 
 	q := model.NewQuery((*Attachment)(nil))
-	q = q.WithField("Parent =", cont.Slug)
+	q = q.WithField("Parent =", cont.EncodedKey())
 	if err := q.GetMulti(ctx, &cont.Attachments); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s attachments: %s", id, err.Error())
 		return nil, err
@@ -188,16 +188,12 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		content.Author = user.Username()
 	}
 
-	// input is valid, create the resource
-	opts := model.CreateOptions{}
-	opts.WithStringId(content.Slug)
-
 	// // WARNING: the volatile field Multimedia because Memcache (Gob)
 	//	can't ignore field
 	tmp := content.Attachments
 	content.Attachments = nil
 
-	err = model.CreateWithOptions(ctx, content, &opts)
+	err = model.Create(ctx, content)
 	if err != nil {
 		log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
 		return err

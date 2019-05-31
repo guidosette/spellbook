@@ -127,6 +127,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Created     time.Time     `json:"created"`
 		Updated     time.Time     `json:"updated"`
 		Published   time.Time     `json:"published"`
+		Id          string        `json:"id"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -161,6 +162,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Created:     content.Created,
 			Updated:     content.Updated,
 			Published:   content.Published,
+			Id:          content.EncodedKey(),
 		},
 	})
 }
