@@ -56,17 +56,17 @@ type Content struct {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Slug        string                   `json:"slug"`
-		Title       string                   `json:"title"`
-		Subtitle    string                   `json:"subtitle"`
-		Body        string                   `json:"body"`
-		Tags        []string                 `json:"tags"`
-		Category    string                   `json:"category"`
-		Topic       string                   `json:"topic"`
-		Locale      string                   `json:"locale"`
-		Description string                   `json:"description"`
-		Revision    int                      `json:"revision"`
-		Order       int                      `json:"order"`
+		Slug        string        `json:"slug"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
+		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
 		Author      string        `json:"author"`
 		Cover       string        `json:"cover"`
@@ -106,17 +106,17 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Slug        string                   `json:"slug"`
-		Title       string                   `json:"title"`
-		Subtitle    string                   `json:"subtitle"`
-		Body        string                   `json:"body"`
-		Tags        []string                 `json:"tags"`
-		Category    string                   `json:"category"`
-		Topic       string                   `json:"topic"`
-		Locale      string                   `json:"locale"`
-		Description string                   `json:"description"`
-		Revision    int                      `json:"revision"`
-		Order       int                      `json:"order"`
+		Slug        string        `json:"slug"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
+		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
 		Attachments []*Attachment `json:"attachments"`
 		Author      string        `json:"author"`
 		Cover       string        `json:"cover"`
@@ -134,12 +134,10 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 	isPublished := content.Published != ZeroTime
 
 	return json.Marshal(&struct {
-		Id          int64    `json:"id"`
 		Tags        []string `json:"tags"`
 		IsPublished bool     `json:"isPublished"`
 		Alias
 	}{
-		content.IntID(),
 		tags,
 		isPublished,
 		Alias{
