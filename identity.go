@@ -52,9 +52,9 @@ var Permissions = map[Permission]string{
 	PermissionReadMedia:       "PERMISSION_READ_MEDIA",
 	PermissionCreateMedia:     "PERMISSION_CREATE_MEDIA",
 	PermissionEditMedia:       "PERMISSION_EDIT_MEDIA",
-	PermissionReadSeo:       "PERMISSION_READ_SEO",
-	PermissionCreateSeo:     "PERMISSION_CREATE_SEO",
-	PermissionEditSeo:       "PERMISSION_EDIT_SEO",
+	PermissionReadSeo:         "PERMISSION_READ_SEO",
+	PermissionCreateSeo:       "PERMISSION_CREATE_SEO",
+	PermissionEditSeo:         "PERMISSION_EDIT_SEO",
 }
 
 func PermissionName(permission Permission) string {
