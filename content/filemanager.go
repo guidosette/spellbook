@@ -177,6 +177,10 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 
 	// get the file headers
 	fhs := ins["file"].Files()
+	if len(fhs) == 0 {
+		msg := fmt.Sprintf("error no file: %v", fhs)
+		return page.NewFieldError("no file", errors.New(msg))
+	}
 	// todo: handle multiple files
 	fh := fhs[0]
 	f, err := fh.Open()
