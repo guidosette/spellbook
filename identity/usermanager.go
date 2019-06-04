@@ -33,13 +33,17 @@ func (manager userManager) NewResource(ctx context.Context) (page.Resource, erro
 
 func (manager userManager) FromId(ctx context.Context, id string) (page.Resource, error) {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionReadUser) {
+	if current == nil {
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
 	user, ok := current.(User)
 	if ok && id == user.Id() {
 		return &user, nil
+	}
+
+	if !current.HasPermission(page.PermissionReadUser) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
 	att := User{}
@@ -178,7 +182,7 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 	pf.AddValidator(page.LenValidator{MinLen: 8})
 
 	if err := pf.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid password %s for username %s", user.Password, username)
+		msg := fmt.Sprintf("invalid password %s for username %s", meta.Password, username)
 		return page.NewFieldError("password", errors.New(msg))
 	}
 
@@ -204,7 +208,7 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 		return page.NewFieldError("user", errors.New(msg))
 	}
 
-	user.Password = HashPassword(user.Password, salt)
+	user.Password = HashPassword(meta.Password, salt)
 
 
 	opts := model.CreateOptions{}

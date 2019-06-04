@@ -142,7 +142,7 @@ func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle 
 		return page.NewFieldError("metadesc", errors.New("metadesc can be at most 160 characters long"))
 	}
 
-		seo.Title = other.Title
+	seo.Title = other.Title
 	seo.MetaDesc = other.MetaDesc
 	seo.Url = other.Url
 
