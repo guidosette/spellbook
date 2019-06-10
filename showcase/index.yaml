@@ -9,12 +9,36 @@ indexes:
 - kind: "Content"
   properties:
   - name: "Category"
+  - name: "Type"
+  - name: "Order"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Order"
+- kind: "Content"
+  properties:
+  - name: "Category"
   - name: "Order"
 - kind: "Content"
   properties:
   - name: "Category"
   - name: "Locale"
   - name: "Order"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Order"
+    direction: desc
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Order"
+    direction: desc
 - kind: "Content"
   properties:
   - name: "Locale"

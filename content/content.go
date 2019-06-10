@@ -33,6 +33,7 @@ ByOrder end
 
 type Content struct {
 	model.Model `json:"-"`
+	Type        page.ContentType
 	Slug        string
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
@@ -51,29 +52,34 @@ type Content struct {
 	Created   time.Time
 	Updated   time.Time
 	Published time.Time
+
+	// KeyTypeEvent
+	Date time.Time
 }
 
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Slug        string        `json:"slug"`
-		Title       string        `json:"title"`
-		Subtitle    string        `json:"subtitle"`
-		Body        string        `json:"body"`
-		Tags        []string      `json:"tags"`
-		Category    string        `json:"category"`
-		Topic       string        `json:"topic"`
-		Locale      string        `json:"locale"`
-		Description string        `json:"description"`
-		Revision    int           `json:"revision"`
-		Order       int           `json:"order"`
-		Attachments []*Attachment `json:"attachments"`
-		Author      string        `json:"author"`
-		Cover       string        `json:"cover"`
-		Created     time.Time     `json:"created"`
-		Updated     time.Time     `json:"updated"`
-		Published   time.Time     `json:"published"`
-		IsPublished bool          `json:"isPublished"`
+		Type        page.ContentType `json:"type"`
+		Slug        string           `json:"slug"`
+		Title       string           `json:"title"`
+		Subtitle    string           `json:"subtitle"`
+		Body        string           `json:"body"`
+		Tags        []string         `json:"tags"`
+		Category    string           `json:"category"`
+		Topic       string           `json:"topic"`
+		Locale      string           `json:"locale"`
+		Description string           `json:"description"`
+		Revision    int              `json:"revision"`
+		Order       int              `json:"order"`
+		Attachments []*Attachment    `json:"attachments"`
+		Author      string           `json:"author"`
+		Cover       string           `json:"cover"`
+		Created     time.Time        `json:"created"`
+		Updated     time.Time        `json:"updated"`
+		Published   time.Time        `json:"published"`
+		IsPublished bool             `json:"isPublished"`
+		Date        time.Time        `json:"date"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -81,6 +87,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	content.Type = alias.Type
 	content.Slug = alias.Slug
 	content.Title = alias.Title
 	content.Subtitle = alias.Subtitle
@@ -96,6 +103,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Attachments = alias.Attachments
 	content.Created = alias.Created
 	content.Updated = alias.Updated
+	content.Date = alias.Date
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -106,24 +114,26 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Slug        string        `json:"slug"`
-		Title       string        `json:"title"`
-		Subtitle    string        `json:"subtitle"`
-		Body        string        `json:"body"`
-		Tags        []string      `json:"tags"`
-		Category    string        `json:"category"`
-		Topic       string        `json:"topic"`
-		Locale      string        `json:"locale"`
-		Description string        `json:"description"`
-		Revision    int           `json:"revision"`
-		Order       int           `json:"order"`
-		Attachments []*Attachment `json:"attachments"`
-		Author      string        `json:"author"`
-		Cover       string        `json:"cover"`
-		Created     time.Time     `json:"created"`
-		Updated     time.Time     `json:"updated"`
-		Published   time.Time     `json:"published"`
-		Id          string        `json:"id"`
+		Type        page.ContentType `json:"type"`
+		Slug        string           `json:"slug"`
+		Title       string           `json:"title"`
+		Subtitle    string           `json:"subtitle"`
+		Body        string           `json:"body"`
+		Tags        []string         `json:"tags"`
+		Category    string           `json:"category"`
+		Topic       string           `json:"topic"`
+		Locale      string           `json:"locale"`
+		Description string           `json:"description"`
+		Revision    int              `json:"revision"`
+		Order       int              `json:"order"`
+		Attachments []*Attachment    `json:"attachments"`
+		Author      string           `json:"author"`
+		Cover       string           `json:"cover"`
+		Created     time.Time        `json:"created"`
+		Updated     time.Time        `json:"updated"`
+		Published   time.Time        `json:"published"`
+		Id          string           `json:"id"`
+		Date        time.Time        `json:"date"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -141,6 +151,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		tags,
 		isPublished,
 		Alias{
+			Type:        content.Type,
 			Slug:        content.Slug,
 			Title:       content.Title,
 			Subtitle:    content.Subtitle,
@@ -157,6 +168,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Created:     content.Created,
 			Updated:     content.Updated,
 			Published:   content.Published,
+			Date:        content.Date,
 			Id:          content.EncodedKey(),
 		},
 	})

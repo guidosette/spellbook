@@ -1,4 +1,4 @@
-package configuration
+package content
 
 import (
 	"context"
@@ -6,24 +6,58 @@ import (
 	"encoding/json"
 )
 
-type Category string
+type Category page.SupportedCategory
 
-func (category Category) Id() string {
-	return string(category)
+func (category *Category) UnmarshalJSON(data []byte) error {
+
+	alias := struct {
+		Name  string           `json:"name"`
+		Label string           `json:"label"`
+		Type  page.ContentType `json:"type"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	category.Type = alias.Type
+	category.Name = alias.Name
+	category.Label = alias.Label
+
+	return nil
 }
 
-func (category Category) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (category *Category) MarshalJSON() ([]byte, error) {
+	alias := struct {
+		Name  string           `json:"name"`
+		Label string           `json:"label"`
+		Type  page.ContentType `json:"type"`
+	}{category.Name, category.Label, category.Type}
+
+	return json.Marshal(&alias)
+}
+
+/**
+* Resource representation
+ */
+
+func (category *Category) Id() string {
+	return category.Name
+}
+
+func (category *Category) FromRepresentation(rtype page.RepresentationType, data []byte) error {
 	switch rtype {
 	case page.RepresentationTypeJSON:
-		return json.Unmarshal(data, &category)
+		return json.Unmarshal(data, category)
 	}
 	return page.NewUnsupportedError()
 }
 
-func (category Category) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (category *Category) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
 	switch rtype {
 	case page.RepresentationTypeJSON:
-		return []byte(string(category)), nil
+		return json.Marshal(category)
 	}
 	return nil, page.NewUnsupportedError()
 }
@@ -68,7 +102,7 @@ func (manager categoryManager) ListOf(ctx context.Context, opts page.ListOptions
 
 	for i := range items {
 		category := Category(items[i])
-		resources[i] = page.Resource(category)
+		resources[i] = page.Resource(&category)
 	}
 
 	return resources, nil

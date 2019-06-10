@@ -42,12 +42,23 @@ func (app Website) Options() Options {
 	return app.options
 }
 
-type Options struct {
-	Languages []language.Tag
-	Categories []Category
+type ContentType string
+
+const (
+	KeyTypeContent = "content"
+	KeyTypeEvent   = "event"
+)
+
+type SupportedCategory struct {
+	Name  string
+	Label string
+	Type  ContentType
 }
 
-type Category string
+type Options struct {
+	Languages  []language.Tag
+	Categories []SupportedCategory
+}
 
 func NewWebsite(opts *Options) *Website {
 	ws := Application()

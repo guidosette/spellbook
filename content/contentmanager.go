@@ -163,26 +163,39 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		content.Published = time.Now().UTC()
 	}
 
-	if content.Title == "" {
-		return page.NewFieldError("title", errors.New("title can't be empty"))
+	if content.Type == "" {
+		return page.NewFieldError("type", errors.New("type can't be 0"))
 	}
 
-	if content.Slug == "" {
-		content.Slug = url.PathEscape(content.Title)
-	}
+	switch content.Type {
+	case page.KeyTypeContent:
+		if content.Title == "" {
+			return page.NewFieldError("title", errors.New("title can't be empty"))
+		}
 
-	// if the same slug already exists, we must return
-	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
-	q := model.NewQuery((*Content)(nil))
-	q = q.WithField("Slug =", content.Slug)
-	count, err := q.Count(ctx)
-	if err != nil {
-		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
-	}
+		if content.Slug == "" {
+			content.Slug = url.PathEscape(content.Title)
+		}
+		// if the same slug already exists, we must return
+		// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
+		q := model.NewQuery((*Content)(nil))
+		q = q.WithField("Slug =", content.Slug)
+		count, err := q.Count(ctx)
+		if err != nil {
+			return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+		}
 
-	if count > 0 {
-		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
-		return page.NewFieldError("slug", errors.New(msg))
+		if count > 0 {
+			msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
+			return page.NewFieldError("slug", errors.New(msg))
+		}
+	case page.KeyTypeEvent:
+		if content.Date.IsZero() {
+			msg := fmt.Sprintf("date can't be empty. %v", content.Date)
+			return page.NewFieldError("date", errors.New(msg))
+		}
+	default:
+		return fmt.Errorf("error no type %v", content)
 	}
 
 	if user, ok := current.(identity.User); ok {
@@ -194,7 +207,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	tmp := content.Attachments
 	content.Attachments = nil
 
-	err = model.Create(ctx, content)
+	err := model.Create(ctx, content)
 	if err != nil {
 		log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
 		return err
@@ -225,6 +238,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
+	content.Type = other.Type
 	content.Title = other.Title
 	content.Subtitle = other.Subtitle
 	content.Category = other.Category
@@ -238,20 +252,26 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 	content.Slug = other.Slug
+	switch content.Type {
+	case page.KeyTypeContent:
+		if other.Published.IsZero() {
+			// not set
+			content.Published = time.Time{}
+		} else {
+			// set
+			// check previous data
+			if content.Published.IsZero() {
+				content.Published = time.Now().UTC()
+			}
+		}
+	case page.KeyTypeEvent:
+		content.Date = other.Date
+	default:
+		return fmt.Errorf("error no type %v", content)
+	}
 
 	if user, ok := current.(identity.User); ok {
 		content.Author = user.Username()
-	}
-
-	if other.Published.IsZero() {
-		// not set
-		content.Published = time.Time{}
-	} else {
-		// set
-		// check previous data
-		if content.Published.IsZero() {
-			content.Published = time.Now().UTC()
-		}
 	}
 
 	tmp := content.Attachments

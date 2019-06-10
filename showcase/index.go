@@ -20,9 +20,10 @@ func init() {
 		language.Italian,
 		language.English,
 	}
-	opts.Categories = []page.Category{
-		"services",
-		"news",
+	opts.Categories = []page.SupportedCategory{
+		page.SupportedCategory{Type: page.KeyTypeContent, Name: "services", Label: "Services"},
+		page.SupportedCategory{Type: page.KeyTypeContent, Name: "news", Label: "News"},
+		page.SupportedCategory{Type: page.KeyTypeEvent, Name: "events", Label: "Events"},
 	}
 
 	instance := page.NewWebsite(&opts)
@@ -86,7 +87,7 @@ func init() {
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/categories", func(ctx context.Context) mage.Controller {
-		c := configuration.NewCategoryController()
+		c := content.NewCategoryController()
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
