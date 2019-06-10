@@ -9,17 +9,17 @@ import (
 
 type MailMessage struct {
 	model.Model `json:"-"`
-	Recipient   string    `json:"recipient";model:"search"`
-	Sender      string    `json:"sender"`
-	Object      string    `json:"object"`
-	Body        string    `json:"body"`
-	Created     time.Time `json:"created"`
+	Recipient   string    `model:"search,atom"`
+	Sender      string    `model:"search"`
+	Object      string    `model:"search"`
+	Body        string    `model:"search"`
+	Created     time.Time `model:"search"`
 }
 
 func (mailMessage *MailMessage) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Recipient string    `json:"recipient";model:"search"`
+		Recipient string    `json:"recipient"`
 		Sender    string    `json:"sender"`
 		Object    string    `json:"object"`
 		Body      string    `json:"body"`
@@ -42,7 +42,7 @@ func (mailMessage *MailMessage) UnmarshalJSON(data []byte) error {
 
 func (mailMessage *MailMessage) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Recipient string    `json:"recipient";model:"search"`
+		Recipient string    `json:"recipient"`
 		Sender    string    `json:"sender"`
 		Object    string    `json:"object"`
 		Body      string    `json:"body"`
