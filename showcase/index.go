@@ -7,6 +7,7 @@ import (
 	"distudio.com/page/configuration"
 	"distudio.com/page/content"
 	"distudio.com/page/identity"
+	"distudio.com/page/mailmessage"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -128,6 +129,20 @@ func init() {
 		params := mage.RoutingParams(ctx)
 		key := params["id"].Value()
 		c := content.NewSeoControllerWithKey(key)
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/mailmessage", func(ctx context.Context) mage.Controller {
+		c := mailmessage.NewMailMessageController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/mailmessage/:id", func(ctx context.Context) mage.Controller {
+		params := mage.RoutingParams(ctx)
+		key := params["id"].Value()
+		c := mailmessage.NewMailMessageControllerWithKey(key)
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})

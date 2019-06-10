@@ -20,8 +20,8 @@ const (
 	PermissionCreateContent
 	PermissionEditContent
 	PermissionPublishContent
-	PermissionReadNewsletter
-	PermissionEditNewsletter
+	PermissionReadMailMessage
+	PermissionEditMailMessage
 	PermissionReadPlace
 	PermissionCreatePlace
 	PermissionEditPlace
@@ -44,8 +44,8 @@ var Permissions = map[Permission]string{
 	PermissionCreateContent:   "PERMISSION_CREATE_CONTENT",
 	PermissionEditContent:     "PERMISSION_UPDATE_CONTENT",
 	PermissionPublishContent:  "PERMISSION_PUBLISH_CONTENT",
-	PermissionReadNewsletter:  "PERMISSION_READ_NEWSLETTER",
-	PermissionEditNewsletter:  "PERMISSION_EDIT_NEWSLETTER",
+	PermissionReadMailMessage: "PERMISSION_READ_MAILMESSAGE",
+	PermissionEditMailMessage: "PERMISSION_EDIT_MAILMESSAGE",
 	PermissionReadPlace:       "PERMISSION_READ_PLACE",
 	PermissionCreatePlace:     "PERMISSION_CREATE_PLACE",
 	PermissionEditPlace:       "PERMISSION_EDIT_PLACE",
