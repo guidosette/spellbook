@@ -158,6 +158,9 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	content := res.(*Content)
 
 	content.Created = time.Now().UTC()
+	if content.IdTranslate == 0 {
+		content.IdTranslate = time.Now().UnixNano()
+	}
 	content.Revision = 1
 	if !content.Published.IsZero() {
 		content.Published = time.Now().UTC()
@@ -167,32 +170,37 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("type", errors.New("type can't be 0"))
 	}
 
+	if content.Slug == "" {
+		content.Slug = url.PathEscape(content.Title)
+	}
+	// if the same slug already exists, we must return
+	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
+	q := model.NewQuery((*Content)(nil))
+	q = q.WithField("Slug =", content.Slug)
+	q = q.WithField("Locale = ", content.Locale)
+	count, err := q.Count(ctx)
+	if err != nil {
+		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+	}
+
+	if count > 0 {
+		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
+		return page.NewFieldError("slug", errors.New(msg))
+	}
+
 	switch content.Type {
 	case page.KeyTypeContent:
 		if content.Title == "" {
 			return page.NewFieldError("title", errors.New("title can't be empty"))
 		}
-
-		if content.Slug == "" {
-			content.Slug = url.PathEscape(content.Title)
-		}
-		// if the same slug already exists, we must return
-		// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
-		q := model.NewQuery((*Content)(nil))
-		q = q.WithField("Slug =", content.Slug)
-		count, err := q.Count(ctx)
-		if err != nil {
-			return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
-		}
-
-		if count > 0 {
-			msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
-			return page.NewFieldError("slug", errors.New(msg))
-		}
 	case page.KeyTypeEvent:
-		if content.Date.IsZero() {
-			msg := fmt.Sprintf("date can't be empty. %v", content.Date)
-			return page.NewFieldError("date", errors.New(msg))
+		if content.StartDate.IsZero() {
+			msg := fmt.Sprintf("start date can't be empty. %v", content.StartDate)
+			return page.NewFieldError("startDate", errors.New(msg))
+		}
+		if content.EndDate.IsZero() {
+			msg := fmt.Sprintf("end date can't be empty. %v", content.StartDate)
+			return page.NewFieldError("endDate", errors.New(msg))
 		}
 	default:
 		return fmt.Errorf("error no type %v", content)
@@ -207,7 +215,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	tmp := content.Attachments
 	content.Attachments = nil
 
-	err := model.Create(ctx, content)
+	err = model.Create(ctx, content)
 	if err != nil {
 		log.Errorf(ctx, "error creating post %s: %s", content.Slug, err)
 		return err
@@ -238,6 +246,21 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
+	// if the same slug already exists, we must return
+	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
+	q := model.NewQuery((*Content)(nil))
+	q = q.WithField("Slug =", content.Slug)
+	q = q.WithField("Locale = ", other.Locale)
+
+	count, err := q.Count(ctx)
+	if err != nil {
+		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+	}
+	if count > 1 {
+		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
+		return page.NewFieldError("slug", errors.New(msg))
+	}
+
 	content.Type = other.Type
 	content.Title = other.Title
 	content.Subtitle = other.Subtitle
@@ -265,7 +288,8 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 			}
 		}
 	case page.KeyTypeEvent:
-		content.Date = other.Date
+		content.StartDate = other.StartDate
+		content.EndDate = other.EndDate
 	default:
 		return fmt.Errorf("error no type %v", content)
 	}

@@ -34,6 +34,7 @@ ByOrder end
 type Content struct {
 	model.Model `json:"-"`
 	Type        page.ContentType
+	IdTranslate int64
 	Slug        string
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
@@ -54,13 +55,15 @@ type Content struct {
 	Published time.Time
 
 	// KeyTypeEvent
-	Date time.Time
+	StartDate time.Time
+	EndDate   time.Time
 }
 
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Type        page.ContentType `json:"type"`
+		IdTranslate int64            `json:"idTranslate"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
 		Subtitle    string           `json:"subtitle"`
@@ -79,7 +82,8 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Updated     time.Time        `json:"updated"`
 		Published   time.Time        `json:"published"`
 		IsPublished bool             `json:"isPublished"`
-		Date        time.Time        `json:"date"`
+		StartDate   time.Time        `json:"startDate"`
+		EndDate     time.Time        `json:"endDate"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -103,7 +107,9 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Attachments = alias.Attachments
 	content.Created = alias.Created
 	content.Updated = alias.Updated
-	content.Date = alias.Date
+	content.StartDate = alias.StartDate
+	content.EndDate = alias.EndDate
+	content.IdTranslate = alias.IdTranslate
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -115,6 +121,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Type        page.ContentType `json:"type"`
+		IdTranslate int64            `json:"idTranslate"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
 		Subtitle    string           `json:"subtitle"`
@@ -133,7 +140,8 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Updated     time.Time        `json:"updated"`
 		Published   time.Time        `json:"published"`
 		Id          string           `json:"id"`
-		Date        time.Time        `json:"date"`
+		StartDate   time.Time        `json:"startDate"`
+		EndDate     time.Time        `json:"endDate"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -152,6 +160,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		isPublished,
 		Alias{
 			Type:        content.Type,
+			IdTranslate: content.IdTranslate,
 			Slug:        content.Slug,
 			Title:       content.Title,
 			Subtitle:    content.Subtitle,
@@ -168,7 +177,8 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Created:     content.Created,
 			Updated:     content.Updated,
 			Published:   content.Published,
-			Date:        content.Date,
+			StartDate:   content.StartDate,
+			EndDate:     content.EndDate,
 			Id:          content.EncodedKey(),
 		},
 	})

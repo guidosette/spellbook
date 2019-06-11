@@ -17,11 +17,11 @@ func (handler fileHandler) HandlePost(ctx context.Context, out *mage.ResponseOut
 
 	res, err := handler.Manager.NewResource(ctx)
 	if err != nil {
-		return handler.ErrorToStatus(ctx, err)
+		return handler.ErrorToStatus(ctx, err, out)
 	}
 
 	if err = handler.Manager.Create(ctx, res, nil); err != nil {
-		return handler.ErrorToStatus(ctx, err)
+		return handler.ErrorToStatus(ctx, err, out)
 	}
 
 	renderer := mage.JSONRenderer{}
@@ -31,10 +31,10 @@ func (handler fileHandler) HandlePost(ctx context.Context, out *mage.ResponseOut
 }
 
 // Converts an error to its equivalent HTTP representation
-func (handler fileHandler) ErrorToStatus(ctx context.Context, err error) mage.Redirect {
+func (handler fileHandler) ErrorToStatus(ctx context.Context, err error, out *mage.ResponseOutput) mage.Redirect {
 	if err == storage.ErrObjectNotExist {
 		log.Errorf(ctx, "%s", err.Error())
 		return mage.Redirect{Status: http.StatusNotFound}
 	}
-	return handler.BaseRestHandler.ErrorToStatus(ctx, err)
+	return handler.BaseRestHandler.ErrorToStatus(ctx, err, out)
 }
