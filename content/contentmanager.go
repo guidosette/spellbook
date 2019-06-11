@@ -100,7 +100,7 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
-	a := []string{"category", "topic", "name"} // list property accepted
+	a := []string{"category", "topic", "name", "locale"} // list property accepted
 	name := opts.Property
 
 	if name == "" {
@@ -158,8 +158,23 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	content := res.(*Content)
 
 	content.Created = time.Now().UTC()
-	if content.IdTranslate == 0 {
-		content.IdTranslate = time.Now().UnixNano()
+	log.Infof(ctx, "content.IdTranslate %s", content.IdTranslate)
+	log.Infof(ctx, "content %v", content)
+	if content.IdTranslate == "" {
+		content.IdTranslate = time.Now().Format(time.RFC3339Nano)
+	} else {
+		// check same idTranslate and Locale
+		q := model.NewQuery((*Content)(nil))
+		q = q.WithField("IdTranslate =", content.IdTranslate)
+		q = q.WithField("Locale = ", content.Locale)
+		count, err := q.Count(ctx)
+		if err != nil {
+			return page.NewFieldError("locale", fmt.Errorf("error verifying locale translate: %s", err.Error()))
+		}
+		if count > 0 {
+			msg := fmt.Sprintf("a content with locale '%s' already exists. Locale must be unique.", content.Locale)
+			return page.NewFieldError("locale", errors.New(msg))
+		}
 	}
 	content.Revision = 1
 	if !content.Published.IsZero() {
@@ -182,7 +197,6 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	if err != nil {
 		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
-
 	if count > 0 {
 		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
 		return page.NewFieldError("slug", errors.New(msg))

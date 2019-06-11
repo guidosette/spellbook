@@ -20,6 +20,65 @@ indexes:
 - kind: "Content"
   properties:
   - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Title"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Title"
+    direction: desc
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Slug"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Locale"
+  - name: "Type"
+  - name: "Slug"
+    direction: desc
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Type"
+  - name: "Slug"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Type"
+  - name: "Created"
+- kind: "Content"
+  properties:
+  - name: "Category"
+  - name: "Type"
+  - name: "Created"
+    direction: desc
+- kind: "Content"
+  properties:
+  - name: "IdTranslate"
+  - name: "Locale"
+- kind: "Content"
+  properties:
+  - name: "Locale"
+  - name: "Order"
+- kind: "Content"
+  properties:
+  - name: "Locale"
+  - name: "Order"
+    direction: desc
+- kind: "Content"
+  properties:
+  - name: "Locale"
+  - name: "Title"
+- kind: "Content"
+  properties:
+  - name: "Category"
   - name: "Order"
 - kind: "Content"
   properties:
@@ -39,10 +98,6 @@ indexes:
   - name: "Type"
   - name: "Order"
     direction: desc
-- kind: "Content"
-  properties:
-  - name: "Locale"
-  - name: "Order"
 - kind: "Attachment"
   properties:
   - name: "Type"

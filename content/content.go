@@ -34,7 +34,7 @@ ByOrder end
 type Content struct {
 	model.Model `json:"-"`
 	Type        page.ContentType
-	IdTranslate int64
+	IdTranslate string
 	Slug        string
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
@@ -63,7 +63,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Type        page.ContentType `json:"type"`
-		IdTranslate int64            `json:"idTranslate"`
+		IdTranslate string           `json:"idTranslate"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
 		Subtitle    string           `json:"subtitle"`
@@ -121,7 +121,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Type        page.ContentType `json:"type"`
-		IdTranslate int64            `json:"idTranslate"`
+		IdTranslate string           `json:"idTranslate"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
 		Subtitle    string           `json:"subtitle"`
