@@ -46,11 +46,22 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 		return nil, err
 	}
 
+	// attachment
 	q := model.NewQuery((*Attachment)(nil))
 	q = q.WithField("Parent =", cont.EncodedKey())
 	if err := q.GetMulti(ctx, &cont.Attachments); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s attachments: %s", id, err.Error())
 		return nil, err
+	}
+
+	// idParent
+	if cont.IdParent != "" {
+		contParent := Content{}
+		idParent := cont.IdParent
+		if err := model.FromEncodedKey(ctx, &contParent, idParent); err != nil {
+			log.Errorf(ctx, "could not retrieve parent content %s: %s", idParent, err.Error())
+			return nil, err
+		}
 	}
 
 	return &cont, nil
@@ -289,6 +300,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 	content.Slug = other.Slug
+	content.IdParent = other.IdParent
 	switch content.Type {
 	case page.KeyTypeContent:
 		if other.Published.IsZero() {

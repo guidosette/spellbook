@@ -53,6 +53,7 @@ type Content struct {
 	Created   time.Time
 	Updated   time.Time
 	Published time.Time
+	IdParent  string `model:"search"`
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -64,6 +65,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Type        page.ContentType `json:"type"`
 		IdTranslate string           `json:"idTranslate"`
+		IdParent    string           `json:"idParent"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
 		Subtitle    string           `json:"subtitle"`
@@ -110,6 +112,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.StartDate = alias.StartDate
 	content.EndDate = alias.EndDate
 	content.IdTranslate = alias.IdTranslate
+	content.IdParent = alias.IdParent
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -140,6 +143,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Updated     time.Time        `json:"updated"`
 		Published   time.Time        `json:"published"`
 		Id          string           `json:"id"`
+		IdParent    string           `json:"idParent"`
 		StartDate   time.Time        `json:"startDate"`
 		EndDate     time.Time        `json:"endDate"`
 	}
@@ -180,6 +184,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			StartDate:   content.StartDate,
 			EndDate:     content.EndDate,
 			Id:          content.EncodedKey(),
+			IdParent:    content.IdParent,
 		},
 	})
 }
