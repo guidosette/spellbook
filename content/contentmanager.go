@@ -55,9 +55,9 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 	}
 
 	// idParent
-	if cont.IdParent != "" {
+	if cont.ParentKey != "" {
 		contParent := Content{}
-		idParent := cont.IdParent
+		idParent := cont.ParentKey
 		if err := model.FromEncodedKey(ctx, &contParent, idParent); err != nil {
 			log.Errorf(ctx, "could not retrieve parent content %s: %s", idParent, err.Error())
 			return nil, err
@@ -300,7 +300,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 	content.Slug = other.Slug
-	content.IdParent = other.IdParent
+	content.ParentKey = other.ParentKey
 	switch content.Type {
 	case page.KeyTypeContent:
 		if other.Published.IsZero() {
