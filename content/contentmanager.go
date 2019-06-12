@@ -48,21 +48,21 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 
 	// attachment
 	q := model.NewQuery((*Attachment)(nil))
-	q = q.WithField("Parent =", cont.EncodedKey())
+	q = q.WithField("ParentKey =", cont.EncodedKey())
 	if err := q.GetMulti(ctx, &cont.Attachments); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s attachments: %s", id, err.Error())
 		return nil, err
 	}
 
 	// idParent
-	if cont.ParentKey != "" {
-		contParent := Content{}
-		idParent := cont.ParentKey
-		if err := model.FromEncodedKey(ctx, &contParent, idParent); err != nil {
-			log.Errorf(ctx, "could not retrieve parent content %s: %s", idParent, err.Error())
-			return nil, err
-		}
-	}
+	//if cont.ParentKey != "" {
+	//	contParent := Content{}
+	//	idParent := cont.ParentKey
+	//	if err := model.FromEncodedKey(ctx, &contParent, idParent); err != nil {
+	//		log.Errorf(ctx, "could not retrieve parent content %s: %s", idParent, err.Error())
+	//		return nil, err
+	//	}
+	//}
 
 	return &cont, nil
 }
@@ -169,8 +169,6 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	content := res.(*Content)
 
 	content.Created = time.Now().UTC()
-	log.Infof(ctx, "content.IdTranslate %s", content.IdTranslate)
-	log.Infof(ctx, "content %v", content)
 	if content.IdTranslate == "" {
 		content.IdTranslate = time.Now().Format(time.RFC3339Nano)
 	} else {
@@ -353,7 +351,7 @@ func (manager contentManager) Delete(ctx context.Context, res page.Resource) err
 	// delete attachments with parent = slug
 	attachments := make([]*Attachment, 0, 0)
 	q := model.NewQuery(&Attachment{})
-	q.WithField("Parent =", content.Slug)
+	q.WithField("ParentKey =", content.EncodedKey())
 	err = q.GetMulti(ctx, &attachments)
 	if err != nil {
 		log.Errorf(ctx, "error retrieving attachments: %s", err)

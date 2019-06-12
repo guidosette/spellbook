@@ -24,7 +24,7 @@ type Attachment struct {
 	ResourceUrl string    `json:"resourceUrl";model:"noindex"`
 	Group       string    `json:"group"`
 	Type        string    `json:"type"`
-	Parent      string    `json:"parent"`
+	ParentKey   string    `json:"parentKey"` // encode key of content
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
 	Uploader    string    `json:"uploader"`
@@ -40,7 +40,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		ResourceUrl string    `json:"resourceUrl"`
 		Group       string    `json:"group"`
 		Type        string    `json:"type"`
-		Parent      string    `json:"parent"`
+		ParentKey   string    `json:"parentKey"`
 		Created     time.Time `json:"created"`
 		Updated     time.Time `json:"updated"`
 		Uploader    string    `json:"uploader"`
@@ -58,7 +58,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.ResourceUrl = alias.ResourceUrl
 	attachment.Group = alias.Group
 	attachment.Type = alias.Type
-	attachment.Parent = alias.Parent
+	attachment.ParentKey = alias.ParentKey
 	attachment.Created = alias.Created
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
@@ -75,7 +75,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		ResourceUrl string    `json:"resourceUrl"`
 		Group       string    `json:"group"`
 		Type        string    `json:"type"`
-		Parent      string    `json:"parent"`
+		ParentKey   string    `json:"parentKey"`
 		Created     time.Time `json:"created"`
 		Updated     time.Time `json:"updated"`
 		Uploader    string    `json:"uploader"`
@@ -93,7 +93,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			ResourceUrl: attachment.ResourceUrl,
 			Group:       attachment.Group,
 			Type:        attachment.Type,
-			Parent:      attachment.Parent,
+			ParentKey:   attachment.ParentKey,
 			Created:     attachment.Created,
 			Updated:     attachment.Updated,
 			Uploader:    attachment.Uploader,
@@ -123,4 +123,3 @@ func (attachment *Attachment) ToRepresentation(rtype page.RepresentationType) ([
 	}
 	return nil, page.NewUnsupportedError()
 }
-

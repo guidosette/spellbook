@@ -170,7 +170,7 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 
 	// attachment parent is required.
 	// if not attachment is to be specified the default value must be used
-	if attachment.Parent == "" {
+	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
 		return page.NewFieldError("parent", errors.New(msg))
 	}
@@ -207,12 +207,12 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 	attachment.Description = other.Description
 	attachment.ResourceUrl = other.ResourceUrl
 	attachment.Group = other.Group
-	attachment.Parent = other.Parent
+	attachment.ParentKey = other.ParentKey
 	attachment.Updated = time.Now().UTC()
 	attachment.AltText = other.AltText
 	attachment.Seo = other.Seo
 
-	if attachment.Parent == "" {
+	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
 		return page.NewFieldError("parent", errors.New(msg))
 	}
