@@ -148,8 +148,8 @@ func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts pag
 func (manager mailMessageManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditMailMessage))
+	if current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
 	}
 
 	mailMessage := res.(*MailMessage)
@@ -189,8 +189,8 @@ func (manager mailMessageManager) Create(ctx context.Context, res page.Resource,
 
 func (manager mailMessageManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditMailMessage))
+	if current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
 	}
 
 	other := MailMessage{}
@@ -204,8 +204,8 @@ func (manager mailMessageManager) Update(ctx context.Context, res page.Resource,
 }
 
 func (manager mailMessageManager) Delete(ctx context.Context, res page.Resource) error {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionEditMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditMailMessage))
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
 	}
 
 	mailMessage := res.(*MailMessage)

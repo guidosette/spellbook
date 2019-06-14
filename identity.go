@@ -11,50 +11,39 @@ const (
 
 const (
 	PermissionEnabled = 1 << iota
-	PermissionReadUser
-	PermissionCreateUser
-	PermissionEditUser
 	PermissionEditPermissions
-	PermissionBlockUser
+	PermissionReadUser
+	PermissionWriteUser
 	PermissionReadContent
-	PermissionCreateContent
-	PermissionEditContent
-	PermissionPublishContent
+	PermissionWriteContent
 	PermissionReadMailMessage
-	PermissionEditMailMessage
+	PermissionWriteMailMessage
 	PermissionReadPlace
 	PermissionCreatePlace
-	PermissionEditPlace
+	PermissionWritePlace
 	PermissionReadMedia
 	PermissionCreateMedia
-	PermissionEditMedia
+	PermissionWriteMedia
 	PermissionReadSeo
 	PermissionCreateSeo
-	PermissionEditSeo
+	PermissionWriteSeo
 )
 
 var Permissions = map[Permission]string{
-	PermissionEnabled:         "PERMISSION_ENABLED",
-	PermissionReadUser:        "PERMISSION_READ_USERS",
-	PermissionCreateUser:      "PERMISSION_CREATE_USERS",
-	PermissionEditUser:        "PERMISSION_UPDATE_USERS",
-	PermissionEditPermissions: "PERMISSION_EDIT_PERMISSIONS",
-	PermissionBlockUser:       "PERMISSION_BLOCK_USERS",
-	PermissionReadContent:     "PERMISSION_READ_CONTENT",
-	PermissionCreateContent:   "PERMISSION_CREATE_CONTENT",
-	PermissionEditContent:     "PERMISSION_UPDATE_CONTENT",
-	PermissionPublishContent:  "PERMISSION_PUBLISH_CONTENT",
-	PermissionReadMailMessage: "PERMISSION_READ_MAILMESSAGE",
-	PermissionEditMailMessage: "PERMISSION_EDIT_MAILMESSAGE",
-	PermissionReadPlace:       "PERMISSION_READ_PLACE",
-	PermissionCreatePlace:     "PERMISSION_CREATE_PLACE",
-	PermissionEditPlace:       "PERMISSION_EDIT_PLACE",
-	PermissionReadMedia:       "PERMISSION_READ_MEDIA",
-	PermissionCreateMedia:     "PERMISSION_CREATE_MEDIA",
-	PermissionEditMedia:       "PERMISSION_EDIT_MEDIA",
-	PermissionReadSeo:         "PERMISSION_READ_SEO",
-	PermissionCreateSeo:       "PERMISSION_CREATE_SEO",
-	PermissionEditSeo:         "PERMISSION_EDIT_SEO",
+	PermissionEnabled:          "PERMISSION_ENABLED",
+	PermissionEditPermissions:  "PERMISSION_EDIT_PERMISSIONS",
+	PermissionReadUser:         "PERMISSION_READ_USER",
+	PermissionWriteUser:        "PERMISSION_WRITE_USER",
+	PermissionReadContent:      "PERMISSION_READ_CONTENT",
+	PermissionWriteContent:     "PERMISSION_WRITE_CONTENT",
+	PermissionReadMailMessage:  "PERMISSION_READ_MAILMESSAGE",
+	PermissionWriteMailMessage: "PERMISSION_WRITE_MAILMESSAGE",
+	PermissionReadPlace:        "PERMISSION_READ_PLACE",
+	PermissionWritePlace:       "PERMISSION_WRITE_PLACE",
+	PermissionReadMedia:        "PERMISSION_READ_MEDIA",
+	PermissionWriteMedia:       "PERMISSION_WRITE_MEDIA",
+	PermissionReadSeo:          "PERMISSION_READ_SEO",
+	PermissionWriteSeo:         "PERMISSION_WRITE_SEO",
 }
 
 func PermissionName(permission Permission) string {

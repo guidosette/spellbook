@@ -146,8 +146,8 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 func (manager userManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionCreateUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionCreateUser))
+	if current == nil || !current.HasPermission(page.PermissionWriteUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
 	}
 
 	user := res.(*User)
@@ -224,8 +224,8 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 
 func (manager userManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if !current.HasPermission(page.PermissionEditUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditUser))
+	if !current.HasPermission(page.PermissionWriteUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
 	}
 
 	o, _ := manager.NewResource(ctx)
@@ -274,8 +274,8 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 
 func (manager userManager) Delete(ctx context.Context, res page.Resource) error {
 	current := page.IdentityFromContext(ctx)
-	if !current.HasPermission(page.PermissionEditUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditUser))
+	if !current.HasPermission(page.PermissionWriteUser) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
 	}
 
 	user := res.(*User)

@@ -123,8 +123,8 @@ func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle 
 func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditSeo) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditSeo))
+	if current == nil || !current.HasPermission(page.PermissionWriteSeo) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteSeo))
 	}
 
 	seo := res.(*Seo)

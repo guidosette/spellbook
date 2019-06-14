@@ -164,8 +164,8 @@ func (manager placeManager) Create(ctx context.Context, res page.Resource, bundl
 
 func (manager placeManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditPlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditPlace))
+	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
 	}
 
 	other := Place{}
@@ -198,8 +198,8 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 
 func (manager placeManager) Delete(ctx context.Context, res page.Resource) error {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionEditPlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditPlace))
+	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
 	}
 
 	place := res.(*Place)
