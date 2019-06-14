@@ -53,7 +53,7 @@ type Content struct {
 	Created   time.Time
 	Updated   time.Time
 	Published time.Time
-	ParentKey string `model:"search"`
+	ParentKey string
 
 	// KeyTypeEvent
 	StartDate time.Time
