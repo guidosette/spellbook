@@ -43,6 +43,7 @@ func (router InternationalRouter) SetRoute(url string, handler func(ctx context.
 		url = fmt.Sprintf("/%s%s", lang.String(), url)
 		switch parms[mage.KeyRequestMethod].Value() {
 		case http.MethodGet:
+			url = fmt.Sprintf("%s?%s", url, parms[mage.KeyRequestQuery].Value())
 			fallthrough
 		case http.MethodHead:
 			return &RedirectController{To:url}, ctx
