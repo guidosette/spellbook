@@ -12,6 +12,10 @@ indexes:
   - name: "Locale"
   - name: "Type"
   - name: "Order"
+- kind: "Seo"
+  properties:
+  - name: "Locale"
+  - name: "Title"
 - kind: "Content"
   properties:
   - name: "Locale"

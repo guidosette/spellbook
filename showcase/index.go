@@ -12,6 +12,11 @@ import (
 	"net/http"
 )
 
+const (
+	HOME     page.StaticPageCode = "HOME"
+	PRODUCTS page.StaticPageCode = "PRODUCTS"
+)
+
 func init() {
 	m := mage.Instance()
 
@@ -24,6 +29,10 @@ func init() {
 		page.SupportedCategory{Type: page.KeyTypeContent, Name: "services", Label: "Services"},
 		page.SupportedCategory{Type: page.KeyTypeContent, Name: "news", Label: "News"},
 		page.SupportedCategory{Type: page.KeyTypeEvent, Name: "events", Label: "Events"},
+	}
+	opts.StaticPages = []page.StaticPageCode{
+		HOME,
+		PRODUCTS,
 	}
 
 	instance := page.NewWebsite(&opts)
