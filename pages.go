@@ -347,6 +347,8 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 		data = page.DataHandler.AssignData(ctx)
 	}
 
+	log.Infof(ctx, "lang %s", lang)
+
 	renderer.Data = struct {
 		Url      string
 		Language string
