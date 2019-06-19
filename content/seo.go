@@ -8,16 +8,18 @@ import (
 
 type Seo struct {
 	model.Model `json:"-"`
-	Title		string
-	MetaDesc	string
-	Url			string
+	Title       string
+	MetaDesc    string
+	Url         string
+	Code        page.StaticPageCode
 }
 
 func (seo *Seo) UnmarshalJSON(data []byte) error {
 	alias := struct {
-		Title		string		`json:"title"`
-		MetaDesc	string		`json:"metadesc"`
-		Url			string		`json:"url"`
+		Title    string              `json:"title"`
+		MetaDesc string              `json:"metadesc"`
+		Url      string              `json:"url"`
+		Code     page.StaticPageCode `json:"code"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -28,26 +30,29 @@ func (seo *Seo) UnmarshalJSON(data []byte) error {
 	seo.Title = alias.Title
 	seo.MetaDesc = alias.MetaDesc
 	seo.Url = alias.Url
+	seo.Code = alias.Code
 
 	return nil
 }
 
 func (seo *Seo) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Title		string		`json:"title"`
-		MetaDesc	string		`json:"metadesc"`
-		Url			string		`json:"url"`
+		Title    string              `json:"title"`
+		MetaDesc string              `json:"metadesc"`
+		Url      string              `json:"url"`
+		Code     page.StaticPageCode `json:"code"`
 	}
 
 	return json.Marshal(&struct {
-		Id		int64		`json:"id"`
+		Id int64 `json:"id"`
 		Alias
 	}{
 		seo.IntID(),
 		Alias{
-			Title:		seo.Title,
-			MetaDesc:	seo.MetaDesc,
-			Url:		seo.Url,
+			Title:    seo.Title,
+			MetaDesc: seo.MetaDesc,
+			Url:      seo.Url,
+			Code:     seo.Code,
 		},
 	})
 }

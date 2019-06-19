@@ -21,13 +21,16 @@ func NewSeoControllerWithKey(key string) *page.RestController {
 	return c
 }
 
-type seoManager struct {}
+type seoManager struct{}
 
 func (manager seoManager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Seo{}, nil
 }
 
 func (manager seoManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadSeo) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadSeo))
+	}
 
 	intid, err := strconv.ParseInt(id, 10, 64)
 
@@ -46,6 +49,9 @@ func (manager seoManager) FromId(ctx context.Context, id string) (page.Resource,
 }
 
 func (manager seoManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadSeo) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadSeo))
+	}
 
 	var conts []*Seo
 	q := model.NewQuery(&Seo{})
@@ -80,16 +86,19 @@ func (manager seoManager) ListOf(ctx context.Context, opts page.ListOptions) ([]
 }
 
 func (manager seoManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadSeo) {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadSeo))
+	}
+
 	var result []string
 	return result, nil
 }
 
-
 func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionCreateSeo) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionCreateSeo))
+	if current == nil || !current.HasPermission(page.PermissionWriteSeo) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWriteSeo))
 	}
 
 	seo := res.(*Seo)
@@ -164,4 +173,3 @@ func (manager seoManager) Delete(ctx context.Context, res page.Resource) error {
 
 	return nil
 }
-

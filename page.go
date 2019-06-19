@@ -55,9 +55,12 @@ type SupportedCategory struct {
 	Type  ContentType
 }
 
+type StaticPageCode string
+
 type Options struct {
-	Languages  []language.Tag
-	Categories []SupportedCategory
+	Languages   []language.Tag
+	Categories  []SupportedCategory
+	StaticPages []StaticPageCode
 }
 
 func NewWebsite(opts *Options) *Website {

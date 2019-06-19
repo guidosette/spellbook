@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
+	"golang.org/x/text/language"
 	"google.golang.org/appengine/log"
 	"html/template"
 	"io/ioutil"
@@ -192,7 +193,6 @@ type LocalizedPage struct {
 	TemplatedPage
 	JsonBaseFile string
 	JsonFile     string
-	Locale       string
 }
 
 func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
@@ -204,30 +204,9 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 		return mage.Redirect{Status: http.StatusNotFound}
 	}
 
-	//get the language hint
-	inputs := mage.InputsFromContext(ctx)
-
-	lang := page.Locale
-
-	_, lok := inputs["X-AppEngine-Country"]
-
-	if lok {
-		lang = inputs["X-AppEngine-Country"].Value()
-	}
-
-	_, lok = inputs[LanguageCookieKey]
-	if lok {
-		lang = inputs[LanguageCookieKey].Value()
-	}
-
-	_, lok = inputs["hl"]
-	if lok {
-		lang = inputs["hl"].Value()
-	}
-	_, lok = inputs["lang"]
-	if lok {
-		lang = inputs["lang"].Value()
-	}
+	t := ctx.Value(KeyLanguageTag)
+	tag := t.(language.Tag)
+	lang := tag.String()
 
 	lcookie := http.Cookie{}
 	lcookie.Name = LanguageCookieKey
@@ -288,9 +267,10 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	_, bok := base[lang]
 
 	if !bok {
-		log.Errorf(ctx, "Base language file %s doesn't support language %s", lbasename, lang)
+		err := fmt.Errorf("base language file %s doesn't support language %s", lbasename, lang)
+		log.Errorf(ctx, err.Error())
 		//we get the default value if the user provides an invalid lang
-		lang = page.Locale
+		panic(err)
 	}
 
 	globals := base[lang]
@@ -346,8 +326,6 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	if page.DataHandler != nil {
 		data = page.DataHandler.AssignData(ctx)
 	}
-
-	log.Infof(ctx, "lang %s", lang)
 
 	renderer.Data = struct {
 		Url      string

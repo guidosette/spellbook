@@ -25,7 +25,6 @@ const (
 	PermissionCreateMedia
 	PermissionWriteMedia
 	PermissionReadSeo
-	PermissionCreateSeo
 	PermissionWriteSeo
 )
 
