@@ -157,11 +157,11 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 
 func (manager attachmentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionCreateMedia)) {
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
 		var p page.Permission
 		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionCreateMedia) {
-			p = page.PermissionCreateMedia
+		if !current.HasPermission(page.PermissionWriteMedia) {
+			p = page.PermissionWriteMedia
 		}
 		return page.NewPermissionError(page.PermissionName(p))
 	}

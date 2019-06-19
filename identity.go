@@ -19,10 +19,8 @@ const (
 	PermissionReadMailMessage
 	PermissionWriteMailMessage
 	PermissionReadPlace
-	PermissionCreatePlace
 	PermissionWritePlace
 	PermissionReadMedia
-	PermissionCreateMedia
 	PermissionWriteMedia
 	PermissionReadSeo
 	PermissionWriteSeo
