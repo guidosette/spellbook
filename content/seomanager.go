@@ -35,7 +35,7 @@ func (manager seoManager) FromId(ctx context.Context, id string) (page.Resource,
 	intid, err := strconv.ParseInt(id, 10, 64)
 
 	if err != nil {
-		err := fmt.Errorf("Invalid ID for seo: %s", err.Error())
+		err := fmt.Errorf("invalid ID for seo: %s", err.Error())
 		return nil, page.NewFieldError("id", err)
 	}
 
@@ -90,8 +90,29 @@ func (manager seoManager) ListOfProperties(ctx context.Context, opts page.ListOp
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadSeo))
 	}
 
-	var result []string
-	return result, nil
+	ws := page.Application()
+
+	staticPages := ws.Options().StaticPages
+
+	from := opts.Page * opts.Size
+	if from > len(staticPages) {
+		return make([]string, 0), nil
+	}
+
+	to := from + opts.Size
+	if to > len(staticPages) {
+		to = len(staticPages)
+	}
+
+	items := staticPages[from:to]
+	codes := make([]string, len(items))
+
+	for i := range items {
+		staticPage := page.StaticPageCode(items[i])
+		codes[i] = string(staticPage)
+	}
+
+	return codes, nil
 }
 
 func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
@@ -103,13 +124,15 @@ func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle 
 
 	seo := res.(*Seo)
 
-	if seo.Title == "" || seo.Url == "" {
-		return page.NewFieldError("title", errors.New("title and url can't be empty"))
+	if seo.Title == "" {
+		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
 	// if the same seo already exists, we must return
 	q := model.NewQuery((*Seo)(nil))
 	q = q.WithField("Url =", seo.Url)
+	q = q.WithField("Locale =", seo.Locale)
+	q = q.WithField("Code =", seo.Code)
 	count, err := q.Count(ctx)
 	if err != nil {
 		return page.NewFieldError("url", fmt.Errorf("error verifying url uniqueness: %s", err.Error()))
@@ -143,8 +166,8 @@ func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle 
 		return page.NewFieldError("", fmt.Errorf("invalid json for seo %s: %s", seo.StringID(), err.Error()))
 	}
 
-	if seo.Title == "" || seo.Url == "" {
-		return page.NewFieldError("title", errors.New("title and url can't be empty"))
+	if seo.Title == "" {
+		return page.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
 	if len(seo.MetaDesc) > 160 {
@@ -154,6 +177,23 @@ func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle 
 	seo.Title = other.Title
 	seo.MetaDesc = other.MetaDesc
 	seo.Url = other.Url
+	seo.Locale = other.Locale
+	seo.Code = other.Code
+
+	// if the same seo already exists, we must return
+	q := model.NewQuery((*Seo)(nil))
+	q = q.WithField("Url =", seo.Url)
+	q = q.WithField("Locale =", seo.Locale)
+	q = q.WithField("Code =", seo.Code)
+	count, err := q.Count(ctx)
+	if err != nil {
+		return page.NewFieldError("url", fmt.Errorf("error verifying url uniqueness: %s", err.Error()))
+	}
+
+	if count > 1 {
+		msg := fmt.Sprintf("a seo for url %s already exists.", seo.Url)
+		return page.NewFieldError("url", errors.New(msg))
+	}
 
 	if err := model.Update(ctx, seo); err != nil {
 		return fmt.Errorf("error updating seo with url %s: %s", seo.Url, err)

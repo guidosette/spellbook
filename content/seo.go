@@ -12,6 +12,7 @@ type Seo struct {
 	MetaDesc    string
 	Url         string
 	Code        page.StaticPageCode
+	Locale      string
 }
 
 func (seo *Seo) UnmarshalJSON(data []byte) error {
@@ -19,6 +20,7 @@ func (seo *Seo) UnmarshalJSON(data []byte) error {
 		Title    string              `json:"title"`
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
+		Locale   string              `json:"locale"`
 		Code     page.StaticPageCode `json:"code"`
 	}{}
 
@@ -31,6 +33,7 @@ func (seo *Seo) UnmarshalJSON(data []byte) error {
 	seo.MetaDesc = alias.MetaDesc
 	seo.Url = alias.Url
 	seo.Code = alias.Code
+	seo.Locale = alias.Locale
 
 	return nil
 }
@@ -40,6 +43,7 @@ func (seo *Seo) MarshalJSON() ([]byte, error) {
 		Title    string              `json:"title"`
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
+		Locale   string              `json:"locale"`
 		Code     page.StaticPageCode `json:"code"`
 	}
 
@@ -53,6 +57,7 @@ func (seo *Seo) MarshalJSON() ([]byte, error) {
 			MetaDesc: seo.MetaDesc,
 			Url:      seo.Url,
 			Code:     seo.Code,
+			Locale:   seo.Locale,
 		},
 	})
 }
