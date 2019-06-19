@@ -141,8 +141,8 @@ func (manager placeManager) ListOfProperties(ctx context.Context, opts page.List
 
 func (manager placeManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionCreatePlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionCreatePlace))
+	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
+		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
 	}
 
 	place := res.(*Place)

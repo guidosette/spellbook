@@ -135,11 +135,11 @@ func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListO
 
 func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
 
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionCreateMedia)) {
+	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
 		var p page.Permission
 		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionCreateMedia) {
-			p = page.PermissionCreateMedia
+		if !current.HasPermission(page.PermissionWriteMedia) {
+			p = page.PermissionWriteMedia
 		}
 		return page.NewPermissionError(page.PermissionName(p))
 	}
