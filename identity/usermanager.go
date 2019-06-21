@@ -99,7 +99,7 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
-	a := []string{"group"}
+	a := []string{"Group"}
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })

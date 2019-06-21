@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -111,7 +110,7 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
 	}
 
-	a := []string{"category", "topic", "name", "locale"} // list property accepted
+	a := []string{"Category", "Locale", "Name", "Topic"} // list property accepted
 	name := opts.Property
 
 	if name == "" {
@@ -123,7 +122,6 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 		return nil, datastore.ErrNoSuchEntity
 	}
 
-	name = fmt.Sprintf("%s%s", strings.ToUpper(string(name[0])), name[1:])
 	var conts []*Content
 	q := model.NewQuery(&Content{})
 	q = q.OffsetBy(opts.Page * opts.Size)
