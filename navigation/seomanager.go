@@ -1,4 +1,4 @@
-package content
+package navigation
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"distudio.com/page"
 	"errors"
 	"fmt"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
-	"strconv"
 )
 
 func NewSeoController() *page.RestController {
@@ -32,15 +32,8 @@ func (manager seoManager) FromId(ctx context.Context, id string) (page.Resource,
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadSeo))
 	}
 
-	intid, err := strconv.ParseInt(id, 10, 64)
-
-	if err != nil {
-		err := fmt.Errorf("invalid ID for seo: %s", err.Error())
-		return nil, page.NewFieldError("id", err)
-	}
-
 	cont := Seo{}
-	if err := model.FromIntID(ctx, &cont, intid, nil); err != nil {
+	if err := model.FromStringID(ctx, &cont, id, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve seo %s: %s", id, err.Error())
 		return nil, err
 	}
@@ -124,32 +117,44 @@ func (manager seoManager) Create(ctx context.Context, res page.Resource, bundle 
 
 	seo := res.(*Seo)
 
-	if seo.Title == "" {
-		return page.NewFieldError("title", errors.New("title can't be empty"))
+	// if the same seo already exists, we must return false
+	existing, _ := manager.NewResource(ctx)
+	err := model.FromStringID(ctx, existing.(*Seo), PageId(seo.Locale, seo.Url), nil)
+	if err == datastore.ErrNoSuchEntity {
+		// we can create the new seo element if another one with the same code doesn't exists
+		q := model.NewQuery((*Seo)(nil))
+		q.WithField("Code =", seo.Code)
+		q.WithField("Locale =", seo.Locale)
+
+		err = q.First(ctx, &Seo{})
+
+		// seo already exists for given code, can't create
+		if err == nil {
+			msg := fmt.Sprintf("a page for %s already exists.", seo.Code)
+			return page.NewFieldError("", errors.New(msg))
+		}
+
+		if err == datastore.ErrNoSuchEntity {
+			seo.IsRoot = seo.Url == rootUrl
+			opts := model.NewCreateOptions()
+			opts.WithStringId(PageId(seo.Locale, seo.Url))
+			err = model.CreateWithOptions(ctx, seo, &opts)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	// if the same seo already exists, we must return
-	q := model.NewQuery((*Seo)(nil))
-	q = q.WithField("Url =", seo.Url)
-	q = q.WithField("Locale =", seo.Locale)
-	q = q.WithField("Code =", seo.Code)
-	count, err := q.Count(ctx)
-	if err != nil {
-		return page.NewFieldError("url", fmt.Errorf("error verifying url uniqueness: %s", err.Error()))
-	}
-
-	if count > 0 {
-		msg := fmt.Sprintf("a seo for url %s already exists.", seo.Url)
-		return page.NewFieldError("url", errors.New(msg))
-	}
-
-	err = model.Create(ctx, seo)
-	if err != nil {
-		log.Errorf(ctx, "error creating seo for url %s: %s", seo.Url, err)
+	if  err != nil {
 		return err
 	}
 
-	return nil
+	// the page with the given url has already been allocated. can't create seo
+	msg := fmt.Sprintf("a seo for url %s already exists.", seo.Url)
+	return page.NewFieldError("", errors.New(msg))
 }
 
 func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
@@ -161,39 +166,33 @@ func (manager seoManager) Update(ctx context.Context, res page.Resource, bundle 
 
 	seo := res.(*Seo)
 
-	other := Seo{}
+	or, _ := manager.NewResource(ctx)
+	other := or.(*Seo)
+
 	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
 		return page.NewFieldError("", fmt.Errorf("invalid json for seo %s: %s", seo.StringID(), err.Error()))
 	}
 
-	if seo.Title == "" {
-		return page.NewFieldError("title", errors.New("title can't be empty"))
+	if err := model.FromStringID(ctx, seo, PageId(other.Locale, other.Url), nil); err != nil {
+		return page.NewUnsupportedError()
 	}
 
-	if len(seo.MetaDesc) > 160 {
-		return page.NewFieldError("metadesc", errors.New("metadesc can be at most 160 characters long"))
+	q := model.NewQuery((*Seo)(nil))
+	q.WithField("Code =", other.Code)
+	q.WithField("Locale =", other.Locale)
+
+	existing := Seo{}
+	err := q.First(ctx, &existing)
+
+	// seo already exists for given code, can't create
+	if err == nil && existing.StringID() != PageId(other.Locale, other.Url) {
+		msg := fmt.Sprintf("a page for %s already exists.", other.Code )
+		return page.NewFieldError("", errors.New(msg))
 	}
 
 	seo.Title = other.Title
 	seo.MetaDesc = other.MetaDesc
-	seo.Url = other.Url
-	seo.Locale = other.Locale
 	seo.Code = other.Code
-
-	// if the same seo already exists, we must return
-	q := model.NewQuery((*Seo)(nil))
-	q = q.WithField("Url =", seo.Url)
-	q = q.WithField("Locale =", seo.Locale)
-	q = q.WithField("Code =", seo.Code)
-	count, err := q.Count(ctx)
-	if err != nil {
-		return page.NewFieldError("url", fmt.Errorf("error verifying url uniqueness: %s", err.Error()))
-	}
-
-	if count > 1 {
-		msg := fmt.Sprintf("a seo for url %s already exists.", seo.Url)
-		return page.NewFieldError("url", errors.New(msg))
-	}
 
 	if err := model.Update(ctx, seo); err != nil {
 		return fmt.Errorf("error updating seo with url %s: %s", seo.Url, err)

@@ -8,6 +8,7 @@ import (
 	"distudio.com/page/content"
 	"distudio.com/page/identity"
 	"distudio.com/page/mailmessage"
+	"distudio.com/page/navigation"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -130,7 +131,7 @@ func init() {
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/seo", func(ctx context.Context) mage.Controller {
-		c := content.NewSeoController()
+		c := navigation.NewSeoController()
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
@@ -138,7 +139,7 @@ func init() {
 	instance.Router.SetUniversalRoute("/api/seo/:id", func(ctx context.Context) mage.Controller {
 		params := mage.RoutingParams(ctx)
 		key := params["id"].Value()
-		c := content.NewSeoControllerWithKey(key)
+		c := navigation.NewSeoControllerWithKey(key)
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})

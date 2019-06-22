@@ -1,4 +1,4 @@
-package content
+package navigation
 
 import (
 	"distudio.com/mage/model"
@@ -6,13 +6,24 @@ import (
 	"encoding/json"
 )
 
+const rootUrl = ""
+
 type Seo struct {
 	model.Model `json:"-"`
 	Title       string
 	MetaDesc    string
 	Url         string
+	IsRoot bool
 	Code        page.StaticPageCode
 	Locale      string
+}
+
+func (seo Seo) LocalizedUrl() string {
+	return "/" + seo.Locale + "/" + seo.Url
+}
+
+func PageId(locale string, url string) string {
+	return locale + "-" + url
 }
 
 func (seo *Seo) UnmarshalJSON(data []byte) error {
@@ -20,7 +31,7 @@ func (seo *Seo) UnmarshalJSON(data []byte) error {
 		Title    string              `json:"title"`
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
-		Locale   string              `json:"locale"`
+		Locale   string `json:"locale"`
 		Code     page.StaticPageCode `json:"code"`
 	}{}
 
@@ -48,10 +59,10 @@ func (seo *Seo) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		Id int64 `json:"id"`
+		Id string `json:"id"`
 		Alias
 	}{
-		seo.IntID(),
+		seo.StringID(),
 		Alias{
 			Title:    seo.Title,
 			MetaDesc: seo.MetaDesc,
