@@ -6,7 +6,7 @@ import (
 )
 
 type Token struct {
-	Value string
+	Value    string
 	Username string
 	Password string
 }
@@ -15,7 +15,7 @@ func (token *Token) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
-	} {}
+	}{}
 
 	if err := json.Unmarshal(data, &alias); err != nil {
 		return err
@@ -52,4 +52,3 @@ func (token *Token) ToRepresentation(rtype page.RepresentationType) ([]byte, err
 	}
 	return nil, page.NewUnsupportedError()
 }
-

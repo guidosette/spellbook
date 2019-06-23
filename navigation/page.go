@@ -8,30 +8,30 @@ import (
 
 const rootUrl = ""
 
-type Seo struct {
+type Page struct {
 	model.Model `json:"-"`
+	Label string
 	Title       string
 	MetaDesc    string
 	Url         string
-	IsRoot bool
+	Order int
+	IsRoot      bool
 	Code        page.StaticPageCode
 	Locale      string
 }
 
-func (seo Seo) LocalizedUrl() string {
-	return "/" + seo.Locale + "/" + seo.Url
+func (p Page) LocalizedUrl() string {
+	return "/" + p.Locale + "/" + p.Url
 }
 
-func PageId(locale string, url string) string {
-	return locale + "-" + url
-}
-
-func (seo *Seo) UnmarshalJSON(data []byte) error {
+func (p *Page) UnmarshalJSON(data []byte) error {
 	alias := struct {
+		Label string `json:"label"`
+		Order int `json:"order"`
 		Title    string              `json:"title"`
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
-		Locale   string `json:"locale"`
+		Locale   string              `json:"locale"`
 		Code     page.StaticPageCode `json:"code"`
 	}{}
 
@@ -40,20 +40,24 @@ func (seo *Seo) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	seo.Title = alias.Title
-	seo.MetaDesc = alias.MetaDesc
-	seo.Url = alias.Url
-	seo.Code = alias.Code
-	seo.Locale = alias.Locale
+	p.Label = alias.Label
+	p.Order = alias.Order
+	p.Title = alias.Title
+	p.MetaDesc = alias.MetaDesc
+	p.Url = alias.Url
+	p.Code = alias.Code
+	p.Locale = alias.Locale
 
 	return nil
 }
 
-func (seo *Seo) MarshalJSON() ([]byte, error) {
+func (p *Page) MarshalJSON() ([]byte, error) {
 	type Alias struct {
+		Label string `json:"label"`
 		Title    string              `json:"title"`
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
+		Order int `json:"order"`
 		Locale   string              `json:"locale"`
 		Code     page.StaticPageCode `json:"code"`
 	}
@@ -62,33 +66,35 @@ func (seo *Seo) MarshalJSON() ([]byte, error) {
 		Id string `json:"id"`
 		Alias
 	}{
-		seo.StringID(),
+		p.StringID(),
 		Alias{
-			Title:    seo.Title,
-			MetaDesc: seo.MetaDesc,
-			Url:      seo.Url,
-			Code:     seo.Code,
-			Locale:   seo.Locale,
+			Label: p.Label,
+			Title:    p.Title,
+			MetaDesc: p.MetaDesc,
+			Url:      p.Url,
+			Order: p.Order,
+			Code:     p.Code,
+			Locale:   p.Locale,
 		},
 	})
 }
 
-func (seo *Seo) Id() string {
-	return seo.StringID()
+func (p *Page) Id() string {
+	return p.StringID()
 }
 
-func (seo *Seo) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (p *Page) FromRepresentation(rtype page.RepresentationType, data []byte) error {
 	switch rtype {
 	case page.RepresentationTypeJSON:
-		return json.Unmarshal(data, seo)
+		return json.Unmarshal(data, p)
 	}
 	return page.NewUnsupportedError()
 }
 
-func (seo *Seo) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (p *Page) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
 	switch rtype {
 	case page.RepresentationTypeJSON:
-		return json.Marshal(seo)
+		return json.Marshal(p)
 	}
 	return nil, page.NewUnsupportedError()
 }

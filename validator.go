@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-
 // Validator operates on a single field.
 // Returns a validation error if the field does not satisfy a set of constraint.
 // Each validator acts upon a given constraint
@@ -14,9 +13,9 @@ type Validator interface {
 }
 
 type Field struct {
-	Name         string
-	validators   []Validator
-	Required     bool
+	Name        string
+	validators  []Validator
+	Required    bool
 	IsValidated bool
 	value       string
 }
@@ -33,7 +32,7 @@ func NewField(name string, required bool, in mage.RequestInputs) *Field {
 
 func NewRawField(name string, required bool, value string) *Field {
 	vs := make([]Validator, 0, 0)
-	f := &Field{Name: name, Required:required, validators:vs}
+	f := &Field{Name: name, Required: required, validators: vs}
 	f.value = value
 	return f
 }

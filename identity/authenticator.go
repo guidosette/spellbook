@@ -8,7 +8,7 @@ import (
 	"google.golang.org/appengine/user"
 )
 
-type UserAuthenticator struct{
+type UserAuthenticator struct {
 	mage.Authenticator
 }
 
@@ -54,5 +54,3 @@ func (authenticator GSupportAuthenticator) Authenticate(ctx context.Context) con
 	u.GrantAll()
 	return page.ContextWithIdentity(ctx, u)
 }
-
-

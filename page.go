@@ -42,6 +42,15 @@ func (app Website) Options() Options {
 	return app.options
 }
 
+func (app Website) SupportsLocale(val string) bool {
+	for _, v := range app.options.Languages {
+		if v.String() == val {
+			return true
+		}
+	}
+	return false
+}
+
 type ContentType string
 
 const (

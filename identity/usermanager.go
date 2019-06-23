@@ -210,7 +210,6 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 
 	user.Password = HashPassword(meta.Password, salt)
 
-
 	opts := model.CreateOptions{}
 	opts.WithStringId(username)
 

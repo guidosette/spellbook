@@ -8,7 +8,7 @@ import (
 )
 
 // Returns 200 if the user is authenticated within the appengine framework
-type IsSuperuserController struct {}
+type IsSuperuserController struct{}
 
 func (controller *IsSuperuserController) OnDestroy(ctx context.Context) {}
 

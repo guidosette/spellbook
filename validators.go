@@ -8,7 +8,7 @@ import (
 )
 
 // checks if the given string is an email address
-type EmailValidator struct {}
+type EmailValidator struct{}
 
 func (validator EmailValidator) Validate(value string) error {
 	_, err := mail.ParseAddress(value)
@@ -59,7 +59,7 @@ func (v LenValidator) Validate(value string) error {
 }
 
 // Checks if a given string is a valid datastore name
-type DatastoreKeyNameValidator struct {}
+type DatastoreKeyNameValidator struct{}
 
 func (v DatastoreKeyNameValidator) Validate(value string) error {
 	if value == "" {
@@ -92,7 +92,7 @@ func (v FileNameValidator) Validate(value string) error {
 	}
 
 	// todo: validate against unicode chars
-	if strings.Contains(value,"\n") || strings.Contains(value, "\r\n") {
+	if strings.Contains(value, "\n") || strings.Contains(value, "\r\n") {
 		return errors.New("file name can't contain new lines or line feeds")
 	}
 

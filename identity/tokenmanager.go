@@ -16,7 +16,7 @@ func NewTokenController() *page.RestController {
 
 type tokenManager struct{}
 
-func (manager tokenManager ) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager tokenManager) NewResource(ctx context.Context) (page.Resource, error) {
 	return &Token{}, nil
 }
 

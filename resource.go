@@ -37,11 +37,11 @@ type Manager interface {
 }
 
 type RepresentationType int
+
 const (
 	RepresentationTypeJSON = iota
 	RepresentationTypeUrlencoded
 )
-
 
 type Resource interface {
 	Id() string
@@ -54,7 +54,7 @@ type Resource interface {
  */
 
 type RestController struct {
-	Key string
+	Key     string
 	Private bool
 	RestHandler
 	extenders map[string][]Extender

@@ -37,7 +37,7 @@ func (router InternationalRouter) SetRoute(url string, handler func(ctx context.
 
 	// if no language is specified, redirect to the default language
 	router.Router.SetRoute(url, func(ctx context.Context) (interface{}, context.Context) {
-		lang,_, _ := router.matcher.Match(language.Make(""))
+		lang, _, _ := router.matcher.Match(language.Make(""))
 		parms := mage.InputsFromContext(ctx)
 		url := parms[mage.KeyRequestURL].Value()
 		url = fmt.Sprintf("/%s%s", lang.String(), url)
@@ -48,9 +48,9 @@ func (router InternationalRouter) SetRoute(url string, handler func(ctx context.
 			}
 			fallthrough
 		case http.MethodHead:
-			return &RedirectController{To:url}, ctx
+			return &RedirectController{To: url}, ctx
 		default:
-			return &TemporaryRedirectController{To:url}, ctx
+			return &TemporaryRedirectController{To: url}, ctx
 		}
 	})
 
@@ -64,20 +64,20 @@ func (router InternationalRouter) SetRoute(url string, handler func(ctx context.
 			}
 			// add the language tag to the route, if supported
 			idx := strings.Index(lurl[1:], "/")
-			lkey := lurl[1:idx + 1]
+			lkey := lurl[1 : idx+1]
 			lang := language.Make(lkey)
 			tag, _, _ := router.matcher.Match(lang)
 			if t := tag.String(); lkey != t {
-				url := fmt.Sprintf("/%s%s",t, url)
+				url := fmt.Sprintf("/%s%s", t, url)
 				// if its not a get request, return a 307
 				parms := mage.InputsFromContext(ctx)
 				switch parms[mage.KeyRequestMethod].Value() {
 				case http.MethodGet:
 					fallthrough
 				case http.MethodHead:
-					return &RedirectController{To:url}, ctx
+					return &RedirectController{To: url}, ctx
 				default:
-					return &TemporaryRedirectController{To:url}, ctx
+					return &TemporaryRedirectController{To: url}, ctx
 				}
 
 			}

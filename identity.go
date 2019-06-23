@@ -22,8 +22,8 @@ const (
 	PermissionWritePlace
 	PermissionReadMedia
 	PermissionWriteMedia
-	PermissionReadSeo
-	PermissionWriteSeo
+	PermissionReadPage
+	PermissionWritePage
 )
 
 var Permissions = map[Permission]string{
@@ -39,8 +39,8 @@ var Permissions = map[Permission]string{
 	PermissionWritePlace:       "PERMISSION_WRITE_PLACE",
 	PermissionReadMedia:        "PERMISSION_READ_MEDIA",
 	PermissionWriteMedia:       "PERMISSION_WRITE_MEDIA",
-	PermissionReadSeo:          "PERMISSION_READ_SEO",
-	PermissionWriteSeo:         "PERMISSION_WRITE_SEO",
+	PermissionReadPage:          "PERMISSION_READ_PAGE",
+	PermissionWritePage:         "PERMISSION_WRITE_PAGE",
 }
 
 func PermissionName(permission Permission) string {

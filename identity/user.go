@@ -26,8 +26,8 @@ const (
 type User struct {
 	model.Model `json:"-"`
 	//Resource
-	Name       string
-	Surname    string
+	Name    string
+	Surname string
 	//username    string `model:"-"`
 	Email      string
 	Password   string
@@ -43,7 +43,7 @@ func (user *User) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Name        string   `json:"name"`
 		Surname     string   `json:"surname"`
-		Username     string   `json:"username"`
+		Username    string   `json:"username"`
 		Email       string   `json:"email"`
 		Permissions []string `json:"permissions"`
 	}{}
@@ -94,7 +94,7 @@ func (user User) Permissions() []string {
 }
 
 func (user User) HasPermission(permission page.Permission) bool {
-	return user.Permission & permission != 0
+	return user.Permission&permission != 0
 }
 
 // sanitizes a string to be used a username
@@ -167,7 +167,7 @@ func (user *User) Id() string {
 	return user.Username()
 }
 
-func (user *User) FromRepresentation(rtype page.RepresentationType, data[]byte) error {
+func (user *User) FromRepresentation(rtype page.RepresentationType, data []byte) error {
 	switch rtype {
 	case page.RepresentationTypeJSON:
 		return json.Unmarshal(data, user)
