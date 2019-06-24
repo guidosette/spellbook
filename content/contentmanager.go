@@ -270,9 +270,8 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
-	q = q.WithField("Slug =", content.Slug)
+	q = q.WithField("Slug =", other.Slug)
 	q = q.WithField("Locale = ", other.Locale)
-
 	count, err := q.Count(ctx)
 	if err != nil {
 		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
@@ -289,6 +288,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Topic = other.Topic
 	content.Locale = other.Locale
 	content.Description = other.Description
+	content.Code = other.Code
 	content.Body = other.Body
 	content.Cover = other.Cover
 	content.Revision = other.Revision

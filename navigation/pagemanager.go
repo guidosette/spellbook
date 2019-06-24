@@ -79,33 +79,7 @@ func (manager pageManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 }
 
 func (manager pageManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPage) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPage))
-	}
-
-	ws := page.Application()
-
-	staticPages := ws.Options().StaticPages
-
-	from := opts.Page * opts.Size
-	if from > len(staticPages) {
-		return make([]string, 0), nil
-	}
-
-	to := from + opts.Size
-	if to > len(staticPages) {
-		to = len(staticPages)
-	}
-
-	items := staticPages[from:to]
-	codes := make([]string, len(items))
-
-	for i := range items {
-		staticPage := page.StaticPageCode(items[i])
-		codes[i] = string(staticPage)
-	}
-
-	return codes, nil
+	return nil, page.NewUnsupportedError()
 }
 
 func (manager pageManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {

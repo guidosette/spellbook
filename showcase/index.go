@@ -18,6 +18,11 @@ const (
 	PRODUCTS page.StaticPageCode = "PRODUCTS"
 )
 
+const (
+	HOME_BANNER page.SpecialCode = "HOME_BANNER"
+	FB          page.SpecialCode = "FB"
+)
+
 func init() {
 	m := mage.Instance()
 
@@ -34,6 +39,10 @@ func init() {
 	opts.StaticPages = []page.StaticPageCode{
 		HOME,
 		PRODUCTS,
+	}
+	opts.SpecialCodes = []page.SpecialCode{
+		HOME_BANNER,
+		FB,
 	}
 
 	instance := page.NewWebsite(&opts)
@@ -131,7 +140,7 @@ func init() {
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/seo", func(ctx context.Context) mage.Controller {
-		c := navigation.NewSeoController()
+		c := navigation.NewPageController()
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
@@ -139,7 +148,7 @@ func init() {
 	instance.Router.SetUniversalRoute("/api/seo/:id", func(ctx context.Context) mage.Controller {
 		params := mage.RoutingParams(ctx)
 		key := params["id"].Value()
-		c := navigation.NewSeoControllerWithKey(key)
+		c := navigation.NewPageControllerWithKey(key)
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
@@ -154,6 +163,32 @@ func init() {
 		params := mage.RoutingParams(ctx)
 		key := params["id"].Value()
 		c := mailmessage.NewMailMessageControllerWithKey(key)
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/page", func(ctx context.Context) mage.Controller {
+		c := navigation.NewPageController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/page/:id", func(ctx context.Context) mage.Controller {
+		params := mage.RoutingParams(ctx)
+		key := params["id"].Value()
+		c := navigation.NewPageControllerWithKey(key)
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/staticpage", func(ctx context.Context) mage.Controller {
+		c := page.NewStaticPageCodeController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/specialcode", func(ctx context.Context) mage.Controller {
+		c := page.NewSpecialCodeController()
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
