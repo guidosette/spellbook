@@ -131,7 +131,7 @@ func init() {
 	}, &identity.GSupportAuthenticator{})
 
 	instance.Router.SetUniversalRoute("/api/seo", func(ctx context.Context) mage.Controller {
-		c := navigation.NewSeoController()
+		c := navigation.NewPageController()
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
@@ -139,7 +139,7 @@ func init() {
 	instance.Router.SetUniversalRoute("/api/seo/:id", func(ctx context.Context) mage.Controller {
 		params := mage.RoutingParams(ctx)
 		key := params["id"].Value()
-		c := navigation.NewSeoControllerWithKey(key)
+		c := navigation.NewPageControllerWithKey(key)
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
