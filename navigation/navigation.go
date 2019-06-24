@@ -15,6 +15,20 @@ func PageId(locale string, url string) string {
 	return locale + "-" + url
 }
 
+func TranslatedMenuItem(ctx context.Context, locale string, mi *MenuItem) *MenuItem {
+	menu, err := GetMenu(ctx, locale, "")
+	if err != nil {
+		log.Errorf(ctx, "unable to retrieve translated menu for menu item %q %q", mi.Code, mi.Locale)
+		return nil
+	}
+	for _, m := range menu {
+		if m.Code == mi.Code {
+			return &m
+		}
+	}
+	return nil
+}
+
 func GetMenu(ctx context.Context, locale string, parent string) (Menu, error) {
 	if !page.Application().SupportsLocale(locale) {
 		return nil, page.NewUnsupportedError()
