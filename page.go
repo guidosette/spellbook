@@ -65,11 +65,13 @@ type SupportedCategory struct {
 }
 
 type StaticPageCode string
+type SpecialCode string
 
 type Options struct {
 	Languages   []language.Tag
 	Categories  []SupportedCategory
 	StaticPages []StaticPageCode
+	SpecialCodes []SpecialCode
 }
 
 func NewWebsite(opts *Options) *Website {

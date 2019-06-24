@@ -289,6 +289,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Topic = other.Topic
 	content.Locale = other.Locale
 	content.Description = other.Description
+	content.Code = other.Code
 	content.Body = other.Body
 	content.Cover = other.Cover
 	content.Revision = other.Revision

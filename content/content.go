@@ -54,6 +54,7 @@ type Content struct {
 	Updated   time.Time
 	Published time.Time
 	ParentKey string
+	Code      string // special
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -80,6 +81,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Attachments []*Attachment    `json:"attachments"`
 		Author      string           `json:"author"`
 		Cover       string           `json:"cover"`
+		Code        string           `json:"code"`
 		Created     time.Time        `json:"created"`
 		Updated     time.Time        `json:"updated"`
 		Published   time.Time        `json:"published"`
@@ -111,6 +113,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Updated = alias.Updated
 	content.StartDate = alias.StartDate
 	content.EndDate = alias.EndDate
+	content.Code = alias.Code
 	content.IdTranslate = alias.IdTranslate
 	content.ParentKey = alias.ParentKey
 	if alias.IsPublished {
@@ -139,6 +142,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Attachments []*Attachment    `json:"attachments"`
 		Author      string           `json:"author"`
 		Cover       string           `json:"cover"`
+		Code        string           `json:"code"`
 		Created     time.Time        `json:"created"`
 		Updated     time.Time        `json:"updated"`
 		Published   time.Time        `json:"published"`
@@ -179,6 +183,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Attachments: content.Attachments,
 			Author:      content.Author,
 			Created:     content.Created,
+			Code:        content.Code,
 			Updated:     content.Updated,
 			Published:   content.Published,
 			StartDate:   content.StartDate,
