@@ -179,7 +179,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 			return page.NewFieldError("locale", fmt.Errorf("error verifying locale translate: %s", err.Error()))
 		}
 		if count > 0 {
-			msg := fmt.Sprintf("a content with locale '%s' already exists. Locale must be unique.", content.Locale)
+			msg := fmt.Sprintf("a content with IdTranslate '%s' already exists. Locale must be unique.", content.Locale)
 			return page.NewFieldError("locale", errors.New(msg))
 		}
 	}
@@ -198,14 +198,25 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
-	q = q.WithField("Slug =", content.Slug)
-	q = q.WithField("Locale = ", content.Locale)
+
+	if content.Code == "" {
+		q = q.WithField("Slug =", content.Slug)
+		q = q.WithField("Locale = ", content.Locale)
+	} else {
+		q = q.WithField("Code =", content.Code)
+		q = q.WithField("Locale = ", content.Locale)
+	}
 	count, err := q.Count(ctx)
 	if err != nil {
 		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
 	if count > 0 {
-		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
+		msg := ""
+		if content.Code == "" {
+			msg = fmt.Sprintf("a content with slug  %s already exists. Slug must be unique.", content.Slug)
+		} else {
+			msg = fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
+		}
 		return page.NewFieldError("slug", errors.New(msg))
 	}
 
@@ -270,15 +281,42 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
-	q = q.WithField("Slug =", other.Slug)
-	q = q.WithField("Locale = ", other.Locale)
+	if other.Code == "" {
+		q = q.WithField("Slug =", other.Slug)
+		q = q.WithField("Locale = ", other.Locale)
+	} else {
+		q = q.WithField("Code =", other.Code)
+		q = q.WithField("Locale = ", other.Locale)
+	}
+
 	count, err := q.Count(ctx)
 	if err != nil {
 		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
-	if count > 1 {
-		msg := fmt.Sprintf("a content with slug %s already exists. Slug must be unique.", content.Slug)
-		return page.NewFieldError("slug", errors.New(msg))
+	log.Infof(ctx, "count %d", count)
+	if count > 0 {
+		var contents []*Content
+		err := q.GetMulti(ctx, &contents)
+		if err != nil {
+			log.Errorf(ctx, "could not retrieve contents %s", err.Error())
+			return page.NewFieldError("check", errors.New("could not retrieve contents"))
+		}
+		valid := true
+		for _, c := range contents {
+			if c.EncodedKey() != content.EncodedKey() {
+				valid = false
+				break
+			}
+		}
+		if !valid {
+			if content.Code == "" {
+				msg := fmt.Sprintf("a content with slug  %s already exists. Slug must be unique.", content.Slug)
+				return page.NewFieldError("slug", errors.New(msg))
+			} else {
+				msg := fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
+				return page.NewFieldError("code", errors.New(msg))
+			}
+		}
 	}
 
 	content.Type = other.Type
