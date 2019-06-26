@@ -330,6 +330,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Body = other.Body
 	content.Cover = other.Cover
 	content.Revision = other.Revision
+	content.Editor = other.Editor
 	content.Order = other.Order
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags

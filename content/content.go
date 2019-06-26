@@ -50,6 +50,7 @@ type Content struct {
 	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author    string `model:"search"`
+	Editor    string `model:"search"`
 	Created   time.Time
 	Updated   time.Time
 	Published time.Time
@@ -80,6 +81,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		Order       int              `json:"order"`
 		Attachments []*Attachment    `json:"attachments"`
 		Author      string           `json:"author"`
+		Editor      string           `json:"editor"`
 		Cover       string           `json:"cover"`
 		Code        string           `json:"code"`
 		Created     time.Time        `json:"created"`
@@ -108,6 +110,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Order = alias.Order
 	content.Author = alias.Author
 	content.Cover = alias.Cover
+	content.Editor = alias.Editor
 	content.Attachments = alias.Attachments
 	content.Created = alias.Created
 	content.Updated = alias.Updated
@@ -141,6 +144,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Order       int              `json:"order"`
 		Attachments []*Attachment    `json:"attachments"`
 		Author      string           `json:"author"`
+		Editor      string           `json:"editor"`
 		Cover       string           `json:"cover"`
 		Code        string           `json:"code"`
 		Created     time.Time        `json:"created"`
@@ -178,6 +182,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Locale:      content.Locale,
 			Description: content.Description,
 			Cover:       content.Cover,
+			Editor:       content.Editor,
 			Revision:    content.Revision,
 			Order:       content.Order,
 			Attachments: content.Attachments,
