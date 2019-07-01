@@ -11,6 +11,7 @@ import (
 var ZeroTime = time.Time{}
 
 type ByOrder []*Content
+type ByTitle []*Content
 
 /**
 ByOrder start
@@ -29,6 +30,25 @@ func (content ByOrder) Less(i, j int) bool {
 
 /**
 ByOrder end
+*/
+
+/**
+ByTitle start
+*/
+func (content ByTitle) Len() int {
+	return len(content)
+}
+
+func (content ByTitle) Swap(i, j int) {
+	content[i], content[j] = content[j], content[i]
+}
+
+func (content ByTitle) Less(i, j int) bool {
+	return content[i].Title < content[j].Title
+}
+
+/**
+ByTitle end
 */
 
 type Content struct {
