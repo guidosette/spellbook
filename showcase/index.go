@@ -85,6 +85,14 @@ func init() {
 		return c
 	}, nil)
 
+	instance.Router.SetUniversalRoute("/api/tokens/:username", func(ctx context.Context) mage.Controller {
+		// todo
+		params := mage.RoutingParams(ctx)
+		key := params["username"].Value()
+		c := identity.NewTokenControllerWithKey(key)
+		return c
+	}, nil)
+
 	instance.Router.SetUniversalRoute("/api/content", func(ctx context.Context) mage.Controller {
 		c := content.NewContentController()
 		c.Private = true

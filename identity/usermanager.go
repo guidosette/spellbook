@@ -46,13 +46,13 @@ func (manager userManager) FromId(ctx context.Context, id string) (page.Resource
 		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
 	}
 
-	att := User{}
-	if err := model.FromStringID(ctx, &att, id, nil); err != nil {
+	us := User{}
+	if err := model.FromStringID(ctx, &us, id, nil); err != nil {
 		log.Errorf(ctx, "could not retrieve user %s: %s", id, err.Error())
 		return nil, err
 	}
 
-	return &att, nil
+	return &us, nil
 }
 
 func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {

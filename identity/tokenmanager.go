@@ -6,12 +6,20 @@ import (
 	"distudio.com/page"
 	"fmt"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 )
 
 func NewTokenController() *page.RestController {
 	handler := page.BaseRestHandler{}
 	handler.Manager = tokenManager{}
 	return page.NewRestController(handler)
+}
+
+func NewTokenControllerWithKey(key string) *page.RestController {
+	handler := page.BaseRestHandler{Manager: tokenManager{}}
+	c := page.NewRestController(handler)
+	c.Key = key
+	return c
 }
 
 type tokenManager struct{}
@@ -21,7 +29,27 @@ func (manager tokenManager) NewResource(ctx context.Context) (page.Resource, err
 }
 
 func (manager tokenManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+
+	// todo
+	current := page.IdentityFromContext(ctx)
+	if current == nil {
+		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+	}
+
+	user, ok := current.(User)
+	if ok && id == user.Id() {
+		return &user, nil
+	}
+
+	us := User{}
+	if err := model.FromStringID(ctx, &us, id, nil); err != nil {
+		log.Errorf(ctx, "could not retrieve user %s: %s", id, err.Error())
+		return nil, err
+	}
+
+	return &us, nil
+
+	//return nil, page.NewUnsupportedError()
 }
 
 func (manager tokenManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {

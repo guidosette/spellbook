@@ -263,6 +263,13 @@ func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error, out
 		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusBadRequest}
 	case PermissionError:
+		renderer := mage.JSONRenderer{}
+		renderer.Data = struct {
+			Error string
+		}{
+			err.(PermissionError).Error(),
+		}
+		out.Renderer = &renderer
 		return mage.Redirect{Status: http.StatusForbidden}
 	default:
 		if err == datastore.ErrNoSuchEntity {
