@@ -53,16 +53,6 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 		return nil, err
 	}
 
-	// idParent
-	//if cont.ParentKey != "" {
-	//	contParent := Content{}
-	//	idParent := cont.ParentKey
-	//	if err := model.FromEncodedKey(ctx, &contParent, idParent); err != nil {
-	//		log.Errorf(ctx, "could not retrieve parent content %s: %s", idParent, err.Error())
-	//		return nil, err
-	//	}
-	//}
-
 	return &cont, nil
 }
 
@@ -234,6 +224,10 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 			msg := fmt.Sprintf("end date can't be empty. %v", content.StartDate)
 			return page.NewFieldError("endDate", errors.New(msg))
 		}
+		if content.EndDate.Before(content.StartDate) {
+			msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate )
+			return page.NewFieldError("endDate", errors.New(msg))
+		}
 	default:
 		return fmt.Errorf("error no type %v", content)
 	}
@@ -349,6 +343,18 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 			}
 		}
 	case page.KeyTypeEvent:
+		if other.StartDate.IsZero() {
+			msg := fmt.Sprintf("start date can't be empty. %v", other.StartDate)
+			return page.NewFieldError("startDate", errors.New(msg))
+		}
+		if other.EndDate.IsZero() {
+			msg := fmt.Sprintf("end date can't be empty. %v", other.EndDate)
+			return page.NewFieldError("endDate", errors.New(msg))
+		}
+		if other.EndDate.Before(other.StartDate) {
+			msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate )
+			return page.NewFieldError("endDate", errors.New(msg))
+		}
 		content.StartDate = other.StartDate
 		content.EndDate = other.EndDate
 	default:
