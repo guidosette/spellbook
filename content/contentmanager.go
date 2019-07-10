@@ -330,18 +330,20 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Tags = other.Tags
 	content.Slug = other.Slug
 	content.ParentKey = other.ParentKey
+
+	if other.Published.IsZero() {
+		// not set
+		content.Published = time.Time{}
+	} else {
+		// set
+		// check previous data
+		if content.Published.IsZero() {
+			content.Published = time.Now().UTC()
+		}
+	}
+
 	switch content.Type {
 	case page.KeyTypeContent:
-		if other.Published.IsZero() {
-			// not set
-			content.Published = time.Time{}
-		} else {
-			// set
-			// check previous data
-			if content.Published.IsZero() {
-				content.Published = time.Now().UTC()
-			}
-		}
 	case page.KeyTypeEvent:
 		if other.StartDate.IsZero() {
 			msg := fmt.Sprintf("start date can't be empty. %v", other.StartDate)
