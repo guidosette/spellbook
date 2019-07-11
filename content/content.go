@@ -51,6 +51,11 @@ func (content ByTitle) Less(i, j int) bool {
 ByTitle end
 */
 
+type PublicationState string
+
+const PublicationStatePublished PublicationState = "PUBLISHED"
+const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
+
 type Content struct {
 	model.Model `json:"-"`
 	Type        page.ContentType
@@ -69,18 +74,22 @@ type Content struct {
 	Order       int
 	Attachments []*Attachment `model:"-"`
 	// username of the author
-	Author      string `model:"search"`
-	Editor      string `model:"search"`
-	Created     time.Time
-	Updated     time.Time
-	Published   time.Time `model:"search"`
-	IsPublished bool      `model:"search"`
-	ParentKey   string
-	Code        string // special
+	Author           string `model:"search"`
+	Editor           string `model:"search"`
+	Created          time.Time
+	Updated          time.Time
+	Published        time.Time        `model:"search"`
+	PublicationState PublicationState `model:"search,atom"`
+	ParentKey        string
+	Code             string // special
 
 	// KeyTypeEvent
 	StartDate time.Time
 	EndDate   time.Time
+}
+
+func (content Content) IsPublished() bool {
+	return !content.Published.IsZero()
 }
 
 func (content *Content) UnmarshalJSON(data []byte) error {

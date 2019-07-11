@@ -174,9 +174,12 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		}
 	}
 	content.Revision = 1
-	if !content.Published.IsZero() {
+
+	if content.IsPublished() {
+		content.PublicationState = PublicationStateUnpublished
 		content.Published = time.Now().UTC()
-		content.IsPublished = true
+	} else {
+		content.PublicationState = PublicationStatePublished
 	}
 
 	if content.Type == "" {
@@ -226,7 +229,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 			return page.NewFieldError("endDate", errors.New(msg))
 		}
 		if content.EndDate.Before(content.StartDate) {
-			msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate )
+			msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate)
 			return page.NewFieldError("endDate", errors.New(msg))
 		}
 	default:
@@ -332,17 +335,22 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	content.Slug = other.Slug
 	content.ParentKey = other.ParentKey
 
-	if other.Published.IsZero() {
+	if !other.IsPublished() {
 		// not set
 		content.Published = time.Time{} // zero
 	} else {
 		// set
 		// check previous data
-		if content.Published.IsZero() {
+		if !content.IsPublished() {
 			content.Published = time.Now().UTC()
 		}
 	}
-	content.IsPublished = !content.Published.IsZero()
+
+	if content.IsPublished() {
+		content.PublicationState = PublicationStateUnpublished
+	} else {
+		content.PublicationState = PublicationStatePublished
+	}
 
 	switch content.Type {
 	case page.KeyTypeContent:
@@ -356,7 +364,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 			return page.NewFieldError("endDate", errors.New(msg))
 		}
 		if other.EndDate.Before(other.StartDate) {
-			msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate )
+			msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate)
 			return page.NewFieldError("endDate", errors.New(msg))
 		}
 		content.StartDate = other.StartDate
