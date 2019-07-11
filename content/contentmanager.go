@@ -176,10 +176,10 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	content.Revision = 1
 
 	if content.IsPublished() {
-		content.PublicationState = PublicationStateUnpublished
+		content.PublicationState = PublicationStatePublished
 		content.Published = time.Now().UTC()
 	} else {
-		content.PublicationState = PublicationStatePublished
+		content.PublicationState = PublicationStateUnpublished
 	}
 
 	if content.Type == "" {
@@ -347,9 +347,9 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	}
 
 	if content.IsPublished() {
-		content.PublicationState = PublicationStateUnpublished
-	} else {
 		content.PublicationState = PublicationStatePublished
+	} else {
+		content.PublicationState = PublicationStateUnpublished
 	}
 
 	switch content.Type {
