@@ -176,6 +176,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	content.Revision = 1
 	if !content.Published.IsZero() {
 		content.Published = time.Now().UTC()
+		content.IsPublished = true
 	}
 
 	if content.Type == "" {
@@ -333,7 +334,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 
 	if other.Published.IsZero() {
 		// not set
-		content.Published = time.Time{}
+		content.Published = time.Time{} // zero
 	} else {
 		// set
 		// check previous data
@@ -341,6 +342,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 			content.Published = time.Now().UTC()
 		}
 	}
+	content.IsPublished = !content.Published.IsZero()
 
 	switch content.Type {
 	case page.KeyTypeContent:

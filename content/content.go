@@ -62,20 +62,21 @@ type Content struct {
 	Tags        string `model:"search"`
 	Category    string `model:"search,atom";page:"gettable,category"`
 	Topic       string `model:"search"`
-	Locale      string
+	Locale      string `model:"search,atom"`
 	Description string
 	Cover       string
 	Revision    int
 	Order       int
 	Attachments []*Attachment `model:"-"`
 	// username of the author
-	Author    string `model:"search"`
-	Editor    string `model:"search"`
-	Created   time.Time
-	Updated   time.Time
-	Published time.Time
-	ParentKey string
-	Code      string // special
+	Author      string `model:"search"`
+	Editor      string `model:"search"`
+	Created     time.Time
+	Updated     time.Time
+	Published   time.Time `model:"search"`
+	IsPublished bool      `model:"search"`
+	ParentKey   string
+	Code        string // special
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -202,7 +203,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Locale:      content.Locale,
 			Description: content.Description,
 			Cover:       content.Cover,
-			Editor:       content.Editor,
+			Editor:      content.Editor,
 			Revision:    content.Revision,
 			Order:       content.Order,
 			Attachments: content.Attachments,
