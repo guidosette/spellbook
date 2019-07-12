@@ -18,34 +18,36 @@ const (
 )
 
 type Attachment struct {
-	model.Model `json:"-"`
-	Name        string    `json:"name"`
-	Description string    `json:"description";model:"noindex"`
-	ResourceUrl string    `json:"resourceUrl";model:"noindex"`
-	Group       string    `json:"group"`
-	Type        string    `json:"type"`
-	ParentKey   string    `json:"parentKey"` // encode key of content
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
-	Uploader    string    `json:"uploader"`
-	AltText     string    `json:"altText"`
-	Seo         int64     `json:"seo"`
+	model.Model      `json:"-"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description";model:"noindex"`
+	ResourceUrl      string    `json:"resourceUrl";model:"noindex"`
+	ResourceThumbUrl string    `json:"resourceThumbUrl";model:"noindex"`
+	Group            string    `json:"group"`
+	Type             string    `json:"type"`
+	ParentKey        string    `json:"parentKey"` // encode key of content
+	Created          time.Time `json:"created"`
+	Updated          time.Time `json:"updated"`
+	Uploader         string    `json:"uploader"`
+	AltText          string    `json:"altText"`
+	Seo              int64     `json:"seo"`
 }
 
 func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		ResourceUrl string    `json:"resourceUrl"`
-		Group       string    `json:"group"`
-		Type        string    `json:"type"`
-		ParentKey   string    `json:"parentKey"`
-		Created     time.Time `json:"created"`
-		Updated     time.Time `json:"updated"`
-		Uploader    string    `json:"uploader"`
-		AltText     string    `json:"altText"`
-		Seo         int64     `json:"seo"`
+		Name             string    `json:"name"`
+		Description      string    `json:"description"`
+		ResourceUrl      string    `json:"resourceUrl"`
+		ResourceThumbUrl string    `json:"resourceThumbUrl"`
+		Group            string    `json:"group"`
+		Type             string    `json:"type"`
+		ParentKey        string    `json:"parentKey"`
+		Created          time.Time `json:"created"`
+		Updated          time.Time `json:"updated"`
+		Uploader         string    `json:"uploader"`
+		AltText          string    `json:"altText"`
+		Seo              int64     `json:"seo"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -56,6 +58,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.Name = alias.Name
 	attachment.Description = alias.Description
 	attachment.ResourceUrl = alias.ResourceUrl
+	attachment.ResourceThumbUrl = alias.ResourceThumbUrl
 	attachment.Group = alias.Group
 	attachment.Type = alias.Type
 	attachment.ParentKey = alias.ParentKey
@@ -70,36 +73,38 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 
 func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		ResourceUrl string    `json:"resourceUrl"`
-		Group       string    `json:"group"`
-		Type        string    `json:"type"`
-		ParentKey   string    `json:"parentKey"`
-		Created     time.Time `json:"created"`
-		Updated     time.Time `json:"updated"`
-		Uploader    string    `json:"uploader"`
-		AltText     string    `json:"altText"`
-		Id          int64     `json:"id"`
-		Seo         int64     `json:"seo"`
+		Name             string    `json:"name"`
+		Description      string    `json:"description"`
+		ResourceUrl      string    `json:"resourceUrl"`
+		ResourceThumbUrl string    `json:"resourceThumbUrl"`
+		Group            string    `json:"group"`
+		Type             string    `json:"type"`
+		ParentKey        string    `json:"parentKey"`
+		Created          time.Time `json:"created"`
+		Updated          time.Time `json:"updated"`
+		Uploader         string    `json:"uploader"`
+		AltText          string    `json:"altText"`
+		Id               int64     `json:"id"`
+		Seo              int64     `json:"seo"`
 	}
 
 	return json.Marshal(&struct {
 		Alias
 	}{
 		Alias{
-			Name:        attachment.Name,
-			Description: attachment.Description,
-			ResourceUrl: attachment.ResourceUrl,
-			Group:       attachment.Group,
-			Type:        attachment.Type,
-			ParentKey:   attachment.ParentKey,
-			Created:     attachment.Created,
-			Updated:     attachment.Updated,
-			Uploader:    attachment.Uploader,
-			AltText:     attachment.AltText,
-			Id:          attachment.IntID(),
-			Seo:         attachment.Seo,
+			Name:             attachment.Name,
+			Description:      attachment.Description,
+			ResourceUrl:      attachment.ResourceUrl,
+			ResourceThumbUrl: attachment.ResourceThumbUrl,
+			Group:            attachment.Group,
+			Type:             attachment.Type,
+			ParentKey:        attachment.ParentKey,
+			Created:          attachment.Created,
+			Updated:          attachment.Updated,
+			Uploader:         attachment.Uploader,
+			AltText:          attachment.AltText,
+			Id:               attachment.IntID(),
+			Seo:              attachment.Seo,
 		},
 	})
 }

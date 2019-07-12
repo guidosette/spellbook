@@ -7,6 +7,7 @@ import (
 	"distudio.com/page"
 	"errors"
 	"fmt"
+	"github.com/disintegration/imaging"
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine/file"
 	"google.golang.org/appengine/log"
@@ -247,18 +248,43 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 
 	if _, err := writer.Write(buffer); err != nil {
 		msg := fmt.Sprintf("upload: unable to write file %s to bucket %s: %s", filename, bucket, err.Error())
-		return page.NewFieldError("parent", errors.New(msg))
+		return page.NewFieldError("bucket", errors.New(msg))
 	}
 
 	if err := writer.Close(); err != nil {
 		msg := fmt.Sprintf("upload: unable to close bucket %s: %s", bucket, err.Error())
-		return page.NewFieldError("parent", errors.New(msg))
+		return page.NewFieldError("bucket", errors.New(msg))
 	}
 
 	uri := fmt.Sprintf(publicURL, bucket, filename)
 
 	rfile.ResourceUrl = uri
 	rfile.Name = name
+
+	// -----------------------------thumbnail
+	// get image
+	image, err := imaging.Decode(f)
+	if err != nil {
+		msg := fmt.Sprintf("error in opening image %s", err)
+		return page.NewFieldError("bucket", errors.New(msg))
+	}
+	// create thumbnail
+	fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
+	afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
+	// Save thumbnail
+	wc := handle.Object(fileNameThumbnail).NewWriter(ctx)
+	wc.ContentType = fh.Header.Get("Content-Type")
+	if imaging.Encode(wc, afterImage, imaging.JPEG); err != nil {
+		msg := fmt.Sprintf("%s in saving image thumbnail", err.Error())
+		return page.NewFieldError("bucket", errors.New(msg))
+	}
+	if err = wc.Close(); err != nil {
+		msg := fmt.Sprintf("CreateFileThumbnail: unable to close bucket %q, file %q: %v", bucket, fileNameThumbnail, err)
+		return page.NewFieldError("bucket", errors.New(msg))
+	}
+
+	uriThumb := fmt.Sprintf(publicURL, bucket, fileNameThumbnail)
+	rfile.ResourceThumbUrl = uriThumb
 
 	return nil
 }

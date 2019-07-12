@@ -206,6 +206,7 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 	attachment.Name = other.Name
 	attachment.Description = other.Description
 	attachment.ResourceUrl = other.ResourceUrl
+	attachment.ResourceThumbUrl = other.ResourceThumbUrl
 	attachment.Group = other.Group
 	attachment.ParentKey = other.ParentKey
 	attachment.Updated = time.Now().UTC()
