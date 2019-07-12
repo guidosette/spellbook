@@ -11,6 +11,7 @@ const publicURL = "https://storage.googleapis.com/%s/%s"
 type File struct {
 	Name        string `json:"name"`
 	ResourceUrl string `json:"resourceUrl"`
+	ContentType string `json:"contentType"`
 }
 
 func (file *File) Id() string {

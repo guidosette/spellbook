@@ -99,25 +99,24 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 	q.Versions = false
 
 	it := handle.Objects(ctx, q)
-	// todo: handle pagination (https://godoc.org/google.golang.org/api/iterator)
-	for {
-		obj, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Errorf(ctx, "listBucket: unable to list bucket %q: %v", bucket, err)
-			break
-		}
+	objs, err := manager.listPagination(ctx, it, opts)
+	if err != nil {
+		log.Errorf(ctx, "listBucket: unable to list bucket %q: %v", bucket, err)
+		return nil, err
+	}
+	for _, obj := range objs {
 		name := obj.Name
 		s := strings.Split(obj.Name, "/")
 		if len(s) > 0 {
 			name = s[len(s)-1]
 		}
+		// create file resource
 		res, _ := manager.NewResource(ctx)
 		f := res.(*File)
 		f.Name = name
 		f.ResourceUrl = obj.MediaLink
+		f.ContentType = obj.ContentType
+		// append file
 		files = append(files, f)
 	}
 
@@ -127,6 +126,27 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 	}
 
 	return resources, nil
+}
+
+func (manager fileManager) listPagination(ctx context.Context, it *storage.ObjectIterator, opts page.ListOptions) ([]*storage.ObjectAttrs, error) {
+	p := iterator.NewPager(it, opts.Size+1, "")
+	var objs []*storage.ObjectAttrs
+	for i := 0; i < opts.Page+1; i++ {
+		objs = make([]*storage.ObjectAttrs, 0, 0)
+		nextPageToken, err := p.NextPage(&objs)
+		if err != nil {
+			return nil, err
+		}
+		if nextPageToken == "" {
+			// end pagination
+			if i != opts.Page {
+				// page requested is out of bound
+				objs = make([]*storage.ObjectAttrs, 0, 0)
+			}
+			break
+		}
+	}
+	return objs, nil
 }
 
 func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
