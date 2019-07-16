@@ -5,6 +5,7 @@ import (
 	"distudio.com/page"
 	"encoding/json"
 	"google.golang.org/appengine"
+	"regexp"
 	"time"
 )
 
@@ -21,6 +22,12 @@ type Place struct {
 	Website     string             `json:"website";model:"noindex"`
 	Created     time.Time          `json:"created"`
 	Updated     time.Time          `json:"updated"`
+}
+
+var extract = regexp.MustCompile("[^0-9+]+")
+
+func (place Place) FormatPhone() string {
+	return extract.ReplaceAllString(place.Phone, "")
 }
 
 func (place *Place) UnmarshalJSON(data []byte) error {
