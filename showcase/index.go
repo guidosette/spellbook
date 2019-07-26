@@ -44,6 +44,10 @@ func init() {
 		HOME_BANNER,
 		FB,
 	}
+	opts.Actions = []page.SupportedAction{
+		page.SupportedAction{Type: page.ActionTypeNormal, Name: "Clean index", Endpoint: "/normal"},
+		page.SupportedAction{Type: page.ActionTypeUpload, Name: "Import places", Endpoint: "/upload"},
+	}
 
 	instance := page.NewWebsite(&opts)
 
@@ -115,6 +119,18 @@ func init() {
 
 	instance.Router.SetUniversalRoute("/api/categories", func(ctx context.Context) mage.Controller {
 		c := content.NewCategoryController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/actions", func(ctx context.Context) mage.Controller {
+		c := content.NewActionController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/tasks", func(ctx context.Context) mage.Controller {
+		c := content.NewTaskController("", "", "")
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
