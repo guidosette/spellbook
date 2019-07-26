@@ -10,18 +10,21 @@ import (
 )
 
 type Place struct {
-	model.Model `json:"-"`
-	Name        string             `model:"search";json:"name"`
-	Address     string             `model:"search";json:"address"`
-	City        string             `model:"search";json:"city"`
-	PostalCode  string             `model:"search";json:"postalCode"`
-	Country     string             `model:"search";json:"country"`
-	Phone       string             `json:"phone";model:"noindex"`
-	Description string             `json:"description";model:"noindex"`
-	Position    appengine.GeoPoint `model:"search"`
-	Website     string             `json:"website";model:"noindex"`
-	Created     time.Time          `json:"created"`
-	Updated     time.Time          `json:"updated"`
+	model.Model  `json:"-"`
+	Name         string             `json:"name"`
+	Address      string             `json:"address"`
+	Street       string             `json:"street"`
+	StreetNumber string             `json:"streetNumber"`
+	Area         string             `json:"area"`
+	City         string             `json:"city"`
+	PostalCode   string             `json:"postalCode"`
+	Country      string             `json:"country"`
+	Phone        string             `json:"phone"`
+	Description  string             `json:"description";model:"noindex"`
+	Position     appengine.GeoPoint `model:"search"`
+	Website      string             `json:"website"`
+	Created      time.Time          `json:"created"`
+	Updated      time.Time          `json:"updated"`
 }
 
 var extract = regexp.MustCompile("[^0-9+]+")
@@ -33,18 +36,21 @@ func (place Place) FormatPhone() string {
 func (place *Place) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Name        string    `json:"name"`
-		Address     string    `json:"address"`
-		City        string    `json:"city"`
-		PostalCode  string    `json:"postalCode"`
-		Country     string    `json:"country"`
-		Phone       string    `json:"phone"`
-		Description string    `json:"description"`
-		Lat         float64   `json:"lat"`
-		Lng         float64   `json:"lng"`
-		Website     string    `json:"website"`
-		Created     time.Time `json:"created"`
-		Updated     time.Time `json:"updated"`
+		Name         string    `json:"name"`
+		Address      string    `json:"address"`
+		Street       string    `json:"street"`
+		StreetNumber string    `json:"streetNumber"`
+		Area         string    `json:"area"`
+		City         string    `json:"city"`
+		PostalCode   string    `json:"postalCode"`
+		Country      string    `json:"country"`
+		Phone        string    `json:"phone"`
+		Description  string    `json:"description"`
+		Lat          float64   `json:"lat"`
+		Lng          float64   `json:"lng"`
+		Website      string    `json:"website"`
+		Created      time.Time `json:"created"`
+		Updated      time.Time `json:"updated"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -54,6 +60,9 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 
 	place.Name = alias.Name
 	place.Address = alias.Address
+	place.Street = alias.Street
+	place.StreetNumber = alias.StreetNumber
+	place.Area = alias.Area
 	place.City = alias.City
 	place.PostalCode = alias.PostalCode
 	place.Country = alias.Country
@@ -69,38 +78,44 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 
 func (place *Place) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Name        string    `json:"name"`
-		Address     string    `json:"address"`
-		City        string    `json:"city"`
-		PostalCode  string    `json:"postalCode"`
-		Country     string    `json:"country"`
-		Phone       string    `json:"phone"`
-		Description string    `json:"description"`
-		Lat         float64   `json:"lat"`
-		Lng         float64   `json:"lng"`
-		Website     string    `json:"website"`
-		Created     time.Time `json:"created"`
-		Updated     time.Time `json:"updated"`
-		Id          int64     `json:"id"`
+		Name         string    `json:"name"`
+		Address      string    `json:"address"`
+		Street       string    `json:"street"`
+		StreetNumber string    `json:"streetNumber"`
+		Area         string    `json:"area"`
+		City         string    `json:"city"`
+		PostalCode   string    `json:"postalCode"`
+		Country      string    `json:"country"`
+		Phone        string    `json:"phone"`
+		Description  string    `json:"description"`
+		Lat          float64   `json:"lat"`
+		Lng          float64   `json:"lng"`
+		Website      string    `json:"website"`
+		Created      time.Time `json:"created"`
+		Updated      time.Time `json:"updated"`
+		Id           int64     `json:"id"`
 	}
 
 	return json.Marshal(&struct {
 		Alias
 	}{
 		Alias{
-			Name:        place.Name,
-			Address:     place.Address,
-			City:        place.City,
-			PostalCode:  place.PostalCode,
-			Country:     place.Country,
-			Phone:       place.Phone,
-			Description: place.Description,
-			Lat:         place.Position.Lat,
-			Lng:         place.Position.Lng,
-			Website:     place.Website,
-			Created:     place.Created,
-			Updated:     place.Updated,
-			Id:          place.IntID(),
+			Name:         place.Name,
+			Address:      place.Address,
+			Street:       place.Street,
+			StreetNumber: place.StreetNumber,
+			Area:         place.Area,
+			City:         place.City,
+			PostalCode:   place.PostalCode,
+			Country:      place.Country,
+			Phone:        place.Phone,
+			Description:  place.Description,
+			Lat:          place.Position.Lat,
+			Lng:          place.Position.Lng,
+			Website:      place.Website,
+			Created:      place.Created,
+			Updated:      place.Updated,
+			Id:           place.IntID(),
 		},
 	})
 }

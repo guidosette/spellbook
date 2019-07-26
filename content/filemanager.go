@@ -47,20 +47,6 @@ func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource
 		return nil, fmt.Errorf("error retrieving default bucket %s", err.Error())
 	}
 
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %s", err.Error())
-	}
-	defer client.Close()
-
-	handle := client.Bucket(bucket)
-
-	reader, err := handle.Object(id).NewReader(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
 	res, _ := manager.NewResource(ctx)
 	f := res.(*File)
 	f.Name = id

@@ -177,6 +177,9 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	place.Name = other.Name
 	place.Address = other.Address
 	place.City = other.City
+	place.Street = other.Street
+	place.StreetNumber = other.StreetNumber
+	place.Area = other.Area
 	place.PostalCode = other.PostalCode
 	place.Country = other.Country
 	place.Description = other.Description
