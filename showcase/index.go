@@ -45,7 +45,7 @@ func init() {
 		FB,
 	}
 	opts.Actions = []page.SupportedAction{
-		page.SupportedAction{Type: page.ActionTypeNormal, Name: "cleantest", Endpoint: "/api/test", Method: http.MethodGet},
+		page.SupportedAction{Type: page.ActionTypeNormal, Name: "cleanindextest", Endpoint: "/api/cleanindextest", Method: http.MethodGet},
 		page.SupportedAction{Type: page.ActionTypeUpload, Name: "places", Endpoint: "/api/places", Method: http.MethodGet},
 	}
 
@@ -225,7 +225,7 @@ func init() {
 		return c
 	}, &identity.GSupportAuthenticator{})
 
-	instance.Router.SetUniversalRoute("/api/test", func(ctx context.Context) mage.Controller {
+	instance.Router.SetUniversalRoute("/api/cleanindextest", func(ctx context.Context) mage.Controller {
 		c := CleanController{}
 		return &c
 	}, nil)
