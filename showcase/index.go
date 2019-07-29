@@ -45,8 +45,8 @@ func init() {
 		FB,
 	}
 	opts.Actions = []page.SupportedAction{
-		page.SupportedAction{Type: page.ActionTypeNormal, Name: "Clean index", Endpoint: "/normal"},
-		page.SupportedAction{Type: page.ActionTypeUpload, Name: "Import places", Endpoint: "/upload"},
+		page.SupportedAction{Type: page.ActionTypeNormal, Name: "cleantest", Endpoint: "/api/test", Method: http.MethodGet},
+		page.SupportedAction{Type: page.ActionTypeUpload, Name: "places", Endpoint: "/api/places", Method: http.MethodGet},
 	}
 
 	instance := page.NewWebsite(&opts)
@@ -129,8 +129,16 @@ func init() {
 		return c
 	}, &identity.GSupportAuthenticator{})
 
-	instance.Router.SetUniversalRoute("/api/tasks", func(ctx context.Context) mage.Controller {
+	instance.Router.SetUniversalRoute("/api/task", func(ctx context.Context) mage.Controller {
 		c := content.NewTaskController("", "", "")
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/task/:id", func(ctx context.Context) mage.Controller {
+		params := mage.RoutingParams(ctx)
+		key := params["id"].Value()
+		c := content.NewTaskControllerWithKey(key, "", "", "")
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
@@ -216,6 +224,11 @@ func init() {
 		c.Private = true
 		return c
 	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/test", func(ctx context.Context) mage.Controller {
+		c := CleanController{}
+		return &c
+	}, nil)
 
 	m.Router = &instance.Router
 	m.LaunchApp(instance)

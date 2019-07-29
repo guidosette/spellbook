@@ -14,6 +14,7 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 		Name     string          `json:"name"`
 		Endpoint string          `json:"endpoint"`
 		Type     page.ActionType `json:"type"`
+		Method   string          `json:"method"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -24,6 +25,7 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 	action.Type = alias.Type
 	action.Name = alias.Name
 	action.Endpoint = alias.Endpoint
+	action.Method = alias.Method
 
 	return nil
 }
@@ -33,7 +35,8 @@ func (action *Action) MarshalJSON() ([]byte, error) {
 		Name     string          `json:"name"`
 		Endpoint string          `json:"endpoint"`
 		Type     page.ActionType `json:"type"`
-	}{action.Name, action.Endpoint, action.Type}
+		Method   string          `json:"method"`
+	}{action.Name, action.Endpoint, action.Type, action.Method}
 
 	return json.Marshal(&alias)
 }

@@ -68,23 +68,25 @@ type StaticPageCode string
 type SpecialCode string
 
 type ActionType string
+
 const (
 	ActionTypeNormal = "normal"
-	ActionTypeUpload   = "upload"
+	ActionTypeUpload = "upload"
 )
 
 type SupportedAction struct {
-	Name  string
+	Name     string
 	Endpoint string
-	Type  ActionType
+	Type     ActionType
+	Method   string
 }
 
 type Options struct {
-	Languages   []language.Tag
-	Categories  []SupportedCategory
-	StaticPages []StaticPageCode
+	Languages    []language.Tag
+	Categories   []SupportedCategory
+	StaticPages  []StaticPageCode
 	SpecialCodes []SpecialCode
-	Actions  []SupportedAction
+	Actions      []SupportedAction
 }
 
 func NewWebsite(opts *Options) *Website {
