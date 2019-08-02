@@ -12,6 +12,8 @@ var ZeroTime = time.Time{}
 
 type ByOrder []*Content
 type ByTitle []*Content
+type ByStartDate []*Content
+type ByPublished []*Content
 
 /**
 ByOrder start
@@ -27,7 +29,6 @@ func (content ByOrder) Swap(i, j int) {
 func (content ByOrder) Less(i, j int) bool {
 	return content[i].Order < content[j].Order
 }
-
 /**
 ByOrder end
 */
@@ -46,9 +47,44 @@ func (content ByTitle) Swap(i, j int) {
 func (content ByTitle) Less(i, j int) bool {
 	return content[i].Title < content[j].Title
 }
-
 /**
 ByTitle end
+*/
+
+/**
+ByStartDate start
+*/
+func (content ByStartDate) Len() int {
+	return len(content)
+}
+
+func (content ByStartDate) Swap(i, j int) {
+	content[i], content[j] = content[j], content[i]
+}
+
+func (content ByStartDate) Less(i, j int) bool {
+	return content[i].StartDate.Before(content[j].StartDate)
+}
+/**
+ByStartDate end
+*/
+
+/**
+ByPublished start
+*/
+func (content ByPublished) Len() int {
+	return len(content)
+}
+
+func (content ByPublished) Swap(i, j int) {
+	content[i], content[j] = content[j], content[i]
+}
+
+func (content ByPublished) Less(i, j int) bool {
+	return content[i].Published.Before(content[j].Published)
+}
+/**
+ByPublished end
 */
 
 type PublicationState string
