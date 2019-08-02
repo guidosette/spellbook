@@ -9,12 +9,12 @@ indexes:
 - kind: "Content"
   properties:
   - name: "Category"
+  - name: "Locale"
   - name: "Type"
   - name: "Order"
 - kind: "Content"
   properties:
   - name: "Category"
-  - name: "Locale"
   - name: "Type"
   - name: "Order"
 - kind: "Page"
