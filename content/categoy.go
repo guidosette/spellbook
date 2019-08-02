@@ -30,10 +30,11 @@ func (category *Category) UnmarshalJSON(data []byte) error {
 
 func (category *Category) MarshalJSON() ([]byte, error) {
 	alias := struct {
-		Name  string           `json:"name"`
-		Label string           `json:"label"`
-		Type  page.ContentType `json:"type"`
-	}{category.Name, category.Label, category.Type}
+		Name                   string                        `json:"name"`
+		Label                  string                        `json:"label"`
+		Type                   page.ContentType              `json:"type"`
+		DefaultAttachmentGroup []page.DefaultAttachmentGroup `json:"defaultAttachmentGroups"`
+	}{category.Name, category.Label, category.Type, category.DefaultAttachmentGroups}
 
 	return json.Marshal(&alias)
 }

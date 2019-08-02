@@ -33,7 +33,9 @@ func init() {
 	}
 	opts.Categories = []page.SupportedCategory{
 		page.SupportedCategory{Type: page.KeyTypeContent, Name: "services", Label: "Services"},
-		page.SupportedCategory{Type: page.KeyTypeContent, Name: "news", Label: "News"},
+		page.SupportedCategory{Type: page.KeyTypeContent, Name: "news", Label: "News", DefaultAttachmentGroups: []page.DefaultAttachmentGroup{
+			page.DefaultAttachmentGroup{"Gallery", content.AttachmentTypeGallery, 0, "Prova descr"},
+		}},
 		page.SupportedCategory{Type: page.KeyTypeEvent, Name: "events", Label: "Events"},
 	}
 	opts.StaticPages = []page.StaticPageCode{

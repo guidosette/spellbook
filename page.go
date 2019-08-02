@@ -58,10 +58,18 @@ const (
 	KeyTypeEvent   = "event"
 )
 
+type DefaultAttachmentGroup struct {
+	Name        string
+	Type        string
+	MaxItem     int
+	Description string
+}
+
 type SupportedCategory struct {
-	Name  string
-	Label string
-	Type  ContentType
+	Name                    string
+	Label                   string
+	Type                    ContentType
+	DefaultAttachmentGroups []DefaultAttachmentGroup
 }
 
 type StaticPageCode string
