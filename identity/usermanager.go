@@ -2,8 +2,8 @@ package identity
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,26 +15,26 @@ import (
 
 type userManager struct{}
 
-func NewUserController() *page.RestController {
+func NewUserController() *spellbook.RestController {
 	return NewUserControllerWithKey("")
 }
 
-func NewUserControllerWithKey(key string) *page.RestController {
+func NewUserControllerWithKey(key string) *spellbook.RestController {
 	manager := userManager{}
-	handler := page.BaseRestHandler{Manager: manager}
-	c := page.NewRestController(handler)
+	handler := spellbook.BaseRestHandler{Manager: manager}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-func (manager userManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager userManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &User{}, nil
 }
 
-func (manager userManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	current := page.IdentityFromContext(ctx)
+func (manager userManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	current := spellbook.IdentityFromContext(ctx)
 	if current == nil {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
 
 	user, ok := current.(User)
@@ -42,8 +42,8 @@ func (manager userManager) FromId(ctx context.Context, id string) (page.Resource
 		return &user, nil
 	}
 
-	if !current.HasPermission(page.PermissionReadUser) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+	if !current.HasPermission(spellbook.PermissionReadUser) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
 
 	us := User{}
@@ -55,10 +55,10 @@ func (manager userManager) FromId(ctx context.Context, id string) (page.Resource
 	return &us, nil
 }
 
-func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager userManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadUser) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadUser) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
 
 	var users []*User
@@ -86,17 +86,17 @@ func (manager userManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(users))
+	resources := make([]spellbook.Resource, len(users))
 	for i := range users {
-		resources[i] = page.Resource(users[i])
+		resources[i] = spellbook.Resource(users[i])
 	}
 
 	return resources, nil
 }
 
-func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadUser) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+func (manager userManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadUser) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
 
 	a := []string{"Group"}
@@ -143,17 +143,17 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts page.ListO
 	return result, nil
 }
 
-func (manager userManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager userManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWriteUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWriteUser) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteUser))
 	}
 
 	user := res.(*User)
 
 	if user.StringID() != "" {
-		return page.NewFieldError("username", fmt.Errorf("user already exists"))
+		return spellbook.NewFieldError("username", fmt.Errorf("user already exists"))
 	}
 
 	meta := struct {
@@ -163,33 +163,33 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 
 	err := json.Unmarshal(bundle, &meta)
 	if err != nil {
-		return page.NewFieldError("json", fmt.Errorf("invalid json: %s", string(bundle)))
+		return spellbook.NewFieldError("json", fmt.Errorf("invalid json: %s", string(bundle)))
 	}
 
 	username := meta.Username
 	username = SanitizeUserName(username)
 
-	uf := page.NewRawField("username", true, username)
-	uf.AddValidator(page.DatastoreKeyNameValidator{})
+	uf := spellbook.NewRawField("username", true, username)
+	uf.AddValidator(spellbook.DatastoreKeyNameValidator{})
 
 	// validate the username. Accepted values for the username are implementation dependent
 	if err := uf.Validate(); err != nil {
 		msg := fmt.Sprintf("invalid username %s", user.Username())
-		return page.NewFieldError("username", errors.New(msg))
+		return spellbook.NewFieldError("username", errors.New(msg))
 	}
 
-	pf := page.NewRawField("password", true, meta.Password)
-	pf.AddValidator(page.LenValidator{MinLen: 8})
+	pf := spellbook.NewRawField("password", true, meta.Password)
+	pf.AddValidator(spellbook.LenValidator{MinLen: 8})
 
 	if err := pf.Validate(); err != nil {
 		msg := fmt.Sprintf("invalid password %s for username %s", meta.Password, username)
-		return page.NewFieldError("password", errors.New(msg))
+		return spellbook.NewFieldError("password", errors.New(msg))
 	}
 
-	if !current.HasPermission(page.PermissionEditPermissions) {
+	if !current.HasPermission(spellbook.PermissionEditPermissions) {
 		// user without the EditPermission perm can only enable or disable a user
 		if !((len(user.Permissions()) == 1 && user.IsEnabled()) || (len(user.Permissions()) == 0 && !user.IsEnabled())) {
-			return page.NewPermissionError(page.PermissionName(page.PermissionEditPermissions))
+			return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionEditPermissions))
 		}
 	}
 
@@ -199,13 +199,13 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 	if err == nil {
 		// user already exists
 		msg := fmt.Sprintf("user %s already exists.", username)
-		return page.NewFieldError("user", errors.New(msg))
+		return spellbook.NewFieldError("user", errors.New(msg))
 	}
 
 	if err != datastore.ErrNoSuchEntity {
 		// generic datastore error
 		msg := fmt.Sprintf("error retrieving user with username %s: %s", username, err.Error())
-		return page.NewFieldError("user", errors.New(msg))
+		return spellbook.NewFieldError("user", errors.New(msg))
 	}
 
 	user.Password = HashPassword(meta.Password, salt)
@@ -221,15 +221,15 @@ func (manager userManager) Create(ctx context.Context, res page.Resource, bundle
 	return nil
 }
 
-func (manager userManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if !current.HasPermission(page.PermissionWriteUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
+func (manager userManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if !current.HasPermission(spellbook.PermissionWriteUser) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteUser))
 	}
 
 	o, _ := manager.NewResource(ctx)
-	if err := o.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
+	if err := o.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
 	}
 
 	other := o.(*User)
@@ -238,30 +238,30 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 
 	tkn, _ := tokenManager{}.NewResource(ctx)
 	token := tkn.(*Token)
-	if err := token.FromRepresentation(page.RepresentationTypeJSON, bundle); err == nil {
+	if err := token.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err == nil {
 		if token.Password != "" {
-			pf := page.NewRawField("password", true, token.Password)
-			pf.AddValidator(page.LenValidator{MinLen: 8})
+			pf := spellbook.NewRawField("password", true, token.Password)
+			pf.AddValidator(spellbook.LenValidator{MinLen: 8})
 
 			if err := pf.Validate(); err != nil {
 				msg := fmt.Sprintf("invalid password %s for username %s", token.Password, other.Username())
-				return page.NewFieldError("user", errors.New(msg))
+				return spellbook.NewFieldError("user", errors.New(msg))
 			}
 			user.Password = HashPassword(token.Password, salt)
 		}
 	}
 
 	if other.Email != "" {
-		ef := page.NewRawField("email", true, other.Email)
+		ef := spellbook.NewRawField("email", true, other.Email)
 		if err := ef.Validate(); err != nil {
 			msg := fmt.Sprintf("invalid email address: %s", other.Email)
-			return page.NewFieldError("user", errors.New(msg))
+			return spellbook.NewFieldError("user", errors.New(msg))
 		}
 		user.Email = other.Email
 	}
 
-	if !current.HasPermission(page.PermissionEditPermissions) && other.ChangedPermission(*user) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEditPermissions))
+	if !current.HasPermission(spellbook.PermissionEditPermissions) && other.ChangedPermission(*user) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionEditPermissions))
 	}
 
 	user.Name = other.Name
@@ -271,10 +271,10 @@ func (manager userManager) Update(ctx context.Context, res page.Resource, bundle
 	return model.Update(ctx, user)
 }
 
-func (manager userManager) Delete(ctx context.Context, res page.Resource) error {
-	current := page.IdentityFromContext(ctx)
-	if !current.HasPermission(page.PermissionWriteUser) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteUser))
+func (manager userManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if !current.HasPermission(spellbook.PermissionWriteUser) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteUser))
 	}
 
 	user := res.(*User)

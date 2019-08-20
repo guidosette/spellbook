@@ -3,17 +3,17 @@ package content
 import (
 	"cloud.google.com/go/storage"
 	"context"
-	"distudio.com/mage"
-	"distudio.com/page"
+	"decodica.com/flamel"
+	"decodica.com/spellbook"
 	"google.golang.org/appengine/log"
 	"net/http"
 )
 
 type fileHandler struct {
-	page.BaseRestHandler
+	spellbook.BaseRestHandler
 }
 
-func (handler fileHandler) HandlePost(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (handler fileHandler) HandlePost(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 
 	res, err := handler.Manager.NewResource(ctx)
 	if err != nil {
@@ -24,17 +24,17 @@ func (handler fileHandler) HandlePost(ctx context.Context, out *mage.ResponseOut
 		return handler.ErrorToStatus(ctx, err, out)
 	}
 
-	renderer := mage.JSONRenderer{}
+	renderer := flamel.JSONRenderer{}
 	renderer.Data = res
 	out.Renderer = &renderer
-	return mage.Redirect{Status: http.StatusCreated}
+	return flamel.HttpResponse{Status: http.StatusCreated}
 }
 
 // Converts an error to its equivalent HTTP representation
-func (handler fileHandler) ErrorToStatus(ctx context.Context, err error, out *mage.ResponseOutput) mage.Redirect {
+func (handler fileHandler) ErrorToStatus(ctx context.Context, err error, out *flamel.ResponseOutput) flamel.HttpResponse {
 	if err == storage.ErrObjectNotExist {
 		log.Errorf(ctx, "%s", err.Error())
-		return mage.Redirect{Status: http.StatusNotFound}
+		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 	return handler.BaseRestHandler.ErrorToStatus(ctx, err, out)
 }

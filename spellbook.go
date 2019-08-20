@@ -1,8 +1,8 @@
-package page
+package spellbook
 
 import (
 	"context"
-	"distudio.com/mage"
+	"decodica.com/flamel"
 	"golang.org/x/text/language"
 	"sync"
 )
@@ -13,7 +13,7 @@ var once sync.Once
 var instance *Website
 
 type Website struct {
-	mage.Application
+	flamel.Application
 	Router  InternationalRouter
 	options Options
 }

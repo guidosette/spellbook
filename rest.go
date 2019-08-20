@@ -1,8 +1,8 @@
-package page
+package spellbook
 
 import (
 	"context"
-	"distudio.com/mage"
+	"decodica.com/flamel"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
@@ -13,18 +13,18 @@ import (
 )
 
 type ReadHandler interface {
-	HandleGet(context context.Context, key string, out *mage.ResponseOutput) mage.Redirect
+	HandleGet(context context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse
 }
 
 type WriteHandler interface {
-	HandlePost(context context.Context, out *mage.ResponseOutput) mage.Redirect
-	HandlePut(context context.Context, key string, out *mage.ResponseOutput) mage.Redirect
-	HandleDelete(context context.Context, key string, out *mage.ResponseOutput) mage.Redirect
+	HandlePost(context context.Context, out *flamel.ResponseOutput) flamel.HttpResponse
+	HandlePut(context context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse
+	HandleDelete(context context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse
 }
 
 type ListHandler interface {
-	HandleList(context context.Context, out *mage.ResponseOutput) mage.Redirect
-	HandlePropertyValues(context context.Context, out *mage.ResponseOutput, property string) mage.Redirect
+	HandleList(context context.Context, out *flamel.ResponseOutput) flamel.HttpResponse
+	HandlePropertyValues(context context.Context, out *flamel.ResponseOutput, property string) flamel.HttpResponse
 }
 
 type RestHandler interface {
@@ -38,12 +38,12 @@ type BaseRestHandler struct {
 }
 
 // Builds the paging options, ordering and standard inputs of a given request
-func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.ResponseOutput, opts *ListOptions) (*ListOptions, error) {
+func (handler BaseRestHandler) buildOptions(ctx context.Context, out *flamel.ResponseOutput, opts *ListOptions) (*ListOptions, error) {
 	// build paging
 	opts.Size = 20
 	opts.Page = 0
 
-	ins := mage.InputsFromContext(ctx)
+	ins := flamel.InputsFromContext(ctx)
 	if pin, ok := ins["page"]; ok {
 		if num, err := strconv.Atoi(pin.Value()); err == nil {
 			if num > 0 {
@@ -96,8 +96,8 @@ func (handler BaseRestHandler) buildOptions(ctx context.Context, out *mage.Respo
 }
 
 // REST Method handlers
-func (handler BaseRestHandler) HandleGet(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
-	renderer := mage.JSONRenderer{}
+func (handler BaseRestHandler) HandleGet(ctx context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse {
+	renderer := flamel.JSONRenderer{}
 	out.Renderer = &renderer
 
 	resource, err := handler.Manager.FromId(ctx, key)
@@ -106,18 +106,18 @@ func (handler BaseRestHandler) HandleGet(ctx context.Context, key string, out *m
 	}
 
 	renderer.Data = resource
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 // Called on GET requests.
 // This handler is called when the available values of one property of a resource are requested
 // Returns a list of the values that the requested property can assume
-func (handler BaseRestHandler) HandlePropertyValues(ctx context.Context, out *mage.ResponseOutput, prop string) mage.Redirect {
+func (handler BaseRestHandler) HandlePropertyValues(ctx context.Context, out *flamel.ResponseOutput, prop string) flamel.HttpResponse {
 	opts := &ListOptions{}
 	opts.Property = prop
 	opts, err := handler.buildOptions(ctx, out, opts)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
 	results, err := handler.Manager.ListOfProperties(ctx, *opts)
@@ -132,22 +132,22 @@ func (handler BaseRestHandler) HandlePropertyValues(ctx context.Context, out *ma
 		count = l
 	}
 
-	renderer := mage.JSONRenderer{}
+	renderer := flamel.JSONRenderer{}
 	renderer.Data = ListResponse{results[:count], l > opts.Size}
 
 	out.Renderer = &renderer
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 // Called on GET requests
 // This handler is called when a list of resources is requested.
 // Returns a paged result
-func (handler BaseRestHandler) HandleList(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (handler BaseRestHandler) HandleList(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	opts := &ListOptions{}
 	opts, err := handler.buildOptions(ctx, out, opts)
 	if err != nil {
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
 	results, err := handler.Manager.ListOf(ctx, *opts)
@@ -162,17 +162,17 @@ func (handler BaseRestHandler) HandleList(ctx context.Context, out *mage.Respons
 		count = l
 	}
 
-	renderer := mage.JSONRenderer{}
+	renderer := flamel.JSONRenderer{}
 	renderer.Data = ListResponse{results[:count], l > opts.Size}
 
 	out.Renderer = &renderer
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 // handles a POST request, ensuring the creation of the resource.
-func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
-	renderer := mage.JSONRenderer{}
+func (handler BaseRestHandler) HandlePost(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
+	renderer := flamel.JSONRenderer{}
 	out.Renderer = &renderer
 
 	resource, err := handler.Manager.NewResource(ctx)
@@ -182,10 +182,10 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 
 	errs := Errors{}
 	// get the content data
-	ins := mage.InputsFromContext(ctx)
-	j, ok := ins[mage.KeyRequestJSON]
+	ins := flamel.InputsFromContext(ctx)
+	j, ok := ins[flamel.KeyRequestJSON]
 	if !ok {
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
 	err = resource.FromRepresentation(RepresentationTypeJSON, []byte(j.Value()))
@@ -194,7 +194,7 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 		errs.AddError("", errors.New(msg))
 		log.Errorf(ctx, msg)
 		renderer.Data = errs
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
 	if err = handler.Manager.Create(ctx, resource, []byte(j.Value())); err != nil {
@@ -202,18 +202,18 @@ func (handler BaseRestHandler) HandlePost(ctx context.Context, out *mage.Respons
 	}
 
 	renderer.Data = resource
-	return mage.Redirect{Status: http.StatusCreated}
+	return flamel.HttpResponse{Status: http.StatusCreated}
 }
 
 // Handles put requests, ensuring the update of the requested resource
-func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
-	renderer := mage.JSONRenderer{}
+func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse {
+	renderer := flamel.JSONRenderer{}
 	out.Renderer = &renderer
 
-	ins := mage.InputsFromContext(ctx)
-	j, ok := ins[mage.KeyRequestJSON]
+	ins := flamel.InputsFromContext(ctx)
+	j, ok := ins[flamel.KeyRequestJSON]
 	if !ok {
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
 	resource, err := handler.Manager.FromId(ctx, key)
@@ -226,12 +226,12 @@ func (handler BaseRestHandler) HandlePut(ctx context.Context, key string, out *m
 	}
 
 	renderer.Data = resource
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 // Handles DELETE requests over a Resource type
-func (handler BaseRestHandler) HandleDelete(ctx context.Context, key string, out *mage.ResponseOutput) mage.Redirect {
-	renderer := mage.JSONRenderer{}
+func (handler BaseRestHandler) HandleDelete(ctx context.Context, key string, out *flamel.ResponseOutput) flamel.HttpResponse {
+	renderer := flamel.JSONRenderer{}
 	out.Renderer = &renderer
 
 	resource, err := handler.Manager.FromId(ctx, key)
@@ -242,17 +242,17 @@ func (handler BaseRestHandler) HandleDelete(ctx context.Context, key string, out
 	if err = handler.Manager.Delete(ctx, resource); err != nil {
 		return handler.ErrorToStatus(ctx, err, out)
 	}
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 // Converts an error to its equivalent HTTP representation
-func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error, out *mage.ResponseOutput) mage.Redirect {
+func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error, out *flamel.ResponseOutput) flamel.HttpResponse {
 	log.Errorf(ctx, "%s", err.Error())
 	switch err.(type) {
 	case UnsupportedError:
-		return mage.Redirect{Status: http.StatusMethodNotAllowed}
+		return flamel.HttpResponse{Status: http.StatusMethodNotAllowed}
 	case FieldError:
-		renderer := mage.JSONRenderer{}
+		renderer := flamel.JSONRenderer{}
 		renderer.Data = struct {
 			Field string
 			Error string
@@ -261,20 +261,20 @@ func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error, out
 			err.(FieldError).error.Error(),
 		}
 		out.Renderer = &renderer
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	case PermissionError:
-		renderer := mage.JSONRenderer{}
+		renderer := flamel.JSONRenderer{}
 		renderer.Data = struct {
 			Error string
 		}{
 			err.(PermissionError).Error(),
 		}
 		out.Renderer = &renderer
-		return mage.Redirect{Status: http.StatusForbidden}
+		return flamel.HttpResponse{Status: http.StatusForbidden}
 	default:
 		if err == datastore.ErrNoSuchEntity {
-			return mage.Redirect{Status: http.StatusNotFound}
+			return flamel.HttpResponse{Status: http.StatusNotFound}
 		}
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 }

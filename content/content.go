@@ -1,14 +1,12 @@
 package content
 
 import (
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"strings"
 	"time"
 )
-
-var ZeroTime = time.Time{}
 
 type ByOrder []*Content
 type ByTitle []*Content
@@ -94,7 +92,7 @@ const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
 	model.Model `json:"-"`
-	Type        page.ContentType
+	Type        spellbook.ContentType
 	IdTranslate string
 	Slug        string
 	Title       string `model:"search"`
@@ -131,7 +129,7 @@ func (content Content) IsPublished() bool {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Type        page.ContentType `json:"type"`
+		Type        spellbook.ContentType `json:"type"`
 		IdTranslate string           `json:"idTranslate"`
 		ParentKey   string           `json:"parentKey"`
 		Slug        string           `json:"slug"`
@@ -195,7 +193,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Type        page.ContentType `json:"type"`
+		Type        spellbook.ContentType `json:"type"`
 		IdTranslate string           `json:"idTranslate"`
 		Slug        string           `json:"slug"`
 		Title       string           `json:"title"`
@@ -273,18 +271,18 @@ func (content *Content) Id() string {
 	return content.StringID()
 }
 
-func (content *Content) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (content *Content) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, content)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (content *Content) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (content *Content) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(content)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

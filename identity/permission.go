@@ -1,13 +1,15 @@
 package identity
 
-import "distudio.com/page"
+import (
+	"decodica.com/spellbook"
+)
 
-func (user *User) GrantPermission(permission page.Permission) {
+func (user *User) GrantPermission(permission spellbook.Permission) {
 	user.Permission |= permission
 }
 
 func (user *User) GrantNamedPermission(name string) {
-	permission := page.NamedPermissionToPermission(name)
+	permission := spellbook.NamedPermissionToPermission(name)
 	user.GrantPermission(permission)
 }
 
@@ -18,36 +20,36 @@ func (user *User) GrantNamedPermissions(names []string) {
 }
 
 func (user *User) GrantAll() {
-	for permission := range page.Permissions {
+	for permission := range spellbook.Permissions {
 		user.GrantPermission(permission)
 	}
 }
 
-func (user *User) RemovePermission(permission page.Permission) {
+func (user *User) RemovePermission(permission spellbook.Permission) {
 	user.Permission &= ^permission
 }
 
-func (user *User) TogglePermission(permission page.Permission) {
+func (user *User) TogglePermission(permission spellbook.Permission) {
 	user.Permission ^= permission
 }
 
 func (user User) IsEnabled() bool {
-	return user.HasPermission(page.PermissionEnabled)
+	return user.HasPermission(spellbook.PermissionEnabled)
 }
 
 func (user *User) Ban() {
-	user.RemovePermission(page.PermissionEnabled)
+	user.RemovePermission(spellbook.PermissionEnabled)
 }
 
 /**
 comparison without PermissionEnabled
  **/
 func (user User) ChangedPermission(oldUser User) bool {
-	if oldUser.HasPermission(page.PermissionEnabled) {
-		oldUser.RemovePermission(page.PermissionEnabled)
+	if oldUser.HasPermission(spellbook.PermissionEnabled) {
+		oldUser.RemovePermission(spellbook.PermissionEnabled)
 	}
-	if user.HasPermission(page.PermissionEnabled) {
-		user.RemovePermission(page.PermissionEnabled)
+	if user.HasPermission(spellbook.PermissionEnabled) {
+		user.RemovePermission(spellbook.PermissionEnabled)
 	}
 	changed := user.Permission != oldUser.Permission
 	return changed

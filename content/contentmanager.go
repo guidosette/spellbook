@@ -2,9 +2,9 @@ package content
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
-	"distudio.com/page/identity"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
+	"decodica.com/spellbook/identity"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
@@ -15,27 +15,27 @@ import (
 	"time"
 )
 
-func NewContentController() *page.RestController {
+func NewContentController() *spellbook.RestController {
 	return NewContentControllerWithKey("")
 }
 
-func NewContentControllerWithKey(key string) *page.RestController {
-	handler := page.BaseRestHandler{Manager: contentManager{}}
-	c := page.NewRestController(handler)
+func NewContentControllerWithKey(key string) *spellbook.RestController {
+	handler := spellbook.BaseRestHandler{Manager: contentManager{}}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type contentManager struct{}
 
-func (manager contentManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager contentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Content{}, nil
 }
 
-func (manager contentManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager contentManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadContent) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadContent))
 	}
 
 	cont := Content{}
@@ -56,10 +56,10 @@ func (manager contentManager) FromId(ctx context.Context, id string) (page.Resou
 	return &cont, nil
 }
 
-func (manager contentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager contentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadContent) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadContent))
 	}
 
 	var conts []*Content
@@ -86,25 +86,25 @@ func (manager contentManager) ListOf(ctx context.Context, opts page.ListOptions)
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(conts))
+	resources := make([]spellbook.Resource, len(conts))
 	for i := range conts {
-		resources[i] = page.Resource(conts[i])
+		resources[i] = spellbook.Resource(conts[i])
 	}
 
 	return resources, nil
 }
 
-func (manager contentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager contentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadContent) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadContent))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadContent) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadContent))
 	}
 
 	a := []string{"Category", "Locale", "Name", "Topic"} // list property accepted
 	name := opts.Property
 
 	if name == "" {
-		return nil, page.NewFieldError("property", fmt.Errorf("empty property"))
+		return nil, spellbook.NewFieldError("property", fmt.Errorf("empty property"))
 	}
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
@@ -147,11 +147,11 @@ func (manager contentManager) ListOfProperties(ctx context.Context, opts page.Li
 	return result, nil
 }
 
-func (manager contentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager contentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWriteContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteContent))
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWriteContent) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteContent))
 	}
 
 	content := res.(*Content)
@@ -166,11 +166,11 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		q = q.WithField("Locale = ", content.Locale)
 		count, err := q.Count(ctx)
 		if err != nil {
-			return page.NewFieldError("locale", fmt.Errorf("error verifying locale translate: %s", err.Error()))
+			return spellbook.NewFieldError("locale", fmt.Errorf("error verifying locale translate: %s", err.Error()))
 		}
 		if count > 0 {
 			msg := fmt.Sprintf("a content with IdTranslate '%s' already exists. Locale must be unique.", content.Locale)
-			return page.NewFieldError("locale", errors.New(msg))
+			return spellbook.NewFieldError("locale", errors.New(msg))
 		}
 	}
 	content.Revision = 1
@@ -183,7 +183,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	}
 
 	if content.Type == "" {
-		return page.NewFieldError("type", errors.New("type can't be 0"))
+		return spellbook.NewFieldError("type", errors.New("type can't be 0"))
 	}
 
 	if content.Slug == "" {
@@ -202,7 +202,7 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	}
 	count, err := q.Count(ctx)
 	if err != nil {
-		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
 	if count > 0 {
 		msg := ""
@@ -211,26 +211,26 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 		} else {
 			msg = fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
 		}
-		return page.NewFieldError("slug", errors.New(msg))
+		return spellbook.NewFieldError("slug", errors.New(msg))
 	}
 
 	switch content.Type {
-	case page.KeyTypeContent:
+	case spellbook.KeyTypeContent:
 		if content.Title == "" {
-			return page.NewFieldError("title", errors.New("title can't be empty"))
+			return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 		}
-	case page.KeyTypeEvent:
+	case spellbook.KeyTypeEvent:
 		if content.StartDate.IsZero() {
 			msg := fmt.Sprintf("start date can't be empty. %v", content.StartDate)
-			return page.NewFieldError("startDate", errors.New(msg))
+			return spellbook.NewFieldError("startDate", errors.New(msg))
 		}
 		if content.EndDate.IsZero() {
 			msg := fmt.Sprintf("end date can't be empty. %v", content.StartDate)
-			return page.NewFieldError("endDate", errors.New(msg))
+			return spellbook.NewFieldError("endDate", errors.New(msg))
 		}
 		if content.EndDate.Before(content.StartDate) {
 			msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate)
-			return page.NewFieldError("endDate", errors.New(msg))
+			return spellbook.NewFieldError("endDate", errors.New(msg))
 		}
 	default:
 		return fmt.Errorf("error no type %v", content)
@@ -257,23 +257,23 @@ func (manager contentManager) Create(ctx context.Context, res page.Resource, bun
 	return nil
 }
 
-func (manager contentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager contentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
+	current := spellbook.IdentityFromContext(ctx)
 
-	if current == nil || !current.HasPermission(page.PermissionWriteContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteContent))
+	if current == nil || !current.HasPermission(spellbook.PermissionWriteContent) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteContent))
 	}
 
 	content := res.(*Content)
 
 	other := &Content{}
-	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
+	if err := other.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
 
 	if other.Title == "" {
-		return page.NewFieldError("title", errors.New("title can't be empty"))
+		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
 	// if the same slug already exists, we must return
@@ -289,7 +289,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 
 	count, err := q.Count(ctx)
 	if err != nil {
-		return page.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
 	log.Infof(ctx, "count %d", count)
 	if count > 0 {
@@ -297,7 +297,7 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		err := q.GetMulti(ctx, &contents)
 		if err != nil {
 			log.Errorf(ctx, "could not retrieve contents %s", err.Error())
-			return page.NewFieldError("check", errors.New("could not retrieve contents"))
+			return spellbook.NewFieldError("check", errors.New("could not retrieve contents"))
 		}
 		valid := true
 		for _, c := range contents {
@@ -309,10 +309,10 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 		if !valid {
 			if content.Code == "" {
 				msg := fmt.Sprintf("a content with slug  %s already exists. Slug must be unique.", content.Slug)
-				return page.NewFieldError("slug", errors.New(msg))
+				return spellbook.NewFieldError("slug", errors.New(msg))
 			} else {
 				msg := fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
-				return page.NewFieldError("code", errors.New(msg))
+				return spellbook.NewFieldError("code", errors.New(msg))
 			}
 		}
 	}
@@ -353,19 +353,19 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	}
 
 	switch content.Type {
-	case page.KeyTypeContent:
-	case page.KeyTypeEvent:
+	case spellbook.KeyTypeContent:
+	case spellbook.KeyTypeEvent:
 		if other.StartDate.IsZero() {
 			msg := fmt.Sprintf("start date can't be empty. %v", other.StartDate)
-			return page.NewFieldError("startDate", errors.New(msg))
+			return spellbook.NewFieldError("startDate", errors.New(msg))
 		}
 		if other.EndDate.IsZero() {
 			msg := fmt.Sprintf("end date can't be empty. %v", other.EndDate)
-			return page.NewFieldError("endDate", errors.New(msg))
+			return spellbook.NewFieldError("endDate", errors.New(msg))
 		}
 		if other.EndDate.Before(other.StartDate) {
 			msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate)
-			return page.NewFieldError("endDate", errors.New(msg))
+			return spellbook.NewFieldError("endDate", errors.New(msg))
 		}
 		content.StartDate = other.StartDate
 		content.EndDate = other.EndDate
@@ -390,10 +390,10 @@ func (manager contentManager) Update(ctx context.Context, res page.Resource, bun
 	return nil
 }
 
-func (manager contentManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager contentManager) Delete(ctx context.Context, res spellbook.Resource) error {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionWriteContent) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteContent))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteContent) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteContent))
 	}
 
 	content := res.(*Content)

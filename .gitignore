@@ -8,6 +8,8 @@ ehthumbs_vista.db
 # Folder config file
 Desktop.ini
 
+
+
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
@@ -369,4 +371,6 @@ __pycache__/
 # Cake - Uncomment if you are using it
 # tools/**
 # !tools/packages.config
+
+
 

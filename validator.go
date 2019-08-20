@@ -1,7 +1,7 @@
-package page
+package spellbook
 
 import (
-	"distudio.com/mage"
+	"decodica.com/flamel"
 	"strings"
 )
 
@@ -20,7 +20,7 @@ type Field struct {
 	value       string
 }
 
-func NewField(name string, required bool, in mage.RequestInputs) *Field {
+func NewField(name string, required bool, in flamel.RequestInputs) *Field {
 	vs := make([]Validator, 0, 0)
 	f := &Field{Name: name, Required: required, validators: vs}
 	if val, ok := in[f.Name]; ok {

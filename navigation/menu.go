@@ -1,6 +1,8 @@
 package navigation
 
-import "distudio.com/page"
+import (
+	"decodica.com/spellbook"
+)
 
 type MenuByOrder Menu
 
@@ -21,7 +23,7 @@ func (menu MenuByOrder) Less(i, j int) bool {
 
 type Menu []MenuItem
 
-func (menu Menu) ItemByCode(code page.StaticPageCode) *MenuItem {
+func (menu Menu) ItemByCode(code spellbook.StaticPageCode) *MenuItem {
 	for _, v := range menu {
 		if v.Code == code {
 			return &v
@@ -34,7 +36,7 @@ func (menu Menu) ItemByCode(code page.StaticPageCode) *MenuItem {
 type MenuItem struct {
 	Url string
 	Locale string
-	Code page.StaticPageCode
+	Code spellbook.StaticPageCode
 	Label string
 	Order int
 }

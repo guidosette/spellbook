@@ -2,19 +2,19 @@ package identity
 
 import (
 	"context"
-	"distudio.com/mage"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"google.golang.org/appengine/user"
 )
 
 type UserAuthenticator struct {
-	mage.Authenticator
+	flamel.Authenticator
 }
 
 func (authenticator UserAuthenticator) Authenticate(ctx context.Context) context.Context {
-	inputs := mage.InputsFromContext(ctx)
-	if tkn, ok := inputs[page.HeaderToken]; ok {
+	inputs := flamel.InputsFromContext(ctx)
+	if tkn, ok := inputs[spellbook.HeaderToken]; ok {
 		token := tkn.Value()
 		// grab the last chars after hashLength
 		encoded := token[hashLen:]
@@ -28,14 +28,14 @@ func (authenticator UserAuthenticator) Authenticate(ctx context.Context) context
 			return ctx
 		}
 
-		return page.ContextWithIdentity(ctx, u)
+		return spellbook.ContextWithIdentity(ctx, u)
 	}
 
 	return ctx
 }
 
 type GSupportAuthenticator struct {
-	mage.Authenticator
+	flamel.Authenticator
 }
 
 func (authenticator GSupportAuthenticator) Authenticate(ctx context.Context) context.Context {
@@ -52,5 +52,5 @@ func (authenticator GSupportAuthenticator) Authenticate(ctx context.Context) con
 	u.Email = guser.Email
 	// if admin, grant all permissions
 	u.GrantAll()
-	return page.ContextWithIdentity(ctx, u)
+	return spellbook.ContextWithIdentity(ctx, u)
 }

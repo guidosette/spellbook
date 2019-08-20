@@ -2,8 +2,8 @@ package mailmessage
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
@@ -14,25 +14,25 @@ import (
 	"time"
 )
 
-func NewMailMessageController() *page.RestController {
+func NewMailMessageController() *spellbook.RestController {
 	return NewMailMessageControllerWithKey("")
 }
 
-func NewMailMessageControllerWithKey(key string) *page.RestController {
+func NewMailMessageControllerWithKey(key string) *spellbook.RestController {
 	man := mailMessageManager{}
-	handler := page.BaseRestHandler{Manager: man}
-	c := page.NewRestController(handler)
+	handler := spellbook.BaseRestHandler{Manager: man}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type mailMessageManager struct{}
 
-func (manager mailMessageManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager mailMessageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &MailMessage{}, nil
 }
 
-func (manager mailMessageManager) FromId(ctx context.Context, strId string) (page.Resource, error) {
+func (manager mailMessageManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -41,7 +41,7 @@ func (manager mailMessageManager) FromId(ctx context.Context, strId string) (pag
 
 	id, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		return nil, page.NewFieldError(strId, err)
+		return nil, spellbook.NewFieldError(strId, err)
 	}
 
 	att := MailMessage{}
@@ -53,7 +53,7 @@ func (manager mailMessageManager) FromId(ctx context.Context, strId string) (pag
 	return &att, nil
 }
 
-func (manager mailMessageManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -85,15 +85,15 @@ func (manager mailMessageManager) ListOf(ctx context.Context, opts page.ListOpti
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(mailMessages))
+	resources := make([]spellbook.Resource, len(mailMessages))
 	for i := range mailMessages {
-		resources[i] = page.Resource(mailMessages[i])
+		resources[i] = spellbook.Resource(mailMessages[i])
 	}
 
 	return resources, nil
 }
 
-func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
+func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	// todo permission?
 	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
 	//if !current.HasPermission(identity.PermissionReadContent) {
@@ -145,11 +145,11 @@ func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts pag
 	return result, nil
 }
 
-func (manager mailMessageManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager mailMessageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteMailMessage))
 	}
 
 	mailMessage := res.(*MailMessage)
@@ -157,11 +157,11 @@ func (manager mailMessageManager) Create(ctx context.Context, res page.Resource,
 
 	if mailMessage.Recipient == "" {
 		msg := fmt.Sprintf("Recipient can't be empty")
-		return page.NewFieldError("Recipient", errors.New(msg))
+		return spellbook.NewFieldError("Recipient", errors.New(msg))
 	}
 	if !strings.Contains(mailMessage.Recipient, "@") || !strings.Contains(mailMessage.Recipient, ".") {
 		msg := fmt.Sprintf("Recipient not valid")
-		return page.NewFieldError("Recipient", errors.New(msg))
+		return spellbook.NewFieldError("Recipient", errors.New(msg))
 	}
 
 	// list mailMessage
@@ -171,11 +171,11 @@ func (manager mailMessageManager) Create(ctx context.Context, res page.Resource,
 	err := q.GetMulti(ctx, &emails)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving list mailMessage %+v", err)
-		return page.NewFieldError("Recipient", errors.New(msg))
+		return spellbook.NewFieldError("Recipient", errors.New(msg))
 	}
 	if len(emails) > 0 {
 		msg := fmt.Sprintf("Recipient already exist")
-		return page.NewFieldError("Recipient", errors.New(msg))
+		return spellbook.NewFieldError("Recipient", errors.New(msg))
 	}
 
 	err = model.Create(ctx, mailMessage)
@@ -187,15 +187,15 @@ func (manager mailMessageManager) Create(ctx context.Context, res page.Resource,
 	return nil
 }
 
-func (manager mailMessageManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
+func (manager mailMessageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteMailMessage))
 	}
 
 	other := MailMessage{}
-	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
+	if err := other.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("invalid json %s: %s", string(bundle), err.Error()))
 	}
 
 	mailMessage := res.(*MailMessage)
@@ -203,9 +203,9 @@ func (manager mailMessageManager) Update(ctx context.Context, res page.Resource,
 	return model.Update(ctx, mailMessage)
 }
 
-func (manager mailMessageManager) Delete(ctx context.Context, res page.Resource) error {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionWriteMailMessage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWriteMailMessage))
+func (manager mailMessageManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteMailMessage))
 	}
 
 	mailMessage := res.(*MailMessage)

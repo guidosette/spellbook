@@ -2,8 +2,8 @@ package content
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
@@ -13,33 +13,33 @@ import (
 	"time"
 )
 
-func NewPlaceController() *page.RestController {
+func NewPlaceController() *spellbook.RestController {
 	return NewPlaceControllerWithKey("")
 }
 
-func NewPlaceControllerWithKey(key string) *page.RestController {
+func NewPlaceControllerWithKey(key string) *spellbook.RestController {
 	man := placeManager{}
-	handler := page.BaseRestHandler{Manager: man}
-	c := page.NewRestController(handler)
+	handler := spellbook.BaseRestHandler{Manager: man}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type placeManager struct{}
 
-func (manager placeManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager placeManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Place{}, nil
 }
 
-func (manager placeManager) FromId(ctx context.Context, strId string) (page.Resource, error) {
+func (manager placeManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPlace) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPlace))
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
 	}
 
 	id, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		return nil, page.NewFieldError(strId, err)
+		return nil, spellbook.NewFieldError(strId, err)
 	}
 
 	att := Place{}
@@ -51,9 +51,9 @@ func (manager placeManager) FromId(ctx context.Context, strId string) (page.Reso
 	return &att, nil
 }
 
-func (manager placeManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPlace) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPlace))
+func (manager placeManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
 	}
 
 	var places []*Place
@@ -81,17 +81,17 @@ func (manager placeManager) ListOf(ctx context.Context, opts page.ListOptions) (
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(places))
+	resources := make([]spellbook.Resource, len(places))
 	for i := range places {
-		resources[i] = page.Resource(places[i])
+		resources[i] = spellbook.Resource(places[i])
 	}
 
 	return resources, nil
 }
 
-func (manager placeManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPlace) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPlace))
+func (manager placeManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
 	}
 
 	a := []string{"City", "Name"} // list property accepted
@@ -139,16 +139,16 @@ func (manager placeManager) ListOfProperties(ctx context.Context, opts page.List
 	return result, nil
 }
 
-func (manager placeManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
+func (manager placeManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))
 	}
 
 	place := res.(*Place)
 
 	if place.Address == "" || !place.Position.Valid() {
-		return page.NewFieldError("address", errors.New("address and position can't be empty"))
+		return spellbook.NewFieldError("address", errors.New("address and position can't be empty"))
 	}
 
 	place.Created = time.Now().UTC()
@@ -162,15 +162,15 @@ func (manager placeManager) Create(ctx context.Context, res page.Resource, bundl
 	return nil
 }
 
-func (manager placeManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
+func (manager placeManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))
 	}
 
 	other := Place{}
-	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("bad json %s", string(bundle)))
+	if err := other.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("bad json %s", string(bundle)))
 	}
 
 	place := res.(*Place)
@@ -189,7 +189,7 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	place.Updated = time.Now().UTC()
 
 	if place.Address == "" || !place.Position.Valid() {
-		return page.NewFieldError("address", errors.New("address and position can't be empty"))
+		return spellbook.NewFieldError("address", errors.New("address and position can't be empty"))
 	}
 
 	if err := model.Update(ctx, place); err != nil {
@@ -199,10 +199,10 @@ func (manager placeManager) Update(ctx context.Context, res page.Resource, bundl
 	return nil
 }
 
-func (manager placeManager) Delete(ctx context.Context, res page.Resource) error {
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWritePlace) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWritePlace))
+func (manager placeManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))
 	}
 
 	place := res.(*Place)

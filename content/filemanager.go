@@ -3,8 +3,8 @@ package content
 import (
 	"cloud.google.com/go/storage"
 	"context"
-	"distudio.com/mage"
-	"distudio.com/page"
+	"decodica.com/flamel"
+	"decodica.com/spellbook"
 	"errors"
 	"fmt"
 	"github.com/disintegration/imaging"
@@ -14,31 +14,31 @@ import (
 	"strings"
 )
 
-func NewFileController() *page.RestController {
+func NewFileController() *spellbook.RestController {
 	return NewFileControllerWithKey("")
 }
 
-func NewFileControllerWithKey(key string) *page.RestController {
-	handler := fileHandler{page.BaseRestHandler{Manager: fileManager{}}}
-	c := page.NewRestController(handler)
+func NewFileControllerWithKey(key string) *spellbook.RestController {
+	handler := fileHandler{spellbook.BaseRestHandler{Manager: fileManager{}}}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type fileManager struct{}
 
-func (manager fileManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager fileManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &File{}, nil
 }
 
-func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
-		var p page.Permission
-		p = page.PermissionReadContent
-		if !current.HasPermission(page.PermissionReadMedia) {
-			p = page.PermissionReadMedia
+func (manager fileManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionReadContent
+		if !current.HasPermission(spellbook.PermissionReadMedia) {
+			p = spellbook.PermissionReadMedia
 		}
-		return nil, page.NewPermissionError(page.PermissionName(p))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	//todo: set bucket name in configuration
@@ -55,15 +55,15 @@ func (manager fileManager) FromId(ctx context.Context, id string) (page.Resource
 	return f, nil
 }
 
-func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager fileManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
-		var p page.Permission
-		p = page.PermissionReadContent
-		if !current.HasPermission(page.PermissionReadMedia) {
-			p = page.PermissionReadMedia
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionReadContent
+		if !current.HasPermission(spellbook.PermissionReadMedia) {
+			p = spellbook.PermissionReadMedia
 		}
-		return nil, page.NewPermissionError(page.PermissionName(p))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	//todo: set bucket name in configuration
@@ -107,15 +107,15 @@ func (manager fileManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		files = append(files, f)
 	}
 
-	resources := make([]page.Resource, len(files))
+	resources := make([]spellbook.Resource, len(files))
 	for i := range files {
-		resources[i] = page.Resource(files[i])
+		resources[i] = spellbook.Resource(files[i])
 	}
 
 	return resources, nil
 }
 
-func (manager fileManager) listPagination(ctx context.Context, it *storage.ObjectIterator, opts page.ListOptions) ([]*storage.ObjectAttrs, error) {
+func (manager fileManager) listPagination(ctx context.Context, it *storage.ObjectIterator, opts spellbook.ListOptions) ([]*storage.ObjectAttrs, error) {
 	p := iterator.NewPager(it, opts.Size+1, "")
 	var objs []*storage.ObjectAttrs
 	for i := 0; i < opts.Page+1; i++ {
@@ -136,38 +136,38 @@ func (manager fileManager) listPagination(ctx context.Context, it *storage.Objec
 	return objs, nil
 }
 
-func (manager fileManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager fileManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager fileManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
-		var p page.Permission
-		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionWriteMedia) {
-			p = page.PermissionWriteMedia
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionWriteContent
+		if !current.HasPermission(spellbook.PermissionWriteMedia) {
+			p = spellbook.PermissionWriteMedia
 		}
-		return page.NewPermissionError(page.PermissionName(p))
+		return spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	rfile := res.(*File)
 
-	ins := mage.InputsFromContext(ctx)
+	ins := flamel.InputsFromContext(ctx)
 
-	tv := page.NewField("type", true, ins)
-	tv.AddValidator(page.FileNameValidator{})
+	tv := spellbook.NewField("type", true, ins)
+	tv.AddValidator(spellbook.FileNameValidator{})
 	typ, err := tv.Value()
 	if err != nil {
-		return page.NewFieldError("type", err)
+		return spellbook.NewFieldError("type", err)
 	}
 
 	// namespace is the sub folder where the file will be loaded
-	nsv := page.NewField("namespace", false, ins)
-	nsv.AddValidator(page.FileNameValidator{AllowEmpty: true})
+	nsv := spellbook.NewField("namespace", false, ins)
+	nsv.AddValidator(spellbook.FileNameValidator{AllowEmpty: true})
 	namespace, err := nsv.Value()
 	if err != nil {
-		return page.NewFieldError("namespace", err)
+		return spellbook.NewFieldError("namespace", err)
 	}
 
 	// prepend a slash to build the filename
@@ -175,18 +175,18 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 		namespace = fmt.Sprintf("/%s", namespace)
 	}
 
-	nv := page.NewField("name", true, ins)
-	nv.AddValidator(page.FileNameValidator{})
+	nv := spellbook.NewField("name", true, ins)
+	nv.AddValidator(spellbook.FileNameValidator{})
 	name, err := nv.Value()
 	if err != nil {
-		return page.NewFieldError("name", err)
+		return spellbook.NewFieldError("name", err)
 	}
 
 	// get the file headers
 	fhs := ins["file"].Files()
 	if len(fhs) == 0 {
 		msg := fmt.Sprintf("error no file: %v", fhs)
-		return page.NewFieldError("no file", errors.New(msg))
+		return spellbook.NewFieldError("no file", errors.New(msg))
 	}
 	// todo: handle multiple files
 	fh := fhs[0]
@@ -196,7 +196,7 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 	buffer := make([]byte, fh.Size)
 	if err != nil {
 		msg := fmt.Sprintf("error buffer: %s", err.Error())
-		return page.NewFieldError("buffer", errors.New(msg))
+		return spellbook.NewFieldError("buffer", errors.New(msg))
 	}
 
 	_, err = f.Read(buffer)
@@ -205,10 +205,10 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 		_, err = f.Seek(0, 0)
 		if err != nil {
 			msg := fmt.Sprintf("error Seek buffer: %s", err.Error())
-			return page.NewFieldError("buffer", errors.New(msg))
+			return spellbook.NewFieldError("buffer", errors.New(msg))
 		}
 	} else {
-		return page.NewFieldError("read", err)
+		return spellbook.NewFieldError("read", err)
 	}
 
 	// build the filename
@@ -218,13 +218,13 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 	bucket, err := file.DefaultBucketName(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("can't retrieve bucket name: %s", err.Error())
-		return page.NewFieldError("bucket", errors.New(msg))
+		return spellbook.NewFieldError("bucket", errors.New(msg))
 	}
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create client: %s", err.Error())
-		return page.NewFieldError("client", errors.New(msg))
+		return spellbook.NewFieldError("client", errors.New(msg))
 	}
 	defer client.Close()
 
@@ -234,12 +234,12 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 
 	if _, err := writer.Write(buffer); err != nil {
 		msg := fmt.Sprintf("upload: unable to write file %s to bucket %s: %s", filename, bucket, err.Error())
-		return page.NewFieldError("bucket", errors.New(msg))
+		return spellbook.NewFieldError("bucket", errors.New(msg))
 	}
 
 	if err := writer.Close(); err != nil {
 		msg := fmt.Sprintf("upload: unable to close bucket %s: %s", bucket, err.Error())
-		return page.NewFieldError("bucket", errors.New(msg))
+		return spellbook.NewFieldError("bucket", errors.New(msg))
 	}
 
 	uri := fmt.Sprintf(publicURL, bucket, filename)
@@ -253,7 +253,7 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 		image, err := imaging.Decode(f)
 		if err != nil {
 			msg := fmt.Sprintf("error in opening image %s", err)
-			return page.NewFieldError("bucket", errors.New(msg))
+			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
 		// create thumbnail
 		fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
@@ -263,11 +263,11 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 		wc.ContentType = fh.Header.Get("Content-Type")
 		if imaging.Encode(wc, afterImage, imaging.JPEG); err != nil {
 			msg := fmt.Sprintf("%s in saving image thumbnail", err.Error())
-			return page.NewFieldError("bucket", errors.New(msg))
+			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
 		if err = wc.Close(); err != nil {
 			msg := fmt.Sprintf("CreateFileThumbnail: unable to close bucket %q, file %q: %v", bucket, fileNameThumbnail, err)
-			return page.NewFieldError("bucket", errors.New(msg))
+			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
 
 		uriThumb := fmt.Sprintf(publicURL, bucket, fileNameThumbnail)
@@ -277,10 +277,10 @@ func (manager fileManager) Create(ctx context.Context, res page.Resource, bundle
 	return nil
 }
 
-func (manager fileManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager fileManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager fileManager) Delete(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (manager fileManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	return spellbook.NewUnsupportedError()
 }

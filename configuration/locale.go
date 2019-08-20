@@ -2,7 +2,7 @@ package configuration
 
 import (
 	"context"
-	"distudio.com/page"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"golang.org/x/text/language"
 )
@@ -18,42 +18,42 @@ func (locale *Locale) Id() string {
 	return language.Tag(*locale).String()
 }
 
-func (locale *Locale) FromRepresentation(rtype page.RepresentationType, data []byte) error {
-	return page.NewUnsupportedError()
+func (locale *Locale) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (locale *Locale) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (locale *Locale) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(locale)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func NewLocaleController() *page.RestController {
+func NewLocaleController() *spellbook.RestController {
 	man := localeManager{}
-	return page.NewRestController(page.BaseRestHandler{Manager: man})
+	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
 type localeManager struct{}
 
-func (manager localeManager) NewResource(ctx context.Context) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager localeManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager localeManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager localeManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager localeManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager localeManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	ws := page.Application()
+	ws := spellbook.Application()
 
 	langs := ws.Options().Languages
 
 	from := opts.Page * opts.Size
 	if from > len(langs) {
-		return make([]page.Resource, 0), nil
+		return make([]spellbook.Resource, 0), nil
 	}
 
 	to := from + opts.Size
@@ -62,28 +62,28 @@ func (manager localeManager) ListOf(ctx context.Context, opts page.ListOptions) 
 	}
 
 	items := langs[from:to]
-	resources := make([]page.Resource, len(items))
+	resources := make([]spellbook.Resource, len(items))
 
 	for i := range items {
 		locale := Locale(items[i])
-		resources[i] = page.Resource(&locale)
+		resources[i] = spellbook.Resource(&locale)
 	}
 
 	return resources, nil
 }
 
-func (manager localeManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager localeManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager localeManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager localeManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager localeManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager localeManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager localeManager) Delete(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (manager localeManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	return spellbook.NewUnsupportedError()
 }

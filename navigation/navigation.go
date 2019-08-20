@@ -2,8 +2,8 @@ package navigation
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/memcache"
 	"sort"
@@ -30,8 +30,8 @@ func TranslatedMenuItem(ctx context.Context, locale string, mi *MenuItem) *MenuI
 }
 
 func GetMenu(ctx context.Context, locale string, parent string) (Menu, error) {
-	if !page.Application().SupportsLocale(locale) {
-		return nil, page.NewUnsupportedError()
+	if !spellbook.Application().SupportsLocale(locale) {
+		return nil, spellbook.NewUnsupportedError()
 	}
 
 	var menu map[string]Menu

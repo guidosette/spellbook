@@ -1,14 +1,14 @@
 package content
 
 import (
-	"appengine"
 	"context"
-	"distudio.com/page"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"golang.org/x/oauth2/google"
 	cloudtasks "google.golang.org/api/cloudtasks/v2beta3"
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
 
@@ -90,33 +90,33 @@ func (task *Task) Id() string {
 	return task.CloudTask.Name
 }
 
-func (task *Task) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (task *Task) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, task)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (task *Task) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (task *Task) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(task)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func NewTaskController(projectId string, locationId string, queueId string) *page.RestController {
+func NewTaskController(projectId string, locationId string, queueId string) *spellbook.RestController {
 	man := taskManager{}
 	initTaskManager(&man, projectId, locationId, queueId)
-	return page.NewRestController(page.BaseRestHandler{Manager: man})
+	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
-func NewTaskControllerWithKey(key string, projectId string, locationId string, queueId string) *page.RestController {
+func NewTaskControllerWithKey(key string, projectId string, locationId string, queueId string) *spellbook.RestController {
 	man := taskManager{}
 	initTaskManager(&man, projectId, locationId, queueId)
-	handler := page.BaseRestHandler{Manager: man}
-	c := page.NewRestController(handler)
+	handler := spellbook.BaseRestHandler{Manager: man}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
@@ -143,39 +143,39 @@ type taskManager struct {
 	queueid    string
 }
 
-func (manager taskManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager taskManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Task{}, nil
 }
 
-func (manager taskManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager taskManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
-		return nil, page.NewFieldError("cloudtasksService", err)
+		return nil, spellbook.NewFieldError("cloudtasksService", err)
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", manager.projectid, manager.locationid, manager.queueid, id)
 
 	cloudTask, err := cloudtasksService.Projects.Locations.Queues.Tasks.Get(name).Context(ctx).Do()
 	if err != nil {
-		return nil, page.NewFieldError("task get", err)
+		return nil, spellbook.NewFieldError("task get", err)
 	}
 
 	var t Task
 	t.CloudTask = cloudTask
 	return &t, nil
-	//return nil, page.NewUnsupportedError()
+	//return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager taskManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
-		return nil, page.NewFieldError("cloudtasksService", err)
+		return nil, spellbook.NewFieldError("cloudtasksService", err)
 	}
 
 	// get queue
 	myQueue, err := manager.GetQueue(ctx, cloudtasksService)
 	if myQueue == nil {
-		return nil, page.NewFieldError("queue create", err)
+		return nil, spellbook.NewFieldError("queue create", err)
 	}
 
 	// get tasks
@@ -192,12 +192,12 @@ func (manager taskManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		}
 		return nil
 	}); err != nil {
-		return nil, page.NewFieldError("task list", err)
+		return nil, spellbook.NewFieldError("task list", err)
 	}
 
 	from := opts.Page * opts.Size
 	if from > len(tasks) {
-		return make([]page.Resource, 0), nil
+		return make([]spellbook.Resource, 0), nil
 	}
 
 	to := from + opts.Size
@@ -206,21 +206,21 @@ func (manager taskManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 	}
 
 	items := tasks[from:to]
-	resources := make([]page.Resource, len(items))
+	resources := make([]spellbook.Resource, len(items))
 
 	for i := range items {
 		task := Task(items[i])
-		resources[i] = page.Resource(&task)
+		resources[i] = spellbook.Resource(&task)
 	}
 
 	return resources, nil
 }
 
-func (manager taskManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager taskManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	task := res.(*Task)
 	task.CloudTask = &cloudtasks.Task{}
 	task.CloudTask.AppEngineHttpRequest = &cloudtasks.AppEngineHttpRequest{}
@@ -231,12 +231,12 @@ func (manager taskManager) Create(ctx context.Context, res page.Resource, bundle
 
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
-		return page.NewFieldError("cloudtasksService", err)
+		return spellbook.NewFieldError("cloudtasksService", err)
 	}
 
 	myQueue, err := manager.GetQueue(ctx, cloudtasksService)
 	if myQueue == nil {
-		return page.NewFieldError("queue not found", err)
+		return spellbook.NewFieldError("queue not found", err)
 	}
 
 	parent := fmt.Sprintf("projects/%s/locations/%s/queues/%s", manager.projectid, manager.locationid, manager.queueid)
@@ -245,7 +245,7 @@ func (manager taskManager) Create(ctx context.Context, res page.Resource, bundle
 	}
 	cloudTask, err := cloudtasksService.Projects.Locations.Queues.Tasks.Create(parent, rb).Context(ctx).Do()
 	if err != nil {
-		return page.NewFieldError("create task", err)
+		return spellbook.NewFieldError("create task", err)
 	}
 
 	task.CloudTask = cloudTask
@@ -253,7 +253,7 @@ func (manager taskManager) Create(ctx context.Context, res page.Resource, bundle
 	return nil
 }
 
-func (manager taskManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	// RUN
 	task := res.(*Task)
 	task.CloudTask = &cloudtasks.Task{}
@@ -264,12 +264,12 @@ func (manager taskManager) Update(ctx context.Context, res page.Resource, bundle
 
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
-		return page.NewFieldError("cloudtasksService", err)
+		return spellbook.NewFieldError("cloudtasksService", err)
 	}
 
 	myQueue, err := manager.GetQueue(ctx, cloudtasksService)
 	if myQueue == nil {
-		return page.NewFieldError("queue not found", err)
+		return spellbook.NewFieldError("queue not found", err)
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", manager.projectid, manager.locationid, manager.queueid, task.Name)
@@ -278,15 +278,15 @@ func (manager taskManager) Update(ctx context.Context, res page.Resource, bundle
 	}
 	cloudTask, err := cloudtasksService.Projects.Locations.Queues.Tasks.Run(name, rb).Context(ctx).Do()
 	if err != nil {
-		return page.NewFieldError("run task", err)
+		return spellbook.NewFieldError("run task", err)
 	}
 	task.CloudTask = cloudTask
 
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) Delete(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (manager taskManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	return spellbook.NewUnsupportedError()
 }
 
 /**

@@ -1,8 +1,8 @@
-package showcase
+package main
 
 import (
 	"context"
-	"distudio.com/mage"
+	"decodica.com/flamel"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/search"
@@ -13,10 +13,10 @@ type CleanController struct {}
 
 func (controller *CleanController) OnDestroy(ctx context.Context) {}
 
-func (controller *CleanController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (controller *CleanController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	log.Infof(ctx, "CleanController")
-	ins := mage.InputsFromContext(ctx)
-	method := ins[mage.KeyRequestMethod]
+	ins := flamel.InputsFromContext(ctx)
+	method := ins[flamel.KeyRequestMethod]
 	_, ok := ins["entity"]
 	if !ok {
 		//log.Errorf(ctx, "unable to perform request. Entity not specified")
@@ -30,7 +30,7 @@ func (controller *CleanController) Process(ctx context.Context, out *mage.Respon
 	case http.MethodGet:
 		idx, err :=search.Open(entity)
 		if err != nil {
-			return mage.Redirect{Status:http.StatusNotFound}
+			return flamel.HttpResponse{Status:http.StatusNotFound}
 		}
 
 		opts := search.ListOptions{}
@@ -65,8 +65,8 @@ func (controller *CleanController) Process(ctx context.Context, out *mage.Respon
 
 		log.Infof(ctx, "Removed index of %d products", counter)
 
-		return mage.Redirect{Status:http.StatusOK}
+		return flamel.HttpResponse{Status:http.StatusOK}
 	}
-	return mage.Redirect{Status:http.StatusNotImplemented}
+	return flamel.HttpResponse{Status:http.StatusNotImplemented}
 }
 

@@ -2,34 +2,34 @@ package navigation
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 )
 
-func NewPageController() *page.RestController {
+func NewPageController() *spellbook.RestController {
 	return NewPageControllerWithKey("")
 }
 
-func NewPageControllerWithKey(key string) *page.RestController {
-	handler := page.BaseRestHandler{Manager: pageManager{}}
-	c := page.NewRestController(handler)
+func NewPageControllerWithKey(key string) *spellbook.RestController {
+	handler := spellbook.BaseRestHandler{Manager: pageManager{}}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type pageManager struct{}
 
-func (manager pageManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager pageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Page{}, nil
 }
 
-func (manager pageManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPage) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPage))
+func (manager pageManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPage) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPage))
 	}
 
 	cont := Page{}
@@ -41,9 +41,9 @@ func (manager pageManager) FromId(ctx context.Context, id string) (page.Resource
 	return &cont, nil
 }
 
-func (manager pageManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || !current.HasPermission(page.PermissionReadPage) {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadPage))
+func (manager pageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPage) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPage))
 	}
 
 	var conts []*Page
@@ -70,23 +70,23 @@ func (manager pageManager) ListOf(ctx context.Context, opts page.ListOptions) ([
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(conts))
+	resources := make([]spellbook.Resource, len(conts))
 	for i := range conts {
-		resources[i] = page.Resource(conts[i])
+		resources[i] = spellbook.Resource(conts[i])
 	}
 
 	return resources, nil
 }
 
-func (manager pageManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager pageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager pageManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager pageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWritePage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWritePage))
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWritePage) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePage))
 	}
 
 	p := res.(*Page)
@@ -105,7 +105,7 @@ func (manager pageManager) Create(ctx context.Context, res page.Resource, bundle
 		// seo already exists for given code, can't create
 		if err == nil {
 			msg := fmt.Sprintf("a page for %q already exists.", p.Code)
-			return page.NewFieldError("", errors.New(msg))
+			return spellbook.NewFieldError("", errors.New(msg))
 		}
 
 		if err == datastore.ErrNoSuchEntity {
@@ -129,14 +129,14 @@ func (manager pageManager) Create(ctx context.Context, res page.Resource, bundle
 
 	// the page with the given url has already been allocated. can't create seo
 	msg := fmt.Sprintf("a seo for url %q already exists.", p.Url)
-	return page.NewFieldError("", errors.New(msg))
+	return spellbook.NewFieldError("", errors.New(msg))
 }
 
-func (manager pageManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager pageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
-	current := page.IdentityFromContext(ctx)
-	if current == nil || !current.HasPermission(page.PermissionWritePage) {
-		return page.NewPermissionError(page.PermissionName(page.PermissionWritePage))
+	current := spellbook.IdentityFromContext(ctx)
+	if current == nil || !current.HasPermission(spellbook.PermissionWritePage) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePage))
 	}
 
 	p := res.(*Page)
@@ -144,12 +144,12 @@ func (manager pageManager) Update(ctx context.Context, res page.Resource, bundle
 	or, _ := manager.NewResource(ctx)
 	other := or.(*Page)
 
-	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("invalid json for seo %q: %s", p.StringID(), err.Error()))
+	if err := other.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("invalid json for seo %q: %s", p.StringID(), err.Error()))
 	}
 
 	if err := model.FromStringID(ctx, p, PageId(other.Locale, other.Url), nil); err != nil {
-		return page.NewUnsupportedError()
+		return spellbook.NewUnsupportedError()
 	}
 
 	q := model.NewQuery((*Page)(nil))
@@ -162,7 +162,7 @@ func (manager pageManager) Update(ctx context.Context, res page.Resource, bundle
 	// seo already exists for given code, can't create
 	if err == nil && existing.StringID() != PageId(other.Locale, other.Url) {
 		msg := fmt.Sprintf("a page for %q already exists.", other.Code)
-		return page.NewFieldError("", errors.New(msg))
+		return spellbook.NewFieldError("", errors.New(msg))
 	}
 
 	p.Order = other.Order
@@ -179,7 +179,7 @@ func (manager pageManager) Update(ctx context.Context, res page.Resource, bundle
 	return nil
 }
 
-func (manager pageManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager pageManager) Delete(ctx context.Context, res spellbook.Resource) error {
 
 	p := res.(*Page)
 	err := model.Delete(ctx, p, nil)

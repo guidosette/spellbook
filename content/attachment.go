@@ -1,8 +1,8 @@
 package content
 
 import (
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"time"
 )
@@ -113,18 +113,18 @@ func (attachment *Attachment) Id() string {
 	return attachment.StringID()
 }
 
-func (attachment *Attachment) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (attachment *Attachment) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, attachment)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (attachment *Attachment) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (attachment *Attachment) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(attachment)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

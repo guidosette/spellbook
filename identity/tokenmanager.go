@@ -2,38 +2,38 @@ package identity
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"fmt"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 )
 
-func NewTokenController() *page.RestController {
-	handler := page.BaseRestHandler{}
+func NewTokenController() *spellbook.RestController {
+	handler := spellbook.BaseRestHandler{}
 	handler.Manager = tokenManager{}
-	return page.NewRestController(handler)
+	return spellbook.NewRestController(handler)
 }
 
-func NewTokenControllerWithKey(key string) *page.RestController {
-	handler := page.BaseRestHandler{Manager: tokenManager{}}
-	c := page.NewRestController(handler)
+func NewTokenControllerWithKey(key string) *spellbook.RestController {
+	handler := spellbook.BaseRestHandler{Manager: tokenManager{}}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type tokenManager struct{}
 
-func (manager tokenManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager tokenManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Token{}, nil
 }
 
-func (manager tokenManager) FromId(ctx context.Context, id string) (page.Resource, error) {
+func (manager tokenManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 
 	// todo
-	current := page.IdentityFromContext(ctx)
+	current := spellbook.IdentityFromContext(ctx)
 	if current == nil {
-		return nil, page.NewPermissionError(page.PermissionName(page.PermissionReadUser))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
 
 	user, ok := current.(User)
@@ -49,31 +49,31 @@ func (manager tokenManager) FromId(ctx context.Context, id string) (page.Resourc
 
 	return &us, nil
 
-	//return nil, page.NewUnsupportedError()
+	//return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager tokenManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager tokenManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
+func (manager tokenManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	token := res.(*Token)
 
 	// checks the provided credentials. If correct creates a token, saves the user and returns the token
-	nick := page.NewRawField("username", true, token.Username)
+	nick := spellbook.NewRawField("username", true, token.Username)
 	if _, err := nick.Value(); err != nil {
-		return page.NewFieldError("username", err)
+		return spellbook.NewFieldError("username", err)
 	}
 
-	password := page.NewRawField("password", true, token.Password)
-	password.AddValidator(page.LenValidator{MinLen: 8})
+	password := spellbook.NewRawField("password", true, token.Password)
+	password.AddValidator(spellbook.LenValidator{MinLen: 8})
 	if _, err := password.Value(); err != nil {
-		return page.NewFieldError("password", err)
+		return spellbook.NewFieldError("password", err)
 	}
 
 	u := User{}
@@ -107,16 +107,16 @@ func (manager tokenManager) Create(ctx context.Context, res page.Resource, bundl
 	return nil
 }
 
-func (manager tokenManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager tokenManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) Delete(ctx context.Context, res page.Resource) error {
+func (manager tokenManager) Delete(ctx context.Context, res spellbook.Resource) error {
 
-	u := page.IdentityFromContext(ctx)
+	u := spellbook.IdentityFromContext(ctx)
 	user, ok := u.(User)
 	if !ok {
-		return page.NewPermissionError(page.PermissionName(page.PermissionEnabled))
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionEnabled))
 	}
 
 	user.Token = ""

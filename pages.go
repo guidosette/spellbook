@@ -1,10 +1,10 @@
-package page
+package spellbook
 
 import (
-	"distudio.com/mage"
+	"context"
+	"decodica.com/flamel"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"golang.org/x/text/language"
 	"google.golang.org/appengine/log"
 	"html/template"
@@ -22,29 +22,29 @@ const (
 //If a template is needed use TemplatedPage instead
 type StaticPage struct {
 	FileName string
-	mage.Controller
+	flamel.Controller
 }
 
-func (page *StaticPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *StaticPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	fname := fmt.Sprintf("%s.html", page.FileName)
 	_, err := os.Stat(fname)
 
 	if os.IsNotExist(err) {
 		log.Errorf(ctx, "Can't find file %s", fname)
-		return mage.Redirect{Status: http.StatusNotFound}
+		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 
 	str, err := ioutil.ReadFile(fname)
 
 	if err != nil {
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
-	renderer := mage.TextRenderer{}
+	renderer := flamel.TextRenderer{}
 	renderer.Data = string(str)
 	out.Renderer = &renderer
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 func (page *StaticPage) OnDestroy(ctx context.Context) {
@@ -58,19 +58,19 @@ type FourOFourPage struct {
 	StaticPage
 }
 
-func (page *FourOFourPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *FourOFourPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	if page.FileName != "" {
 		redir := page.StaticPage.Process(ctx, out)
 		out.AddHeader("Content-type", "text/html; charset=utf-8")
 		switch redir.Status {
 		case http.StatusOK:
-			return mage.Redirect{Status: http.StatusNotFound}
+			return flamel.HttpResponse{Status: http.StatusNotFound}
 		case http.StatusInternalServerError:
 			return redir
 		}
 	}
 
-	return mage.Redirect{Status: http.StatusNotFound}
+	return flamel.HttpResponse{Status: http.StatusNotFound}
 }
 
 /**
@@ -81,19 +81,19 @@ type StatusTemplatedPage struct {
 	Status int
 }
 
-func (page *StatusTemplatedPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *StatusTemplatedPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	if page.FileName != "" {
 		redir := page.TemplatedPage.Process(ctx, out)
 		out.AddHeader("Content-type", "text/html; charset=utf-8")
 		switch redir.Status {
 		case http.StatusOK:
-			return mage.Redirect{Status: page.Status}
+			return flamel.HttpResponse{Status: page.Status}
 		case http.StatusInternalServerError:
 			return redir
 		}
 	}
 
-	return mage.Redirect{Status: page.Status}
+	return flamel.HttpResponse{Status: page.Status}
 }
 
 /**
@@ -104,19 +104,19 @@ type LocalizedStatusPage struct {
 	Status int
 }
 
-func (page *LocalizedStatusPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *LocalizedStatusPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	if page.FileName != "" {
 		redir := page.LocalizedPage.Process(ctx, out)
 		out.AddHeader("Content-type", "text/html; charset=utf-8")
 		switch redir.Status {
 		case http.StatusOK:
-			return mage.Redirect{Status: page.Status}
+			return flamel.HttpResponse{Status: page.Status}
 		case http.StatusInternalServerError:
 			return redir
 		}
 	}
 
-	return mage.Redirect{Status: page.Status}
+	return flamel.HttpResponse{Status: page.Status}
 }
 
 //Reads a template and mixes it with a base template (useful for headers/footers)
@@ -127,7 +127,7 @@ type TemplatedPage struct {
 	BaseName    string
 	Bases       []string
 	DataHandler TemplateDataHandler
-	mage.Controller
+	flamel.Controller
 	FuncHandler TemplateFuncHandler
 }
 
@@ -147,13 +147,13 @@ func NewTemplatedPage(url string, filename string, bases ...string) TemplatedPag
 	return page
 }
 
-func (page *TemplatedPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *TemplatedPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	fname := fmt.Sprintf("%s.html", page.FileName)
 	_, err := os.Stat(fname)
 
 	if os.IsNotExist(err) {
 		log.Debugf(ctx, "Can't find file %s", fname)
-		return mage.Redirect{Status: http.StatusNotFound}
+		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 
 	files := make([]string, 0, 0)
@@ -164,10 +164,10 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
-	renderer := mage.TemplateRenderer{}
+	renderer := flamel.TemplateRenderer{}
 	if page.BaseName == "" {
 		renderer.TemplateName = "base"
 	} else {
@@ -181,27 +181,27 @@ func (page *TemplatedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	out.Renderer = &renderer
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 func (page *TemplatedPage) OnDestroy(ctx context.Context) {
 
 }
 
-//Has a TemplatedPage. Attaches to each templated page a corresponding json file that specifies translations
+//Has a Templatedspellbook. Attaches to each templated page a corresponding json file that specifies translations
 type LocalizedPage struct {
 	TemplatedPage
 	JsonBaseFile string
 	JsonFile     string
 }
 
-func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 	fname := fmt.Sprintf("%s.html", page.FileName)
 	_, err := os.Stat(fname)
 
 	if os.IsNotExist(err) {
 		log.Debugf(ctx, "Can't find file %s", fname)
-		return mage.Redirect{Status: http.StatusNotFound}
+		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 
 	t := ctx.Value(KeyLanguageTag)
@@ -239,7 +239,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Cant' parse template files: %v", err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	//get the base language file
@@ -253,7 +253,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Error reading base language file %s: %v", lbasename, err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	var base map[string]interface{}
@@ -261,7 +261,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Invalid json for base file %s: %v", lbasename, err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	_, bok := base[lang]
@@ -285,7 +285,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 	_, err = os.Stat(lfname)
 	if os.IsNotExist(err) {
 		log.Debugf(ctx, "Can't find json file %s", fname)
-		return mage.Redirect{Status: http.StatusNotFound}
+		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 
 	//now that we have the locale, read the json language file and get the corresponding values
@@ -293,7 +293,7 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Error retrieving language file %s: %v", lfname, err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	var contents map[string]interface{}
@@ -301,19 +301,19 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	if err != nil {
 		log.Errorf(ctx, "Invalid json for file %s: %v", lfname, err)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	_, dok := contents[lang]
 
 	if !dok {
 		log.Errorf(ctx, "File %s doesn't support language %s", lfname, lang)
-		return mage.Redirect{Status: http.StatusInternalServerError}
+		return flamel.HttpResponse{Status: http.StatusInternalServerError}
 	}
 
 	content := contents[lang]
 
-	renderer := mage.TemplateRenderer{}
+	renderer := flamel.TemplateRenderer{}
 	if page.BaseName == "" {
 		renderer.TemplateName = "base"
 	} else {
@@ -343,40 +343,40 @@ func (page *LocalizedPage) Process(ctx context.Context, out *mage.ResponseOutput
 
 	out.Renderer = &renderer
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 //sends an email with the specified message and sender
 type SendMailPage struct {
-	mage.Controller
+	flamel.Controller
 	Mailer
 }
 
 type Mailer interface {
-	ValidateAndSend(ctx context.Context, inputs mage.RequestInputs) error
+	ValidateAndSend(ctx context.Context, inputs flamel.RequestInputs) error
 }
 
-func (page *SendMailPage) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (page *SendMailPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 
-	inputs := mage.InputsFromContext(ctx)
+	inputs := flamel.InputsFromContext(ctx)
 
-	method := inputs[mage.KeyRequestMethod].Value()
+	method := inputs[flamel.KeyRequestMethod].Value()
 
 	if method != http.MethodPost {
-		return mage.Redirect{Status: http.StatusMethodNotAllowed}
+		return flamel.HttpResponse{Status: http.StatusMethodNotAllowed}
 	}
 
 	err := page.Mailer.ValidateAndSend(ctx, inputs)
 
 	if err != nil {
 		//if we have a field error we handle it returning a 404
-		renderer := mage.JSONRenderer{}
+		renderer := flamel.JSONRenderer{}
 		renderer.Data = err.Error()
 		out.Renderer = &renderer
-		return mage.Redirect{Status: http.StatusBadRequest}
+		return flamel.HttpResponse{Status: http.StatusBadRequest}
 	}
 
-	return mage.Redirect{Status: http.StatusOK}
+	return flamel.HttpResponse{Status: http.StatusOK}
 }
 
 func (page *SendMailPage) OnDestroy(ctx context.Context) {
@@ -387,12 +387,12 @@ func (page *SendMailPage) OnDestroy(ctx context.Context) {
 REDIRECT StatusMovedPermanently
 */
 type MovedController struct {
-	mage.Controller
+	flamel.Controller
 	To string
 }
 
-func (controller *MovedController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
-	return mage.Redirect{Location: controller.To, Status: http.StatusMovedPermanently}
+func (controller *MovedController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
+	return flamel.HttpResponse{Location: controller.To, Status: http.StatusMovedPermanently}
 }
 
 func (controller *MovedController) OnDestroy(ctx context.Context) {}
@@ -401,12 +401,12 @@ func (controller *MovedController) OnDestroy(ctx context.Context) {}
 REDIRECT StatusFound
 */
 type FoundController struct {
-	mage.Controller
+	flamel.Controller
 	To string
 }
 
-func (controller *FoundController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
-	return mage.Redirect{Location: controller.To, Status: http.StatusFound}
+func (controller *FoundController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
+	return flamel.HttpResponse{Location: controller.To, Status: http.StatusFound}
 }
 
 func (controller *FoundController) OnDestroy(ctx context.Context) {}

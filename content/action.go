@@ -2,18 +2,19 @@ package content
 
 import (
 	"context"
-	"distudio.com/page"
+	"decodica.com/spellbook"
+
 	"encoding/json"
 )
 
-type Action page.SupportedAction
+type Action spellbook.SupportedAction
 
 func (action *Action) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Name     string          `json:"name"`
 		Endpoint string          `json:"endpoint"`
-		Type     page.ActionType `json:"type"`
+		Type     spellbook.ActionType `json:"type"`
 		Method   string          `json:"method"`
 	}{}
 
@@ -34,7 +35,7 @@ func (action *Action) MarshalJSON() ([]byte, error) {
 	alias := struct {
 		Name     string          `json:"name"`
 		Endpoint string          `json:"endpoint"`
-		Type     page.ActionType `json:"type"`
+		Type     spellbook.ActionType `json:"type"`
 		Method   string          `json:"method"`
 	}{action.Name, action.Endpoint, action.Type, action.Method}
 
@@ -44,30 +45,29 @@ func (action *Action) MarshalJSON() ([]byte, error) {
 /**
 * Resource representation
  */
-
 func (action *Action) Id() string {
 	return action.Name
 }
 
-func (action *Action) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (action *Action) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, action)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (action *Action) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (action *Action) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(action)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func NewActionController() *page.RestController {
+func NewActionController() *spellbook.RestController {
 	man := actionManager{}
-	return page.NewRestController(page.BaseRestHandler{Manager: man})
+	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
 /*
@@ -76,23 +76,23 @@ func NewActionController() *page.RestController {
 
 type actionManager struct{}
 
-func (manager actionManager) NewResource(ctx context.Context) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager actionManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager actionManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager actionManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	ws := page.Application()
+	ws := spellbook.Application()
 
 	actions := ws.Options().Actions
 
 	from := opts.Page * opts.Size
 	if from > len(actions) {
-		return make([]page.Resource, 0), nil
+		return make([]spellbook.Resource, 0), nil
 	}
 
 	to := from + opts.Size
@@ -101,28 +101,28 @@ func (manager actionManager) ListOf(ctx context.Context, opts page.ListOptions) 
 	}
 
 	items := actions[from:to]
-	resources := make([]page.Resource, len(items))
+	resources := make([]spellbook.Resource, len(items))
 
 	for i := range items {
 		action := Action(items[i])
-		resources[i] = page.Resource(&action)
+		resources[i] = spellbook.Resource(&action)
 	}
 
 	return resources, nil
 }
 
-func (manager actionManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager actionManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager actionManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager actionManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Delete(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (manager actionManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	return spellbook.NewUnsupportedError()
 }

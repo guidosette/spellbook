@@ -2,18 +2,18 @@ package content
 
 import (
 	"context"
-	"distudio.com/page"
+	"decodica.com/spellbook"
 	"encoding/json"
 )
 
-type Category page.SupportedCategory
+type Category spellbook.SupportedCategory
 
 func (category *Category) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Name  string           `json:"name"`
 		Label string           `json:"label"`
-		Type  page.ContentType `json:"type"`
+		Type  spellbook.ContentType `json:"type"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -32,8 +32,8 @@ func (category *Category) MarshalJSON() ([]byte, error) {
 	alias := struct {
 		Name                   string                        `json:"name"`
 		Label                  string                        `json:"label"`
-		Type                   page.ContentType              `json:"type"`
-		DefaultAttachmentGroup []page.DefaultAttachmentGroup `json:"defaultAttachmentGroups"`
+		Type                   spellbook.ContentType              `json:"type"`
+		DefaultAttachmentGroup []spellbook.DefaultAttachmentGroup `json:"defaultAttachmentGroups"`
 	}{category.Name, category.Label, category.Type, category.DefaultAttachmentGroups}
 
 	return json.Marshal(&alias)
@@ -47,25 +47,25 @@ func (category *Category) Id() string {
 	return category.Name
 }
 
-func (category *Category) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (category *Category) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, category)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (category *Category) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (category *Category) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(category)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func NewCategoryController() *page.RestController {
+func NewCategoryController() *spellbook.RestController {
 	man := categoryManager{}
-	return page.NewRestController(page.BaseRestHandler{Manager: man})
+	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
 /*
@@ -74,23 +74,23 @@ func NewCategoryController() *page.RestController {
 
 type categoryManager struct{}
 
-func (manager categoryManager) NewResource(ctx context.Context) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager categoryManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) FromId(ctx context.Context, id string) (page.Resource, error) {
-	return nil, page.NewUnsupportedError()
+func (manager categoryManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
+func (manager categoryManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
-	ws := page.Application()
+	ws := spellbook.Application()
 
 	categories := ws.Options().Categories
 
 	from := opts.Page * opts.Size
 	if from > len(categories) {
-		return make([]page.Resource, 0), nil
+		return make([]spellbook.Resource, 0), nil
 	}
 
 	to := from + opts.Size
@@ -99,28 +99,28 @@ func (manager categoryManager) ListOf(ctx context.Context, opts page.ListOptions
 	}
 
 	items := categories[from:to]
-	resources := make([]page.Resource, len(items))
+	resources := make([]spellbook.Resource, len(items))
 
 	for i := range items {
 		category := Category(items[i])
-		resources[i] = page.Resource(&category)
+		resources[i] = spellbook.Resource(&category)
 	}
 
 	return resources, nil
 }
 
-func (manager categoryManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	return nil, page.NewUnsupportedError()
+func (manager categoryManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager categoryManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	return page.NewUnsupportedError()
+func (manager categoryManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	return spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Delete(ctx context.Context, res page.Resource) error {
-	return page.NewUnsupportedError()
+func (manager categoryManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	return spellbook.NewUnsupportedError()
 }

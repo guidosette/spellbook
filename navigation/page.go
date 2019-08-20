@@ -1,8 +1,8 @@
 package navigation
 
 import (
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 )
 
@@ -16,7 +16,7 @@ type Page struct {
 	Url         string
 	Order int
 	IsRoot      bool
-	Code        page.StaticPageCode
+	Code        spellbook.StaticPageCode
 	Locale      string
 }
 
@@ -32,7 +32,7 @@ func (p *Page) UnmarshalJSON(data []byte) error {
 		MetaDesc string              `json:"metadesc"`
 		Url      string              `json:"url"`
 		Locale   string              `json:"locale"`
-		Code     page.StaticPageCode `json:"code"`
+		Code     spellbook.StaticPageCode `json:"code"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -59,7 +59,7 @@ func (p *Page) MarshalJSON() ([]byte, error) {
 		Url      string              `json:"url"`
 		Order int `json:"order"`
 		Locale   string              `json:"locale"`
-		Code     page.StaticPageCode `json:"code"`
+		Code     spellbook.StaticPageCode `json:"code"`
 	}
 
 	return json.Marshal(&struct {
@@ -83,18 +83,18 @@ func (p *Page) Id() string {
 	return p.StringID()
 }
 
-func (p *Page) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (p *Page) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, p)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (p *Page) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (p *Page) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(p)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

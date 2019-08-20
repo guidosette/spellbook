@@ -2,9 +2,9 @@ package content
 
 import (
 	"context"
-	"distudio.com/mage/model"
-	"distudio.com/page"
-	"distudio.com/page/identity"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
+	"decodica.com/spellbook/identity"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
@@ -14,38 +14,38 @@ import (
 	"time"
 )
 
-func NewAttachmentController() *page.RestController {
+func NewAttachmentController() *spellbook.RestController {
 	return NewAttachmentControllerWithKey("")
 }
 
-func NewAttachmentControllerWithKey(key string) *page.RestController {
+func NewAttachmentControllerWithKey(key string) *spellbook.RestController {
 	man := attachmentManager{}
-	handler := page.BaseRestHandler{Manager: man}
-	c := page.NewRestController(handler)
+	handler := spellbook.BaseRestHandler{Manager: man}
+	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
 type attachmentManager struct{}
 
-func (manager attachmentManager) NewResource(ctx context.Context) (page.Resource, error) {
+func (manager attachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Attachment{}, nil
 }
 
-func (manager attachmentManager) FromId(ctx context.Context, strId string) (page.Resource, error) {
+func (manager attachmentManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
-		var p page.Permission
-		p = page.PermissionReadContent
-		if !current.HasPermission(page.PermissionReadMedia) {
-			p = page.PermissionReadMedia
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionReadContent
+		if !current.HasPermission(spellbook.PermissionReadMedia) {
+			p = spellbook.PermissionReadMedia
 		}
-		return nil, page.NewPermissionError(page.PermissionName(p))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	id, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		return nil, page.NewFieldError(strId, err)
+		return nil, spellbook.NewFieldError(strId, err)
 	}
 
 	att := Attachment{}
@@ -57,14 +57,14 @@ func (manager attachmentManager) FromId(ctx context.Context, strId string) (page
 	return &att, nil
 }
 
-func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptions) ([]page.Resource, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
-		var p page.Permission
-		p = page.PermissionReadContent
-		if !current.HasPermission(page.PermissionReadMedia) {
-			p = page.PermissionReadMedia
+func (manager attachmentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionReadContent
+		if !current.HasPermission(spellbook.PermissionReadMedia) {
+			p = spellbook.PermissionReadMedia
 		}
-		return nil, page.NewPermissionError(page.PermissionName(p))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	var attachments []*Attachment
@@ -92,22 +92,22 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts page.ListOptio
 		return nil, err
 	}
 
-	resources := make([]page.Resource, len(attachments))
+	resources := make([]spellbook.Resource, len(attachments))
 	for i := range attachments {
-		resources[i] = page.Resource(attachments[i])
+		resources[i] = spellbook.Resource(attachments[i])
 	}
 
 	return resources, nil
 }
 
-func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page.ListOptions) ([]string, error) {
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionReadContent) && !current.HasPermission(page.PermissionReadMedia)) {
-		var p page.Permission
-		p = page.PermissionReadContent
-		if !current.HasPermission(page.PermissionReadMedia) {
-			p = page.PermissionReadMedia
+func (manager attachmentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionReadContent
+		if !current.HasPermission(spellbook.PermissionReadMedia) {
+			p = spellbook.PermissionReadMedia
 		}
-		return nil, page.NewPermissionError(page.PermissionName(p))
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	a := []string{"Group"} // list property accepted
@@ -155,15 +155,15 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts page
 	return result, nil
 }
 
-func (manager attachmentManager) Create(ctx context.Context, res page.Resource, bundle []byte) error {
-	current := page.IdentityFromContext(ctx)
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
-		var p page.Permission
-		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionWriteMedia) {
-			p = page.PermissionWriteMedia
+func (manager attachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	current := spellbook.IdentityFromContext(ctx)
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionWriteContent
+		if !current.HasPermission(spellbook.PermissionWriteMedia) {
+			p = spellbook.PermissionWriteMedia
 		}
-		return page.NewPermissionError(page.PermissionName(p))
+		return spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	attachment := res.(*Attachment)
@@ -172,7 +172,7 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 	// if not attachment is to be specified the default value must be used
 	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
-		return page.NewFieldError("parent", errors.New(msg))
+		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
 	attachment.Created = time.Now().UTC()
@@ -187,19 +187,19 @@ func (manager attachmentManager) Create(ctx context.Context, res page.Resource, 
 	return nil
 }
 
-func (manager attachmentManager) Update(ctx context.Context, res page.Resource, bundle []byte) error {
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
-		var p page.Permission
-		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionWriteMedia) {
-			p = page.PermissionWriteMedia
+func (manager attachmentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionWriteContent
+		if !current.HasPermission(spellbook.PermissionWriteMedia) {
+			p = spellbook.PermissionWriteMedia
 		}
-		return page.NewPermissionError(page.PermissionName(p))
+		return spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	other := Attachment{}
-	if err := other.FromRepresentation(page.RepresentationTypeJSON, bundle); err != nil {
-		return page.NewFieldError("", fmt.Errorf("bad json %s", string(bundle)))
+	if err := other.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err != nil {
+		return spellbook.NewFieldError("", fmt.Errorf("bad json %s", string(bundle)))
 	}
 
 	attachment := res.(*Attachment)
@@ -215,20 +215,20 @@ func (manager attachmentManager) Update(ctx context.Context, res page.Resource, 
 
 	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
-		return page.NewFieldError("parent", errors.New(msg))
+		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
 	return model.Update(ctx, attachment)
 }
 
-func (manager attachmentManager) Delete(ctx context.Context, res page.Resource) error {
-	if current := page.IdentityFromContext(ctx); current == nil || (!current.HasPermission(page.PermissionWriteContent) && !current.HasPermission(page.PermissionWriteMedia)) {
-		var p page.Permission
-		p = page.PermissionWriteContent
-		if !current.HasPermission(page.PermissionWriteMedia) {
-			p = page.PermissionWriteMedia
+func (manager attachmentManager) Delete(ctx context.Context, res spellbook.Resource) error {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
+		var p spellbook.Permission
+		p = spellbook.PermissionWriteContent
+		if !current.HasPermission(spellbook.PermissionWriteMedia) {
+			p = spellbook.PermissionWriteMedia
 		}
-		return page.NewPermissionError(page.PermissionName(p))
+		return spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
 	attachment := res.(*Attachment)

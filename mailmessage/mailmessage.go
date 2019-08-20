@@ -1,8 +1,8 @@
 package mailmessage
 
 import (
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"time"
 )
@@ -68,18 +68,18 @@ func (mailMessage *MailMessage) Id() string {
 	return mailMessage.StringID()
 }
 
-func (mailMessage *MailMessage) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (mailMessage *MailMessage) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, mailMessage)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (mailMessage *MailMessage) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (mailMessage *MailMessage) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(mailMessage)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

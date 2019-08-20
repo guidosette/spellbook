@@ -1,8 +1,8 @@
-package page
+package spellbook
 
 import (
 	"context"
-	"distudio.com/mage"
+	"decodica.com/flamel"
 	"google.golang.org/appengine/log"
 	"net/http"
 )
@@ -77,17 +77,17 @@ func (controller *RestController) AddExtender(hook string, extender Extender) {
 	controller.extenders[hook] = e
 }
 
-func (controller *RestController) Process(ctx context.Context, out *mage.ResponseOutput) mage.Redirect {
+func (controller *RestController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 
 	u := IdentityFromContext(ctx)
 
 	if controller.Private && u == nil {
-		return mage.Redirect{Status: http.StatusUnauthorized}
+		return flamel.HttpResponse{Status: http.StatusUnauthorized}
 	}
 
-	ins := mage.InputsFromContext(ctx)
+	ins := flamel.InputsFromContext(ctx)
 
-	method := ins[mage.KeyRequestMethod].Value()
+	method := ins[flamel.KeyRequestMethod].Value()
 	hasKey := controller.Key != ""
 	prop, hasProperty := ins["property"]
 
@@ -105,18 +105,18 @@ func (controller *RestController) Process(ctx context.Context, out *mage.Respons
 	case http.MethodPut:
 		if !hasKey {
 			log.Errorf(ctx, "no item was specify for put method")
-			return mage.Redirect{Status: http.StatusBadRequest}
+			return flamel.HttpResponse{Status: http.StatusBadRequest}
 		}
 		return controller.HandlePut(ctx, controller.Key, out)
 	case http.MethodDelete:
 		if !hasKey {
 			log.Errorf(ctx, "no item was specify for delete method")
-			return mage.Redirect{Status: http.StatusBadRequest}
+			return flamel.HttpResponse{Status: http.StatusBadRequest}
 		}
 		return controller.HandleDelete(ctx, controller.Key, out)
 	}
 
-	return mage.Redirect{Status: http.StatusNotImplemented}
+	return flamel.HttpResponse{Status: http.StatusNotImplemented}
 }
 
 func (controller *RestController) OnDestroy(ctx context.Context) {}

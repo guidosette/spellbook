@@ -3,8 +3,8 @@ package identity
 import (
 	"crypto/sha1"
 	"crypto/sha256"
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -33,7 +33,7 @@ type User struct {
 	Password   string
 	Token      string
 	Locale     string
-	Permission page.Permission
+	Permission spellbook.Permission
 	LastLogin  time.Time
 	gUser      *guser.User `model:"-",json:"-"`
 }
@@ -85,7 +85,7 @@ func (user *User) MarshalJSON() ([]byte, error) {
 
 func (user User) Permissions() []string {
 	var perms []string
-	for permission, description := range page.Permissions {
+	for permission, description := range spellbook.Permissions {
 		if user.HasPermission(permission) {
 			perms = append(perms, description)
 		}
@@ -93,7 +93,7 @@ func (user User) Permissions() []string {
 	return perms
 }
 
-func (user User) HasPermission(permission page.Permission) bool {
+func (user User) HasPermission(permission spellbook.Permission) bool {
 	return user.Permission&permission != 0
 }
 
@@ -167,18 +167,18 @@ func (user *User) Id() string {
 	return user.Username()
 }
 
-func (user *User) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (user *User) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, user)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (user *User) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (user *User) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(user)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

@@ -1,7 +1,7 @@
 package identity
 
 import (
-	"distudio.com/page"
+	"decodica.com/spellbook"
 	"encoding/json"
 )
 
@@ -37,18 +37,18 @@ func (token *Token) Id() string {
 	return token.Value
 }
 
-func (token *Token) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (token *Token) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, token)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (token *Token) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (token *Token) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(token)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }

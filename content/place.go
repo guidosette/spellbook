@@ -1,8 +1,8 @@
 package content
 
 import (
-	"distudio.com/mage/model"
-	"distudio.com/page"
+	"decodica.com/flamel/model"
+	"decodica.com/spellbook"
 	"encoding/json"
 	"google.golang.org/appengine"
 	"regexp"
@@ -124,18 +124,18 @@ func (place *Place) Id() string {
 	return place.StringID()
 }
 
-func (place *Place) FromRepresentation(rtype page.RepresentationType, data []byte) error {
+func (place *Place) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Unmarshal(data, place)
 	}
-	return page.NewUnsupportedError()
+	return spellbook.NewUnsupportedError()
 }
 
-func (place *Place) ToRepresentation(rtype page.RepresentationType) ([]byte, error) {
+func (place *Place) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, error) {
 	switch rtype {
-	case page.RepresentationTypeJSON:
+	case spellbook.RepresentationTypeJSON:
 		return json.Marshal(place)
 	}
-	return nil, page.NewUnsupportedError()
+	return nil, spellbook.NewUnsupportedError()
 }
