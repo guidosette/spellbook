@@ -12,10 +12,10 @@ type Action spellbook.SupportedAction
 func (action *Action) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Name     string          `json:"name"`
-		Endpoint string          `json:"endpoint"`
+		Name     string               `json:"name"`
+		Endpoint string               `json:"endpoint"`
 		Type     spellbook.ActionType `json:"type"`
-		Method   string          `json:"method"`
+		Method   string               `json:"method"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -33,10 +33,10 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 
 func (action *Action) MarshalJSON() ([]byte, error) {
 	alias := struct {
-		Name     string          `json:"name"`
-		Endpoint string          `json:"endpoint"`
+		Name     string               `json:"name"`
+		Endpoint string               `json:"endpoint"`
 		Type     spellbook.ActionType `json:"type"`
-		Method   string          `json:"method"`
+		Method   string               `json:"method"`
 	}{action.Name, action.Endpoint, action.Type, action.Method}
 
 	return json.Marshal(&alias)

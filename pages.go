@@ -193,7 +193,7 @@ type LocalizedPage struct {
 	TemplatedPage
 	JsonBaseFile string
 	JsonFile     string
-	Language string
+	Language     string
 }
 
 func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {

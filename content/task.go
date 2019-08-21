@@ -273,9 +273,7 @@ func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, b
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", manager.projectid, manager.locationid, manager.queueid, task.Name)
-	rb := &cloudtasks.RunTaskRequest{
-
-	}
+	rb := &cloudtasks.RunTaskRequest{}
 	cloudTask, err := cloudtasksService.Projects.Locations.Queues.Tasks.Run(name, rb).Context(ctx).Do()
 	if err != nil {
 		return spellbook.NewFieldError("run task", err)

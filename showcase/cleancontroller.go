@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type CleanController struct {}
+type CleanController struct{}
 
 func (controller *CleanController) OnDestroy(ctx context.Context) {}
 
@@ -28,18 +28,17 @@ func (controller *CleanController) Process(ctx context.Context, out *flamel.Resp
 
 	switch method.Value() {
 	case http.MethodGet:
-		idx, err :=search.Open(entity)
+		idx, err := search.Open(entity)
 		if err != nil {
-			return flamel.HttpResponse{Status:http.StatusNotFound}
+			return flamel.HttpResponse{Status: http.StatusNotFound}
 		}
 
 		opts := search.ListOptions{}
 		opts.IDsOnly = true
 
-
 		counter := 0
 
-		for it := idx.List(ctx, &opts) ;; {
+		for it := idx.List(ctx, &opts); ; {
 			k, e := it.Next(nil)
 
 			if e == search.Done {
@@ -65,8 +64,7 @@ func (controller *CleanController) Process(ctx context.Context, out *flamel.Resp
 
 		log.Infof(ctx, "Removed index of %d products", counter)
 
-		return flamel.HttpResponse{Status:http.StatusOK}
+		return flamel.HttpResponse{Status: http.StatusOK}
 	}
-	return flamel.HttpResponse{Status:http.StatusNotImplemented}
+	return flamel.HttpResponse{Status: http.StatusNotImplemented}
 }
-

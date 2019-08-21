@@ -10,11 +10,11 @@ const rootUrl = ""
 
 type Page struct {
 	model.Model `json:"-"`
-	Label string
+	Label       string
 	Title       string
 	MetaDesc    string
 	Url         string
-	Order int
+	Order       int
 	IsRoot      bool
 	Code        spellbook.StaticPageCode
 	Locale      string
@@ -26,12 +26,12 @@ func (p Page) LocalizedUrl() string {
 
 func (p *Page) UnmarshalJSON(data []byte) error {
 	alias := struct {
-		Label string `json:"label"`
-		Order int `json:"order"`
-		Title    string              `json:"title"`
-		MetaDesc string              `json:"metadesc"`
-		Url      string              `json:"url"`
-		Locale   string              `json:"locale"`
+		Label    string                   `json:"label"`
+		Order    int                      `json:"order"`
+		Title    string                   `json:"title"`
+		MetaDesc string                   `json:"metadesc"`
+		Url      string                   `json:"url"`
+		Locale   string                   `json:"locale"`
 		Code     spellbook.StaticPageCode `json:"code"`
 	}{}
 
@@ -53,12 +53,12 @@ func (p *Page) UnmarshalJSON(data []byte) error {
 
 func (p *Page) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Label string `json:"label"`
-		Title    string              `json:"title"`
-		MetaDesc string              `json:"metadesc"`
-		Url      string              `json:"url"`
-		Order int `json:"order"`
-		Locale   string              `json:"locale"`
+		Label    string                   `json:"label"`
+		Title    string                   `json:"title"`
+		MetaDesc string                   `json:"metadesc"`
+		Url      string                   `json:"url"`
+		Order    int                      `json:"order"`
+		Locale   string                   `json:"locale"`
 		Code     spellbook.StaticPageCode `json:"code"`
 	}
 
@@ -68,11 +68,11 @@ func (p *Page) MarshalJSON() ([]byte, error) {
 	}{
 		p.StringID(),
 		Alias{
-			Label: p.Label,
+			Label:    p.Label,
 			Title:    p.Title,
 			MetaDesc: p.MetaDesc,
 			Url:      p.Url,
-			Order: p.Order,
+			Order:    p.Order,
 			Code:     p.Code,
 			Locale:   p.Locale,
 		},

@@ -23,7 +23,7 @@ const (
 	FB         spellbook.SpecialCode = "FB"
 )
 
-type HelloWorldController struct {}
+type HelloWorldController struct{}
 
 func (controller *HelloWorldController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
 
@@ -34,10 +34,10 @@ func (controller *HelloWorldController) Process(ctx context.Context, out *flamel
 		renderer := flamel.TextRenderer{}
 		renderer.Data = "Hello Flamel!"
 		out.Renderer = &renderer
-		return flamel.HttpResponse{Status:http.StatusOK}
+		return flamel.HttpResponse{Status: http.StatusOK}
 	}
 
-	return flamel.HttpResponse{Status:http.StatusMethodNotAllowed}
+	return flamel.HttpResponse{Status: http.StatusMethodNotAllowed}
 }
 
 func (controller *HelloWorldController) OnDestroy(ctx context.Context) {}

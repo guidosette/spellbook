@@ -34,20 +34,20 @@ func (menu Menu) ItemByCode(code spellbook.StaticPageCode) *MenuItem {
 
 // menu is derived from the page resource
 type MenuItem struct {
-	Url string
+	Url    string
 	Locale string
-	Code spellbook.StaticPageCode
-	Label string
-	Order int
+	Code   spellbook.StaticPageCode
+	Label  string
+	Order  int
 }
 
 func NewMenuItemFromPage(page *Page) MenuItem {
-	return MenuItem {
-		Url: page.Url,
+	return MenuItem{
+		Url:    page.Url,
 		Locale: page.Locale,
-		Code: page.Code,
-		Label: page.Label,
-		Order: page.Order,
+		Code:   page.Code,
+		Label:  page.Label,
+		Order:  page.Order,
 	}
 }
 

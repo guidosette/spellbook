@@ -27,6 +27,7 @@ func (content ByOrder) Swap(i, j int) {
 func (content ByOrder) Less(i, j int) bool {
 	return content[i].Order < content[j].Order
 }
+
 /**
 ByOrder end
 */
@@ -45,6 +46,7 @@ func (content ByTitle) Swap(i, j int) {
 func (content ByTitle) Less(i, j int) bool {
 	return content[i].Title < content[j].Title
 }
+
 /**
 ByTitle end
 */
@@ -63,6 +65,7 @@ func (content ByStartDate) Swap(i, j int) {
 func (content ByStartDate) Less(i, j int) bool {
 	return content[i].StartDate.Before(content[j].StartDate)
 }
+
 /**
 ByStartDate end
 */
@@ -81,6 +84,7 @@ func (content ByPublished) Swap(i, j int) {
 func (content ByPublished) Less(i, j int) bool {
 	return content[i].Published.Before(content[j].Published)
 }
+
 /**
 ByPublished end
 */
@@ -130,30 +134,30 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
 		Type        spellbook.ContentType `json:"type"`
-		IdTranslate string           `json:"idTranslate"`
-		ParentKey   string           `json:"parentKey"`
-		Slug        string           `json:"slug"`
-		Title       string           `json:"title"`
-		Subtitle    string           `json:"subtitle"`
-		Body        string           `json:"body"`
-		Tags        []string         `json:"tags"`
-		Category    string           `json:"category"`
-		Topic       string           `json:"topic"`
-		Locale      string           `json:"locale"`
-		Description string           `json:"description"`
-		Revision    int              `json:"revision"`
-		Order       int              `json:"order"`
-		Attachments []*Attachment    `json:"attachments"`
-		Author      string           `json:"author"`
-		Editor      string           `json:"editor"`
-		Cover       string           `json:"cover"`
-		Code        string           `json:"code"`
-		Created     time.Time        `json:"created"`
-		Updated     time.Time        `json:"updated"`
-		Published   time.Time        `json:"published"`
-		IsPublished bool             `json:"isPublished"`
-		StartDate   time.Time        `json:"startDate"`
-		EndDate     time.Time        `json:"endDate"`
+		IdTranslate string                `json:"idTranslate"`
+		ParentKey   string                `json:"parentKey"`
+		Slug        string                `json:"slug"`
+		Title       string                `json:"title"`
+		Subtitle    string                `json:"subtitle"`
+		Body        string                `json:"body"`
+		Tags        []string              `json:"tags"`
+		Category    string                `json:"category"`
+		Topic       string                `json:"topic"`
+		Locale      string                `json:"locale"`
+		Description string                `json:"description"`
+		Revision    int                   `json:"revision"`
+		Order       int                   `json:"order"`
+		Attachments []*Attachment         `json:"attachments"`
+		Author      string                `json:"author"`
+		Editor      string                `json:"editor"`
+		Cover       string                `json:"cover"`
+		Code        string                `json:"code"`
+		Created     time.Time             `json:"created"`
+		Updated     time.Time             `json:"updated"`
+		Published   time.Time             `json:"published"`
+		IsPublished bool                  `json:"isPublished"`
+		StartDate   time.Time             `json:"startDate"`
+		EndDate     time.Time             `json:"endDate"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -194,30 +198,30 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
 		Type        spellbook.ContentType `json:"type"`
-		IdTranslate string           `json:"idTranslate"`
-		Slug        string           `json:"slug"`
-		Title       string           `json:"title"`
-		Subtitle    string           `json:"subtitle"`
-		Body        string           `json:"body"`
-		Tags        []string         `json:"tags"`
-		Category    string           `json:"category"`
-		Topic       string           `json:"topic"`
-		Locale      string           `json:"locale"`
-		Description string           `json:"description"`
-		Revision    int              `json:"revision"`
-		Order       int              `json:"order"`
-		Attachments []*Attachment    `json:"attachments"`
-		Author      string           `json:"author"`
-		Editor      string           `json:"editor"`
-		Cover       string           `json:"cover"`
-		Code        string           `json:"code"`
-		Created     time.Time        `json:"created"`
-		Updated     time.Time        `json:"updated"`
-		Published   time.Time        `json:"published"`
-		Key         string           `json:"key"`
-		ParentKey   string           `json:"parentKey"`
-		StartDate   time.Time        `json:"startDate"`
-		EndDate     time.Time        `json:"endDate"`
+		IdTranslate string                `json:"idTranslate"`
+		Slug        string                `json:"slug"`
+		Title       string                `json:"title"`
+		Subtitle    string                `json:"subtitle"`
+		Body        string                `json:"body"`
+		Tags        []string              `json:"tags"`
+		Category    string                `json:"category"`
+		Topic       string                `json:"topic"`
+		Locale      string                `json:"locale"`
+		Description string                `json:"description"`
+		Revision    int                   `json:"revision"`
+		Order       int                   `json:"order"`
+		Attachments []*Attachment         `json:"attachments"`
+		Author      string                `json:"author"`
+		Editor      string                `json:"editor"`
+		Cover       string                `json:"cover"`
+		Code        string                `json:"code"`
+		Created     time.Time             `json:"created"`
+		Updated     time.Time             `json:"updated"`
+		Published   time.Time             `json:"published"`
+		Key         string                `json:"key"`
+		ParentKey   string                `json:"parentKey"`
+		StartDate   time.Time             `json:"startDate"`
+		EndDate     time.Time             `json:"endDate"`
 	}
 
 	tags := make([]string, 0, 0)
