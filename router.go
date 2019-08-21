@@ -33,6 +33,12 @@ func (router InternationalRouter) SetUniversalRoute(url string, handler func(ctx
 	router.DefaultRouter.SetRoute(url, handler, authenticator)
 }
 
+func (router InternationalRouter) SetUniversalRoutes(urls []string, handler func(ctx context.Context) flamel.Controller, authenticator flamel.Authenticator) {
+	for _, v := range urls {
+		router.SetUniversalRoute(v, handler, authenticator)
+	}
+}
+
 func (router InternationalRouter) SetRoute(url string, handler func(ctx context.Context) flamel.Controller, authenticator flamel.Authenticator) {
 
 	// if no language is specified, redirect to the default language
