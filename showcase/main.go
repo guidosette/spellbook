@@ -23,6 +23,25 @@ const (
 	FB         spellbook.SpecialCode = "FB"
 )
 
+type HelloWorldController struct {}
+
+func (controller *HelloWorldController) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
+
+	ins := flamel.InputsFromContext(ctx)
+	method := ins[flamel.KeyRequestMethod].Value()
+	switch method {
+	case http.MethodGet:
+		renderer := flamel.TextRenderer{}
+		renderer.Data = "Hello Flamel!"
+		out.Renderer = &renderer
+		return flamel.HttpResponse{Status:http.StatusOK}
+	}
+
+	return flamel.HttpResponse{Status:http.StatusMethodNotAllowed}
+}
+
+func (controller *HelloWorldController) OnDestroy(ctx context.Context) {}
+
 func main() {
 	m := flamel.Instance()
 
@@ -52,6 +71,10 @@ func main() {
 	}
 
 	instance := spellbook.NewWebsite(&opts)
+
+	instance.Router.SetUniversalRoute("/hello", func(ctx context.Context) flamel.Controller {
+		return &HelloWorldController{}
+	}, nil)
 
 	// superuser endpoints
 	instance.Router.SetUniversalRoute("/api/me", func(ctx context.Context) flamel.Controller {
@@ -233,6 +256,5 @@ func main() {
 	}, nil)
 
 	m.Router = &instance.Router
-	m.LaunchApp(instance)
-	m.Run()
+	m.Run(instance)
 }
