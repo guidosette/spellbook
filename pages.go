@@ -193,6 +193,7 @@ type LocalizedPage struct {
 	TemplatedPage
 	JsonBaseFile string
 	JsonFile     string
+	Language string
 }
 
 func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutput) flamel.HttpResponse {
@@ -204,15 +205,12 @@ func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutp
 		return flamel.HttpResponse{Status: http.StatusNotFound}
 	}
 
-	t := ctx.Value(KeyLanguageTag)
-	tag := t.(language.Tag)
-	lang := tag.String()
-
-	lcookie := http.Cookie{}
-	lcookie.Name = LanguageCookieKey
-	lcookie.Value = lang
-	lcookie.Path = "/"
-	out.AddCookie(lcookie)
+	lang := page.Language
+	if lang == "" {
+		t := ctx.Value(KeyLanguageTag)
+		tag := t.(language.Tag)
+		lang = tag.String()
+	}
 
 	//create the link creator function
 	funcMap := template.FuncMap{
