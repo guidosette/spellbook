@@ -96,7 +96,7 @@ const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
 	model.Model `json:"-"`
-	Type        spellbook.ContentType
+	Type        string
 	IdTranslate string
 	Slug        string
 	Title       string `model:"search"`
@@ -133,7 +133,7 @@ func (content Content) IsPublished() bool {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Type        spellbook.ContentType `json:"type"`
+		Type        string `json:"type"`
 		IdTranslate string                `json:"idTranslate"`
 		ParentKey   string                `json:"parentKey"`
 		Slug        string                `json:"slug"`
@@ -197,7 +197,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Type        spellbook.ContentType `json:"type"`
+		Type        string `json:"type"`
 		IdTranslate string                `json:"idTranslate"`
 		Slug        string                `json:"slug"`
 		Title       string                `json:"title"`

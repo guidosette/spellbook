@@ -13,7 +13,7 @@ func (category *Category) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Name  string                `json:"name"`
 		Label string                `json:"label"`
-		Type  spellbook.ContentType `json:"type"`
+		Type  string `json:"type"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -32,7 +32,7 @@ func (category *Category) MarshalJSON() ([]byte, error) {
 	alias := struct {
 		Name                   string                             `json:"name"`
 		Label                  string                             `json:"label"`
-		Type                   spellbook.ContentType              `json:"type"`
+		Type                   string              `json:"type"`
 		DefaultAttachmentGroup []spellbook.DefaultAttachmentGroup `json:"defaultAttachmentGroups"`
 	}{category.Name, category.Label, category.Type, category.DefaultAttachmentGroups}
 

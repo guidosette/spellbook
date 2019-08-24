@@ -51,12 +51,6 @@ func (app Website) SupportsLocale(val string) bool {
 	return false
 }
 
-type ContentType string
-
-const (
-	KeyTypeContent = "content"
-	KeyTypeEvent   = "event"
-)
 
 type DefaultAttachmentGroup struct {
 	Name        string
@@ -68,7 +62,7 @@ type DefaultAttachmentGroup struct {
 type SupportedCategory struct {
 	Name                    string
 	Label                   string
-	Type                    ContentType
+	Type                    string
 	DefaultAttachmentGroups []DefaultAttachmentGroup
 }
 

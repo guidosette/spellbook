@@ -183,7 +183,11 @@ func (manager contentManager) Create(ctx context.Context, res spellbook.Resource
 	}
 
 	if content.Type == "" {
-		return spellbook.NewFieldError("type", errors.New("type can't be 0"))
+		return spellbook.NewFieldError("type", errors.New("type can't be empty"))
+	}
+
+	if content.Title == "" {
+		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
 	if content.Slug == "" {
@@ -214,26 +218,9 @@ func (manager contentManager) Create(ctx context.Context, res spellbook.Resource
 		return spellbook.NewFieldError("slug", errors.New(msg))
 	}
 
-	switch content.Type {
-	case spellbook.KeyTypeContent:
-		if content.Title == "" {
-			return spellbook.NewFieldError("title", errors.New("title can't be empty"))
-		}
-	case spellbook.KeyTypeEvent:
-		if content.StartDate.IsZero() {
-			msg := fmt.Sprintf("start date can't be empty. %v", content.StartDate)
-			return spellbook.NewFieldError("startDate", errors.New(msg))
-		}
-		if content.EndDate.IsZero() {
-			msg := fmt.Sprintf("end date can't be empty. %v", content.StartDate)
-			return spellbook.NewFieldError("endDate", errors.New(msg))
-		}
-		if content.EndDate.Before(content.StartDate) {
-			msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate)
-			return spellbook.NewFieldError("endDate", errors.New(msg))
-		}
-	default:
-		return fmt.Errorf("error no type %v", content)
+	if !content.StartDate.IsZero() && !content.EndDate.IsZero() && content.EndDate.Before(content.StartDate) {
+		msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate)
+		return spellbook.NewFieldError("endDate", errors.New(msg))
 	}
 
 	if user, ok := current.(identity.User); ok {
@@ -352,26 +339,13 @@ func (manager contentManager) Update(ctx context.Context, res spellbook.Resource
 		content.PublicationState = PublicationStateUnpublished
 	}
 
-	switch content.Type {
-	case spellbook.KeyTypeContent:
-	case spellbook.KeyTypeEvent:
-		if other.StartDate.IsZero() {
-			msg := fmt.Sprintf("start date can't be empty. %v", other.StartDate)
-			return spellbook.NewFieldError("startDate", errors.New(msg))
-		}
-		if other.EndDate.IsZero() {
-			msg := fmt.Sprintf("end date can't be empty. %v", other.EndDate)
-			return spellbook.NewFieldError("endDate", errors.New(msg))
-		}
-		if other.EndDate.Before(other.StartDate) {
-			msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate)
-			return spellbook.NewFieldError("endDate", errors.New(msg))
-		}
-		content.StartDate = other.StartDate
-		content.EndDate = other.EndDate
-	default:
-		return fmt.Errorf("error no type %v", content)
+	if !other.StartDate.IsZero() && !other.EndDate.IsZero() && other.EndDate.Before(other.StartDate) {
+		msg := fmt.Sprintf("end date %v can't be before start date %v", other.EndDate, other.StartDate)
+		return spellbook.NewFieldError("endDate", errors.New(msg))
 	}
+
+	content.StartDate = other.StartDate
+	content.EndDate = other.EndDate
 
 	if user, ok := current.(identity.User); ok {
 		content.Author = user.Username()
