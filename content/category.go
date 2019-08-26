@@ -29,12 +29,16 @@ func (category *Category) UnmarshalJSON(data []byte) error {
 }
 
 func (category *Category) MarshalJSON() ([]byte, error) {
+	dag := make([]spellbook.DefaultAttachmentGroup, 0)
+	if category.DefaultAttachmentGroups != nil {
+		dag = category.DefaultAttachmentGroups
+	}
 	alias := struct {
 		Name                   string                             `json:"name"`
 		Label                  string                             `json:"label"`
 		Type                   string              `json:"type"`
 		DefaultAttachmentGroup []spellbook.DefaultAttachmentGroup `json:"defaultAttachmentGroups"`
-	}{category.Name, category.Label, category.Type, category.DefaultAttachmentGroups}
+	}{category.Name, category.Label, category.Type, dag}
 
 	return json.Marshal(&alias)
 }
