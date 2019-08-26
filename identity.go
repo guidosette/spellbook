@@ -24,23 +24,27 @@ const (
 	PermissionWriteMedia
 	PermissionReadPage
 	PermissionWritePage
+	PermissionWriteSubscription
+	PermissionReadSubscription
 )
 
 var Permissions = map[Permission]string{
-	PermissionEnabled:          "PERMISSION_ENABLED",
-	PermissionEditPermissions:  "PERMISSION_EDIT_PERMISSIONS",
-	PermissionReadUser:         "PERMISSION_READ_USER",
-	PermissionWriteUser:        "PERMISSION_WRITE_USER",
-	PermissionReadContent:      "PERMISSION_READ_CONTENT",
-	PermissionWriteContent:     "PERMISSION_WRITE_CONTENT",
-	PermissionReadMailMessage:  "PERMISSION_READ_MAILMESSAGE",
-	PermissionWriteMailMessage: "PERMISSION_WRITE_MAILMESSAGE",
-	PermissionReadPlace:        "PERMISSION_READ_PLACE",
-	PermissionWritePlace:       "PERMISSION_WRITE_PLACE",
-	PermissionReadMedia:        "PERMISSION_READ_MEDIA",
-	PermissionWriteMedia:       "PERMISSION_WRITE_MEDIA",
-	PermissionReadPage:         "PERMISSION_READ_PAGE",
-	PermissionWritePage:        "PERMISSION_WRITE_PAGE",
+	PermissionEnabled:           "PERMISSION_ENABLED",
+	PermissionEditPermissions:   "PERMISSION_EDIT_PERMISSIONS",
+	PermissionReadUser:          "PERMISSION_READ_USER",
+	PermissionWriteUser:         "PERMISSION_WRITE_USER",
+	PermissionReadContent:       "PERMISSION_READ_CONTENT",
+	PermissionWriteContent:      "PERMISSION_WRITE_CONTENT",
+	PermissionReadMailMessage:   "PERMISSION_READ_MAILMESSAGE",
+	PermissionWriteMailMessage:  "PERMISSION_WRITE_MAILMESSAGE",
+	PermissionReadPlace:         "PERMISSION_READ_PLACE",
+	PermissionWritePlace:        "PERMISSION_WRITE_PLACE",
+	PermissionReadMedia:         "PERMISSION_READ_MEDIA",
+	PermissionWriteMedia:        "PERMISSION_WRITE_MEDIA",
+	PermissionReadPage:          "PERMISSION_READ_PAGE",
+	PermissionWritePage:         "PERMISSION_WRITE_PAGE",
+	PermissionReadSubscription:  "PERMISSION_READ_SUBSCRIPTION",
+	PermissionWriteSubscription: "PERMISSION_WRITE_SUBSCRIPTION",
 }
 
 func PermissionName(permission Permission) string {
