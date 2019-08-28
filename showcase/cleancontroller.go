@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"decodica.com/flamel"
-	"google.golang.org/appengine/datastore"
+	"cloud.google.com/go/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/search"
 	"net/http"

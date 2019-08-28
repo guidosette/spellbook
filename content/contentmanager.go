@@ -1,13 +1,13 @@
 package content
 
 import (
+	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"decodica.com/spellbook/identity"
 	"errors"
 	"fmt"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/url"
 	"reflect"
