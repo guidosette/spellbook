@@ -96,7 +96,7 @@ const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
 	model.Model `json:"-"`
-	Type        string
+	Type        string `model:"search"`
 	IdTranslate string
 	Slug        string
 	Title       string `model:"search"`
@@ -106,19 +106,19 @@ type Content struct {
 	Category    string `model:"search,atom";page:"gettable,category"`
 	Topic       string `model:"search"`
 	Locale      string `model:"search,atom"`
-	Description string
+	Description string `model:"search"`
 	Cover       string
 	Revision    int
-	Order       int
+	Order       int `model:"search"`
 	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author           string `model:"search"`
 	Editor           string `model:"search"`
 	Created          time.Time
-	Updated          time.Time
+	Updated          time.Time `model:"search"`
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
-	ParentKey        string
+	ParentKey        string `model:"search,atom"`
 	Code             string // special
 
 	// KeyTypeEvent
