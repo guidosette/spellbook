@@ -178,7 +178,7 @@ func (manager subscriptionManager) Create(ctx context.Context, res spellbook.Res
 	err := q.GetMulti(ctx, &subscriptions)
 	if err != nil {
 		msg := fmt.Sprintf("Error retrieving list subscription %+v", err)
-		return spellbook.NewFieldError("Sbscription", errors.New(msg))
+		return spellbook.NewFieldError("Suscription", errors.New(msg))
 	}
 	if len(subscriptions) > 0 {
 		msg := fmt.Sprintf("Email already exist")

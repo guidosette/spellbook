@@ -5,7 +5,7 @@ import (
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"fmt"
-	"google.golang.org/appengine/datastore"
+	"cloud.google.com/go/datastore"
 	"google.golang.org/appengine/log"
 )
 

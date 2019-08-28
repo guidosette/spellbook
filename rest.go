@@ -1,11 +1,11 @@
 package spellbook
 
 import (
+	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel"
 	"errors"
 	"fmt"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"net/http"
 	"strconv"

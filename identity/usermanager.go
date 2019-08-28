@@ -1,13 +1,13 @@
 package identity
 
 import (
+	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"

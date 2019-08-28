@@ -6,7 +6,7 @@ import (
 	"decodica.com/spellbook"
 	"errors"
 	"fmt"
-	"google.golang.org/appengine/datastore"
+	"cloud.google.com/go/datastore"
 	"google.golang.org/appengine/log"
 )
 
