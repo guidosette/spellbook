@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"decodica.com/flamel"
+	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"decodica.com/spellbook/configuration"
 	"decodica.com/spellbook/content"
 	"decodica.com/spellbook/identity"
 	"decodica.com/spellbook/mailmessage"
 	"decodica.com/spellbook/navigation"
+	"decodica.com/spellbook/subscription"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -51,11 +53,11 @@ func main() {
 		language.English,
 	}
 	opts.Categories = []spellbook.SupportedCategory{
-		{Type: spellbook.KeyTypeContent, Name: "services", Label: "Services"},
-		{Type: spellbook.KeyTypeContent, Name: "news", Label: "News", DefaultAttachmentGroups: []spellbook.DefaultAttachmentGroup{
+		{Type: "Content", Name: "services", Label: "Services"},
+		{Type: "Content", Name: "news", Label: "News", DefaultAttachmentGroups: []spellbook.DefaultAttachmentGroup{
 			{"Gallery", content.AttachmentTypeGallery, 0, "Prova descr"},
 		}},
-		{Type: spellbook.KeyTypeEvent, Name: "events", Label: "Events"},
+		{Type: "Events", Name: "events", Label: "Events"},
 	}
 	opts.StaticPages = []spellbook.StaticPageCode{
 		HOME,
@@ -255,6 +257,21 @@ func main() {
 		return &c
 	}, nil)
 
+	instance.Router.SetUniversalRoute("/api/subscription", func(ctx context.Context) flamel.Controller {
+		c := subscription.NewSubscriptionController()
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
+	instance.Router.SetUniversalRoute("/api/subscription/:id", func(ctx context.Context) flamel.Controller {
+		params := flamel.RoutingParams(ctx)
+		key := params["id"].Value()
+		c := subscription.NewSubscriptionControllerWithKey(key)
+		c.Private = true
+		return c
+	}, &identity.GSupportAuthenticator{})
+
 	m.Router = &instance.Router
+	m.AddService(&model.Service{})
 	m.Run(instance)
 }
