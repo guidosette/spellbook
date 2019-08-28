@@ -109,17 +109,17 @@ type Content struct {
 	Description string `model:"search"`
 	Cover       string
 	Revision    int
-	Order       int `model:"search"`
+	Order       int           `model:"search"`
 	Attachments []*Attachment `model:"-"`
 	// username of the author
 	Author           string `model:"search"`
 	Editor           string `model:"search"`
 	Created          time.Time
-	Updated          time.Time `model:"search"`
+	Updated          time.Time        `model:"search"`
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
-	ParentKey        string `model:"search,atom"`
-	Code             string // special
+	ParentKey        string           `model:"search,atom"`
+	Code             string           // special
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -133,31 +133,31 @@ func (content Content) IsPublished() bool {
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
-		Type        string `json:"type"`
-		IdTranslate string                `json:"idTranslate"`
-		ParentKey   string                `json:"parentKey"`
-		Slug        string                `json:"slug"`
-		Title       string                `json:"title"`
-		Subtitle    string                `json:"subtitle"`
-		Body        string                `json:"body"`
-		Tags        []string              `json:"tags"`
-		Category    string                `json:"category"`
-		Topic       string                `json:"topic"`
-		Locale      string                `json:"locale"`
-		Description string                `json:"description"`
-		Revision    int                   `json:"revision"`
-		Order       int                   `json:"order"`
-		Attachments []*Attachment         `json:"attachments"`
-		Author      string                `json:"author"`
-		Editor      string                `json:"editor"`
-		Cover       string                `json:"cover"`
-		Code        string                `json:"code"`
-		Created     time.Time             `json:"created"`
-		Updated     time.Time             `json:"updated"`
-		Published   time.Time             `json:"published"`
-		IsPublished bool                  `json:"isPublished"`
-		StartDate   time.Time             `json:"startDate"`
-		EndDate     time.Time             `json:"endDate"`
+		Type        string        `json:"type"`
+		IdTranslate string        `json:"idTranslate"`
+		ParentKey   string        `json:"parentKey"`
+		Slug        string        `json:"slug"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
+		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
+		Attachments []*Attachment `json:"attachments"`
+		Author      string        `json:"author"`
+		Editor      string        `json:"editor"`
+		Cover       string        `json:"cover"`
+		Code        string        `json:"code"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
+		IsPublished bool          `json:"isPublished"`
+		StartDate   time.Time     `json:"startDate"`
+		EndDate     time.Time     `json:"endDate"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -197,31 +197,31 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Type        string `json:"type"`
-		IdTranslate string                `json:"idTranslate"`
-		Slug        string                `json:"slug"`
-		Title       string                `json:"title"`
-		Subtitle    string                `json:"subtitle"`
-		Body        string                `json:"body"`
-		Tags        []string              `json:"tags"`
-		Category    string                `json:"category"`
-		Topic       string                `json:"topic"`
-		Locale      string                `json:"locale"`
-		Description string                `json:"description"`
-		Revision    int                   `json:"revision"`
-		Order       int                   `json:"order"`
-		Attachments []*Attachment         `json:"attachments"`
-		Author      string                `json:"author"`
-		Editor      string                `json:"editor"`
-		Cover       string                `json:"cover"`
-		Code        string                `json:"code"`
-		Created     time.Time             `json:"created"`
-		Updated     time.Time             `json:"updated"`
-		Published   time.Time             `json:"published"`
-		Key         string                `json:"key"`
-		ParentKey   string                `json:"parentKey"`
-		StartDate   time.Time             `json:"startDate"`
-		EndDate     time.Time             `json:"endDate"`
+		Type        string        `json:"type"`
+		IdTranslate string        `json:"idTranslate"`
+		Slug        string        `json:"slug"`
+		Title       string        `json:"title"`
+		Subtitle    string        `json:"subtitle"`
+		Body        string        `json:"body"`
+		Tags        []string      `json:"tags"`
+		Category    string        `json:"category"`
+		Topic       string        `json:"topic"`
+		Locale      string        `json:"locale"`
+		Description string        `json:"description"`
+		Revision    int           `json:"revision"`
+		Order       int           `json:"order"`
+		Attachments []*Attachment `json:"attachments"`
+		Author      string        `json:"author"`
+		Editor      string        `json:"editor"`
+		Cover       string        `json:"cover"`
+		Code        string        `json:"code"`
+		Created     time.Time     `json:"created"`
+		Updated     time.Time     `json:"updated"`
+		Published   time.Time     `json:"published"`
+		Key         string        `json:"key"`
+		ParentKey   string        `json:"parentKey"`
+		StartDate   time.Time     `json:"startDate"`
+		EndDate     time.Time     `json:"endDate"`
 	}
 
 	tags := make([]string, 0, 0)

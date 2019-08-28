@@ -51,7 +51,6 @@ func (app Website) SupportsLocale(val string) bool {
 	return false
 }
 
-
 type DefaultAttachmentGroup struct {
 	Name        string
 	Type        string
