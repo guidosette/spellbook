@@ -53,11 +53,11 @@ func main() {
 		language.English,
 	}
 	opts.Categories = []spellbook.SupportedCategory{
-		{Type: "Content", Name: "services", Label: "Services"},
-		{Type: "Content", Name: "news", Label: "News", DefaultAttachmentGroups: []spellbook.DefaultAttachmentGroup{
+		{Type: "content", Name: "services", Label: "Services"},
+		{Type: "content", Name: "news", Label: "News", DefaultAttachmentGroups: []spellbook.DefaultAttachmentGroup{
 			{"Gallery", content.AttachmentTypeGallery, 0, "Prova descr"},
 		}},
-		{Type: "Events", Name: "events", Label: "Events"},
+		{Type: "events", Name: "events", Label: "Events"},
 	}
 	opts.StaticPages = []spellbook.StaticPageCode{
 		HOME,
