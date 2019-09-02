@@ -3,7 +3,8 @@ module decodica.com/spellbook
 require (
 	cloud.google.com/go v0.44.3
 	cloud.google.com/go/bigquery v1.0.1 // indirect
-	decodica.com/flamel v0.5.1
+	cloud.google.com/go/datastore v1.0.0
+	decodica.com/flamel v0.5.2
 	github.com/disintegration/imaging v1.6.0
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect

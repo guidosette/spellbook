@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-const salt = "AnticmS"
-
 var once sync.Once
 var instance *Website
 
@@ -83,6 +81,10 @@ type SupportedAction struct {
 }
 
 type Options struct {
+	// application GCS bucket
+	Bucket string
+	// password salt.
+	Salt         string
 	Languages    []language.Tag
 	Categories   []SupportedCategory
 	StaticPages  []StaticPageCode

@@ -1,11 +1,11 @@
 package identity
 
 import (
+	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"fmt"
-	"cloud.google.com/go/datastore"
 	"google.golang.org/appengine/log"
 )
 
@@ -48,8 +48,6 @@ func (manager tokenManager) FromId(ctx context.Context, id string) (spellbook.Re
 	}
 
 	return &us, nil
-
-	//return nil, spellbook.NewUnsupportedError()
 }
 
 func (manager tokenManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
@@ -87,6 +85,7 @@ func (manager tokenManager) Create(ctx context.Context, res spellbook.Resource, 
 		return err
 	}
 
+	salt := spellbook.Application().Options().Salt
 	hp := HashPassword(token.Password, salt)
 	if u.Password != hp {
 		return datastore.ErrNoSuchEntity

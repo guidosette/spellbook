@@ -208,6 +208,7 @@ func (manager userManager) Create(ctx context.Context, res spellbook.Resource, b
 		return spellbook.NewFieldError("user", errors.New(msg))
 	}
 
+	salt := spellbook.Application().Options().Salt
 	user.Password = HashPassword(meta.Password, salt)
 
 	opts := model.CreateOptions{}
@@ -247,6 +248,7 @@ func (manager userManager) Update(ctx context.Context, res spellbook.Resource, b
 				msg := fmt.Sprintf("invalid password %s for username %s", token.Password, other.Username())
 				return spellbook.NewFieldError("user", errors.New(msg))
 			}
+			salt := spellbook.Application().Options().Salt
 			user.Password = HashPassword(token.Password, salt)
 		}
 	}

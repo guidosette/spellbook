@@ -197,6 +197,7 @@ func (manager contentManager) Create(ctx context.Context, res spellbook.Resource
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
 
+	// if is a special content, we check that the content doesn't already exist
 	if content.Code == "" {
 		q = q.WithField("Slug =", content.Slug)
 		q = q.WithField("Locale = ", content.Locale)

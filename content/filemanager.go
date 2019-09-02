@@ -27,6 +27,18 @@ func NewFileControllerWithKey(key string) *spellbook.RestController {
 
 type fileManager struct{}
 
+func (manager fileManager) BucketName(ctx context.Context) (string, error) {
+	bucket := spellbook.Application().Options().Bucket
+	if bucket == "" {
+		b, err := file.DefaultBucketName(ctx)
+		if err != nil {
+			return "", fmt.Errorf("error retrieving default bucket %s", err.Error())
+		}
+		bucket = b
+	}
+	return bucket, nil
+}
+
 func (manager fileManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &File{}, nil
 }
@@ -41,10 +53,9 @@ func (manager fileManager) FromId(ctx context.Context, id string) (spellbook.Res
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
-	//todo: set bucket name in configuration
-	bucket, err := file.DefaultBucketName(ctx)
+	bucket, err := manager.BucketName(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving default bucket %s", err.Error())
+		return nil, err
 	}
 
 	res, _ := manager.NewResource(ctx)
@@ -66,10 +77,9 @@ func (manager fileManager) ListOf(ctx context.Context, opts spellbook.ListOption
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
-	//todo: set bucket name in configuration
-	bucket, err := file.DefaultBucketName(ctx)
+	bucket, err := manager.BucketName(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving default bucket %s", err.Error())
+		return nil, err
 	}
 
 	client, err := storage.NewClient(ctx)
@@ -215,10 +225,9 @@ func (manager fileManager) Create(ctx context.Context, res spellbook.Resource, b
 	filename := fmt.Sprintf("%s%s/%s", typ, namespace, name)
 
 	// handle the upload to Google Cloud Storage
-	bucket, err := file.DefaultBucketName(ctx)
+	bucket, err := manager.BucketName(ctx)
 	if err != nil {
-		msg := fmt.Sprintf("can't retrieve bucket name: %s", err.Error())
-		return spellbook.NewFieldError("bucket", errors.New(msg))
+		return err
 	}
 
 	client, err := storage.NewClient(ctx)

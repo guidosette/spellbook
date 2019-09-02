@@ -20,7 +20,6 @@ const (
 	hashLen        = 28
 	UsernameMaxLen = 32
 	UsernameMinLen = 4
-	salt           = "AnticmS"
 )
 
 type User struct {
