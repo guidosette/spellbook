@@ -88,7 +88,7 @@ func (manager contentManager) ListOf(ctx context.Context, opts spellbook.ListOpt
 
 	resources := make([]spellbook.Resource, len(conts))
 	for i := range conts {
-		resources[i] = spellbook.Resource(conts[i])
+		resources[i] = conts[i]
 	}
 
 	return resources, nil
@@ -279,7 +279,7 @@ func (manager contentManager) Update(ctx context.Context, res spellbook.Resource
 	if err != nil {
 		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
-	log.Infof(ctx, "count %d", count)
+
 	if count > 0 {
 		var contents []*Content
 		err := q.GetMulti(ctx, &contents)

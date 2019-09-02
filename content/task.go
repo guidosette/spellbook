@@ -9,7 +9,6 @@ import (
 	"golang.org/x/oauth2/google"
 	cloudtasks "google.golang.org/api/cloudtasks/v2beta3"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 )
 
 type Task struct {
@@ -209,8 +208,8 @@ func (manager taskManager) ListOf(ctx context.Context, opts spellbook.ListOption
 	resources := make([]spellbook.Resource, len(items))
 
 	for i := range items {
-		task := Task(items[i])
-		resources[i] = spellbook.Resource(&task)
+		task := items[i]
+		resources[i] = &task
 	}
 
 	return resources, nil
@@ -227,7 +226,6 @@ func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, b
 	task.CloudTask.AppEngineHttpRequest.HttpMethod = task.Method
 	task.CloudTask.AppEngineHttpRequest.RelativeUri = task.Url
 	task.CloudTask.Name = fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", manager.projectid, manager.locationid, manager.queueid, task.Name)
-	log.Infof(ctx, "task %+v", task.CloudTask)
 
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
@@ -260,7 +258,6 @@ func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, b
 	task.CloudTask.AppEngineHttpRequest = &cloudtasks.AppEngineHttpRequest{}
 	task.CloudTask.AppEngineHttpRequest.RelativeUri = task.Url
 	task.CloudTask.Name = fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", manager.projectid, manager.locationid, manager.queueid, task.Name)
-	log.Infof(ctx, "task %+v", task.CloudTask)
 
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {

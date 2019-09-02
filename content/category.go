@@ -107,7 +107,7 @@ func (manager categoryManager) ListOf(ctx context.Context, opts spellbook.ListOp
 
 	for i := range items {
 		category := Category(items[i])
-		resources[i] = spellbook.Resource(&category)
+		resources[i] = &category
 	}
 
 	return resources, nil

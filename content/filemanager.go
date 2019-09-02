@@ -119,7 +119,7 @@ func (manager fileManager) ListOf(ctx context.Context, opts spellbook.ListOption
 
 	resources := make([]spellbook.Resource, len(files))
 	for i := range files {
-		resources[i] = spellbook.Resource(files[i])
+		resources[i] = files[i]
 	}
 
 	return resources, nil

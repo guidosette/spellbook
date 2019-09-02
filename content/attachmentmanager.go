@@ -94,7 +94,7 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts spellbook.List
 
 	resources := make([]spellbook.Resource, len(attachments))
 	for i := range attachments {
-		resources[i] = spellbook.Resource(attachments[i])
+		resources[i] = attachments[i]
 	}
 
 	return resources, nil

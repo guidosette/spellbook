@@ -83,7 +83,7 @@ func (manager placeManager) ListOf(ctx context.Context, opts spellbook.ListOptio
 
 	resources := make([]spellbook.Resource, len(places))
 	for i := range places {
-		resources[i] = spellbook.Resource(places[i])
+		resources[i] = places[i]
 	}
 
 	return resources, nil

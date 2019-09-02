@@ -34,11 +34,6 @@ func (manager mailMessageManager) NewResource(ctx context.Context) (spellbook.Re
 
 func (manager mailMessageManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
-
 	id, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		return nil, spellbook.NewFieldError(strId, err)
@@ -54,11 +49,7 @@ func (manager mailMessageManager) FromId(ctx context.Context, strId string) (spe
 }
 
 func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
-	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
+
 
 	var mailMessages []*MailMessage
 	q := model.NewQuery(&MailMessage{})
@@ -87,7 +78,7 @@ func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.Lis
 
 	resources := make([]spellbook.Resource, len(mailMessages))
 	for i := range mailMessages {
-		resources[i] = spellbook.Resource(mailMessages[i])
+		resources[i] = mailMessages[i]
 	}
 
 	return resources, nil
@@ -95,11 +86,6 @@ func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.Lis
 
 func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	// todo permission?
-	//current, _ := ctx.Value(identity.KeyUser).(identity.User)
-	//if !current.HasPermission(identity.PermissionReadContent) {
-	//	return nil, resource.NewPermissionError(identity.PermissionReadContent)
-	//}
-
 	a := []string{"Recipient"} // list property accepted
 	name := opts.Property
 

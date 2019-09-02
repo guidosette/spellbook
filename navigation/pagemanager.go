@@ -72,7 +72,7 @@ func (manager pageManager) ListOf(ctx context.Context, opts spellbook.ListOption
 
 	resources := make([]spellbook.Resource, len(conts))
 	for i := range conts {
-		resources[i] = spellbook.Resource(conts[i])
+		resources[i] = conts[i]
 	}
 
 	return resources, nil

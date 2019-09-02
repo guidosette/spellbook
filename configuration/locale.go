@@ -66,7 +66,7 @@ func (manager localeManager) ListOf(ctx context.Context, opts spellbook.ListOpti
 
 	for i := range items {
 		locale := Locale(items[i])
-		resources[i] = spellbook.Resource(&locale)
+		resources[i] = &locale
 	}
 
 	return resources, nil

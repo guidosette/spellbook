@@ -79,7 +79,7 @@ func (manager subscriptionManager) ListOf(ctx context.Context, opts spellbook.Li
 
 	resources := make([]spellbook.Resource, len(subscriptions))
 	for i := range subscriptions {
-		resources[i] = spellbook.Resource(subscriptions[i])
+		resources[i] = subscriptions[i]
 	}
 
 	return resources, nil

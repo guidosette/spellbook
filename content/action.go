@@ -105,7 +105,7 @@ func (manager actionManager) ListOf(ctx context.Context, opts spellbook.ListOpti
 
 	for i := range items {
 		action := Action(items[i])
-		resources[i] = spellbook.Resource(&action)
+		resources[i] = &action
 	}
 
 	return resources, nil

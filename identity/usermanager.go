@@ -88,7 +88,7 @@ func (manager userManager) ListOf(ctx context.Context, opts spellbook.ListOption
 
 	resources := make([]spellbook.Resource, len(users))
 	for i := range users {
-		resources[i] = spellbook.Resource(users[i])
+		resources[i] = users[i]
 	}
 
 	return resources, nil
