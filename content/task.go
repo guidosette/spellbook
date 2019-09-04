@@ -147,6 +147,10 @@ func (manager taskManager) NewResource(ctx context.Context) (spellbook.Resource,
 }
 
 func (manager taskManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
+	}
+
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
 		return nil, spellbook.NewFieldError("cloudtasksService", err)
@@ -166,6 +170,10 @@ func (manager taskManager) FromId(ctx context.Context, id string) (spellbook.Res
 }
 
 func (manager taskManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
+	}
+
 	cloudtasksService, err := manager.GetCloudTasksService(ctx)
 	if err != nil {
 		return nil, spellbook.NewFieldError("cloudtasksService", err)
@@ -220,6 +228,10 @@ func (manager taskManager) ListOfProperties(ctx context.Context, opts spellbook.
 }
 
 func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteAction) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteAction))
+	}
+
 	task := res.(*Task)
 	task.CloudTask = &cloudtasks.Task{}
 	task.CloudTask.AppEngineHttpRequest = &cloudtasks.AppEngineHttpRequest{}
@@ -252,6 +264,10 @@ func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, b
 }
 
 func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteAction) {
+		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteAction))
+	}
+
 	// RUN
 	task := res.(*Task)
 	task.CloudTask = &cloudtasks.Task{}
