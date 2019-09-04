@@ -229,6 +229,10 @@ func (manager subscriptionManager) Update(ctx context.Context, res spellbook.Res
 		msg := fmt.Sprintf("Organization can't be empty")
 		return spellbook.NewFieldError("Organization", errors.New(msg))
 	}
+	if other.Position == "" {
+		msg := fmt.Sprintf("Position can't be empty")
+		return spellbook.NewFieldError("Position", errors.New(msg))
+	}
 
 	subscription := res.(*Subscription)
 	subscription.Email = other.Email
@@ -236,6 +240,8 @@ func (manager subscriptionManager) Update(ctx context.Context, res spellbook.Res
 	subscription.FirstName = other.FirstName
 	subscription.LastName = other.LastName
 	subscription.Organization = other.Organization
+	subscription.Position = other.Position
+	subscription.Notes = other.Notes
 	subscription.Updated = time.Now().UTC()
 
 	return model.Update(ctx, subscription)
