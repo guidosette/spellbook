@@ -130,6 +130,14 @@ func (content Content) IsPublished() bool {
 	return !content.Published.IsZero()
 }
 
+func (content Content) hasStartDate() bool {
+	return !content.StartDate.IsZero()
+}
+
+func (content Content) hasEndDate() bool {
+	return !content.EndDate.IsZero()
+}
+
 func (content *Content) UnmarshalJSON(data []byte) error {
 
 	alias := struct {
@@ -230,14 +238,20 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 	}
 
 	isPublished := content.IsPublished()
+	hasEndDate := content.hasEndDate()
+	hasStartDate := content.hasStartDate()
 
 	return json.Marshal(&struct {
-		Tags        []string `json:"tags"`
-		IsPublished bool     `json:"isPublished"`
+		Tags         []string `json:"tags"`
+		IsPublished  bool     `json:"isPublished"`
+		HasStartDate bool     `json:"hasStartDate"`
+		HasEndDate   bool     `json:"hasEndDate"`
 		Alias
 	}{
 		tags,
 		isPublished,
+		hasStartDate,
+		hasEndDate,
 		Alias{
 			Type:        content.Type,
 			IdTranslate: content.IdTranslate,
