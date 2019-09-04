@@ -85,6 +85,9 @@ func (manager actionManager) FromId(ctx context.Context, id string) (spellbook.R
 }
 
 func (manager actionManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
+	}
 
 	ws := spellbook.Application()
 

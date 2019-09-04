@@ -1,12 +1,12 @@
 package navigation
 
 import (
+	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"errors"
 	"fmt"
-	"cloud.google.com/go/datastore"
 	"google.golang.org/appengine/log"
 )
 
@@ -97,7 +97,7 @@ func (manager pageManager) Create(ctx context.Context, res spellbook.Resource, b
 	if err == datastore.ErrNoSuchEntity {
 		// we can create the new seo element if another one with the same code doesn't exists
 		q := model.NewQuery((*Page)(nil))
-		q.WithField("Code =", p.Code)
+		q.WithField("Code =", string(p.Code))
 		q.WithField("Locale =", p.Locale)
 
 		err = q.First(ctx, &Page{})

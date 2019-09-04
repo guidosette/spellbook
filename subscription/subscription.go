@@ -9,13 +9,15 @@ import (
 
 type Subscription struct {
 	model.Model  `json:"-"`
-	Email        string    `model:"search,atom"`
-	Country      string    `model:"search"`
-	FirstName    string    `model:"search"`
-	LastName     string    `model:"search"`
-	Organization string    `model:"search"`
-	Created      time.Time `model:"search"`
-	Updated      time.Time `model:"search"`
+	Email        string
+	Country      string
+	FirstName    string
+	LastName     string
+	Organization string
+	Position     string
+	Notes        string
+	Created      time.Time
+	Updated      time.Time
 }
 
 func (subscription *Subscription) UnmarshalJSON(data []byte) error {
@@ -26,6 +28,8 @@ func (subscription *Subscription) UnmarshalJSON(data []byte) error {
 		FirstName    string    `json:"firstName"`
 		LastName     string    `json:"lastName"`
 		Organization string    `json:"organization"`
+		Position     string    `json:"position"`
+		Notes        string    `json:"notes"`
 		Created      time.Time `json:"created"`
 		Updated      time.Time `json:"updated"`
 	}{}
@@ -42,6 +46,8 @@ func (subscription *Subscription) UnmarshalJSON(data []byte) error {
 	subscription.Organization = alias.Organization
 	subscription.Created = alias.Created
 	subscription.Updated = alias.Updated
+	subscription.Position = alias.Position
+	subscription.Notes = alias.Notes
 
 	return nil
 }
@@ -53,6 +59,8 @@ func (subscription *Subscription) MarshalJSON() ([]byte, error) {
 		FirstName    string    `json:"firstName"`
 		LastName     string    `json:"lastName"`
 		Organization string    `json:"organization"`
+		Position     string    `json:"position"`
+		Notes        string    `json:"notes"`
 		Created      time.Time `json:"created"`
 		Updated      time.Time `json:"updated"`
 		Key          string    `json:"key"`
@@ -69,6 +77,8 @@ func (subscription *Subscription) MarshalJSON() ([]byte, error) {
 			Organization: subscription.Organization,
 			Created:      subscription.Created,
 			Updated:      subscription.Updated,
+			Position:     subscription.Position,
+			Notes:        subscription.Notes,
 			Key:          subscription.EncodedKey(),
 		},
 	})
