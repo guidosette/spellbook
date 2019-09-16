@@ -322,6 +322,7 @@ func (manager contentManager) Update(ctx context.Context, res spellbook.Resource
 	content.Tags = other.Tags
 	content.Slug = other.Slug
 	content.ParentKey = other.ParentKey
+	content.VideoUrl = other.VideoUrl
 
 	if !other.IsPublished() {
 		// not set

@@ -120,6 +120,7 @@ type Content struct {
 	PublicationState PublicationState `model:"search,atom"`
 	ParentKey        string           `model:"search,atom"`
 	Code             string           // special
+	VideoUrl         string           `model:"noindex"`
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -166,6 +167,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 		IsPublished bool          `json:"isPublished"`
 		StartDate   time.Time     `json:"startDate"`
 		EndDate     time.Time     `json:"endDate"`
+		VideoUrl    string    `json:"videoUrl"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -195,6 +197,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Code = alias.Code
 	content.IdTranslate = alias.IdTranslate
 	content.ParentKey = alias.ParentKey
+	content.VideoUrl = alias.VideoUrl
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -230,6 +233,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		ParentKey   string        `json:"parentKey"`
 		StartDate   time.Time     `json:"startDate"`
 		EndDate     time.Time     `json:"endDate"`
+		VideoUrl    string    `json:"videoUrl"`
 	}
 
 	tags := make([]string, 0, 0)
@@ -277,6 +281,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			EndDate:     content.EndDate,
 			Key:         content.EncodedKey(),
 			ParentKey:   content.ParentKey,
+			VideoUrl:   content.VideoUrl,
 		},
 	})
 }
