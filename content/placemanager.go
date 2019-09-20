@@ -18,20 +18,20 @@ func NewPlaceController() *spellbook.RestController {
 }
 
 func NewPlaceControllerWithKey(key string) *spellbook.RestController {
-	man := placeManager{}
+	man := PlaceManager{}
 	handler := spellbook.BaseRestHandler{Manager: man}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type placeManager struct{}
+type PlaceManager struct{}
 
-func (manager placeManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager PlaceManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Place{}, nil
 }
 
-func (manager placeManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
+func (manager PlaceManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
@@ -51,7 +51,7 @@ func (manager placeManager) FromId(ctx context.Context, strId string) (spellbook
 	return &att, nil
 }
 
-func (manager placeManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager PlaceManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
 	}
@@ -89,7 +89,7 @@ func (manager placeManager) ListOf(ctx context.Context, opts spellbook.ListOptio
 	return resources, nil
 }
 
-func (manager placeManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager PlaceManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPlace) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPlace))
 	}
@@ -139,7 +139,7 @@ func (manager placeManager) ListOfProperties(ctx context.Context, opts spellbook
 	return result, nil
 }
 
-func (manager placeManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager PlaceManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))
@@ -162,7 +162,7 @@ func (manager placeManager) Create(ctx context.Context, res spellbook.Resource, 
 	return nil
 }
 
-func (manager placeManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager PlaceManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))
@@ -199,7 +199,7 @@ func (manager placeManager) Update(ctx context.Context, res spellbook.Resource, 
 	return nil
 }
 
-func (manager placeManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager PlaceManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWritePlace) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWritePlace))

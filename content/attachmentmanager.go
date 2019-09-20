@@ -19,20 +19,20 @@ func NewAttachmentController() *spellbook.RestController {
 }
 
 func NewAttachmentControllerWithKey(key string) *spellbook.RestController {
-	man := attachmentManager{}
+	man := AttachmentManager{}
 	handler := spellbook.BaseRestHandler{Manager: man}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type attachmentManager struct{}
+type AttachmentManager struct{}
 
-func (manager attachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager AttachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Attachment{}, nil
 }
 
-func (manager attachmentManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
+func (manager AttachmentManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
@@ -57,7 +57,7 @@ func (manager attachmentManager) FromId(ctx context.Context, strId string) (spel
 	return &att, nil
 }
 
-func (manager attachmentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager AttachmentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionReadContent
@@ -100,7 +100,7 @@ func (manager attachmentManager) ListOf(ctx context.Context, opts spellbook.List
 	return resources, nil
 }
 
-func (manager attachmentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager AttachmentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionReadContent
@@ -155,7 +155,7 @@ func (manager attachmentManager) ListOfProperties(ctx context.Context, opts spel
 	return result, nil
 }
 
-func (manager attachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager AttachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
@@ -187,7 +187,7 @@ func (manager attachmentManager) Create(ctx context.Context, res spellbook.Resou
 	return nil
 }
 
-func (manager attachmentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionWriteContent
@@ -221,7 +221,7 @@ func (manager attachmentManager) Update(ctx context.Context, res spellbook.Resou
 	return model.Update(ctx, attachment)
 }
 
-func (manager attachmentManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager AttachmentManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionWriteContent

@@ -11,24 +11,24 @@ import (
 
 func NewTokenController() *spellbook.RestController {
 	handler := spellbook.BaseRestHandler{}
-	handler.Manager = tokenManager{}
+	handler.Manager = TokenManager{}
 	return spellbook.NewRestController(handler)
 }
 
 func NewTokenControllerWithKey(key string) *spellbook.RestController {
-	handler := spellbook.BaseRestHandler{Manager: tokenManager{}}
+	handler := spellbook.BaseRestHandler{Manager: TokenManager{}}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type tokenManager struct{}
+type TokenManager struct{}
 
-func (manager tokenManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager TokenManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Token{}, nil
 }
 
-func (manager tokenManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager TokenManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 
 	// todo
 	current := spellbook.IdentityFromContext(ctx)
@@ -50,15 +50,15 @@ func (manager tokenManager) FromId(ctx context.Context, id string) (spellbook.Re
 	return &us, nil
 }
 
-func (manager tokenManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager TokenManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager TokenManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager TokenManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	token := res.(*Token)
 
@@ -106,11 +106,11 @@ func (manager tokenManager) Create(ctx context.Context, res spellbook.Resource, 
 	return nil
 }
 
-func (manager tokenManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager TokenManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager tokenManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager TokenManager) Delete(ctx context.Context, res spellbook.Resource) error {
 
 	u := spellbook.IdentityFromContext(ctx)
 	user, ok := u.(User)

@@ -19,15 +19,15 @@ func NewFileController() *spellbook.RestController {
 }
 
 func NewFileControllerWithKey(key string) *spellbook.RestController {
-	handler := fileHandler{spellbook.BaseRestHandler{Manager: fileManager{}}}
+	handler := fileHandler{spellbook.BaseRestHandler{Manager: FileManager{}}}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type fileManager struct{}
+type FileManager struct{}
 
-func (manager fileManager) BucketName(ctx context.Context) (string, error) {
+func (manager FileManager) BucketName(ctx context.Context) (string, error) {
 	bucket := spellbook.Application().Options().Bucket
 	if bucket == "" {
 		b, err := file.DefaultBucketName(ctx)
@@ -39,11 +39,11 @@ func (manager fileManager) BucketName(ctx context.Context) (string, error) {
 	return bucket, nil
 }
 
-func (manager fileManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager FileManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &File{}, nil
 }
 
-func (manager fileManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager FileManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionReadContent
@@ -66,7 +66,7 @@ func (manager fileManager) FromId(ctx context.Context, id string) (spellbook.Res
 	return f, nil
 }
 
-func (manager fileManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager FileManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
@@ -125,7 +125,7 @@ func (manager fileManager) ListOf(ctx context.Context, opts spellbook.ListOption
 	return resources, nil
 }
 
-func (manager fileManager) listPagination(ctx context.Context, it *storage.ObjectIterator, opts spellbook.ListOptions) ([]*storage.ObjectAttrs, error) {
+func (manager FileManager) listPagination(ctx context.Context, it *storage.ObjectIterator, opts spellbook.ListOptions) ([]*storage.ObjectAttrs, error) {
 	p := iterator.NewPager(it, opts.Size+1, "")
 	var objs []*storage.ObjectAttrs
 	for i := 0; i < opts.Page+1; i++ {
@@ -146,11 +146,11 @@ func (manager fileManager) listPagination(ctx context.Context, it *storage.Objec
 	return objs, nil
 }
 
-func (manager fileManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager FileManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager fileManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
@@ -286,10 +286,10 @@ func (manager fileManager) Create(ctx context.Context, res spellbook.Resource, b
 	return nil
 }
 
-func (manager fileManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager FileManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager fileManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager FileManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	return spellbook.NewUnsupportedError()
 }

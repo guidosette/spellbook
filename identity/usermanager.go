@@ -13,25 +13,25 @@ import (
 	"sort"
 )
 
-type userManager struct{}
+type UserManager struct{}
 
 func NewUserController() *spellbook.RestController {
 	return NewUserControllerWithKey("")
 }
 
 func NewUserControllerWithKey(key string) *spellbook.RestController {
-	manager := userManager{}
+	manager := UserManager{}
 	handler := spellbook.BaseRestHandler{Manager: manager}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-func (manager userManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager UserManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &User{}, nil
 }
 
-func (manager userManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager UserManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
@@ -55,7 +55,7 @@ func (manager userManager) FromId(ctx context.Context, id string) (spellbook.Res
 	return &us, nil
 }
 
-func (manager userManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager UserManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadUser) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
@@ -94,7 +94,7 @@ func (manager userManager) ListOf(ctx context.Context, opts spellbook.ListOption
 	return resources, nil
 }
 
-func (manager userManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager UserManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadUser) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadUser))
 	}
@@ -143,7 +143,7 @@ func (manager userManager) ListOfProperties(ctx context.Context, opts spellbook.
 	return result, nil
 }
 
-func (manager userManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager UserManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWriteUser) {
@@ -222,7 +222,7 @@ func (manager userManager) Create(ctx context.Context, res spellbook.Resource, b
 	return nil
 }
 
-func (manager userManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager UserManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if !current.HasPermission(spellbook.PermissionWriteUser) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteUser))
@@ -237,7 +237,7 @@ func (manager userManager) Update(ctx context.Context, res spellbook.Resource, b
 	user := res.(*User)
 	user.Name = other.Name
 
-	tkn, _ := tokenManager{}.NewResource(ctx)
+	tkn, _ := TokenManager{}.NewResource(ctx)
 	token := tkn.(*Token)
 	if err := token.FromRepresentation(spellbook.RepresentationTypeJSON, bundle); err == nil {
 		if token.Password != "" {
@@ -273,7 +273,7 @@ func (manager userManager) Update(ctx context.Context, res spellbook.Resource, b
 	return model.Update(ctx, user)
 }
 
-func (manager userManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager UserManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if !current.HasPermission(spellbook.PermissionWriteUser) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteUser))

@@ -19,20 +19,20 @@ func NewMailMessageController() *spellbook.RestController {
 }
 
 func NewMailMessageControllerWithKey(key string) *spellbook.RestController {
-	man := mailMessageManager{}
+	man := MailMessageManager{}
 	handler := spellbook.BaseRestHandler{Manager: man}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type mailMessageManager struct{}
+type MailMessageManager struct{}
 
-func (manager mailMessageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager MailMessageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &MailMessage{}, nil
 }
 
-func (manager mailMessageManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
+func (manager MailMessageManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 	// todo permission?
 	id, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
@@ -48,7 +48,7 @@ func (manager mailMessageManager) FromId(ctx context.Context, strId string) (spe
 	return &att, nil
 }
 
-func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager MailMessageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
 
 	var mailMessages []*MailMessage
@@ -84,7 +84,7 @@ func (manager mailMessageManager) ListOf(ctx context.Context, opts spellbook.Lis
 	return resources, nil
 }
 
-func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager MailMessageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	// todo permission?
 	a := []string{"Recipient"} // list property accepted
 	name := opts.Property
@@ -131,7 +131,7 @@ func (manager mailMessageManager) ListOfProperties(ctx context.Context, opts spe
 	return result, nil
 }
 
-func (manager mailMessageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager MailMessageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
@@ -173,7 +173,7 @@ func (manager mailMessageManager) Create(ctx context.Context, res spellbook.Reso
 	return nil
 }
 
-func (manager mailMessageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager MailMessageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteMailMessage))
@@ -189,7 +189,7 @@ func (manager mailMessageManager) Update(ctx context.Context, res spellbook.Reso
 	return model.Update(ctx, mailMessage)
 }
 
-func (manager mailMessageManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager MailMessageManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteMailMessage) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteMailMessage))
 	}
