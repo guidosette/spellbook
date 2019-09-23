@@ -4,6 +4,7 @@ import (
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -18,6 +19,7 @@ const (
 )
 
 type Attachment struct {
+	spellbook.GormModel `model:"-"`
 	model.Model      `json:"-"`
 	Name             string    `json:"name"`
 	Description      string    `json:"description";model:"noindex"`
@@ -73,6 +75,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 
 func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 	type Alias struct {
+		Id               string     `json:"id"`
 		Name             string    `json:"name"`
 		Description      string    `json:"description"`
 		ResourceUrl      string    `json:"resourceUrl"`
@@ -84,7 +87,6 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
 		AltText          string    `json:"altText"`
-		Id               int64     `json:"id"`
 		Seo              int64     `json:"seo"`
 	}
 
@@ -92,6 +94,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Alias
 	}{
 		Alias{
+			Id:               attachment.Id(),
 			Name:             attachment.Name,
 			Description:      attachment.Description,
 			ResourceUrl:      attachment.ResourceUrl,
@@ -103,14 +106,16 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			Updated:          attachment.Updated,
 			Uploader:         attachment.Uploader,
 			AltText:          attachment.AltText,
-			Id:               attachment.IntID(),
 			Seo:              attachment.Seo,
 		},
 	})
 }
 
 func (attachment *Attachment) Id() string {
-	return attachment.StringID()
+	if id  := attachment.EncodedKey(); id != "" {
+		return id
+	}
+	return fmt.Sprintf("%d", attachment.ID)
 }
 
 func (attachment *Attachment) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {

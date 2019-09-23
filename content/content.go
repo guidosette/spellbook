@@ -4,6 +4,7 @@ import (
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -95,17 +96,18 @@ const PublicationStatePublished PublicationState = "PUBLISHED"
 const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
+	spellbook.GormModel `model:"-"`
 	model.Model `json:"-"`
 	Type        string `model:"search"`
-	IdTranslate string
-	Slug        string
+	IdTranslate string `gorm:"UNIQUE_INDEX:content_tanslate"`
+	Slug        string `gorm:"UNIQUE, NOT NULL"`
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
 	Body        string `model:"search,noindex,HTML"`
 	Tags        string `model:"search"`
 	Category    string `model:"search,atom";page:"gettable,category"`
 	Topic       string `model:"search"`
-	Locale      string `model:"search,atom"`
+	Locale      string `model:"search,atom";gorm:"UNIQUE_INDEX:content_tanslate"`
 	Description string `model:"search"`
 	Cover       string
 	Revision    int
@@ -118,8 +120,8 @@ type Content struct {
 	Updated          time.Time        `model:"search"`
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
-	ParentKey        string           `model:"search,atom"`
-	Code             string           // special
+	Parent        string           `model:"search,atom"`
+	Code             string `gorm:"UNIQUE"`
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -143,7 +145,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Type        string        `json:"type"`
 		IdTranslate string        `json:"idTranslate"`
-		ParentKey   string        `json:"parentKey"`
+		Parent  string        `json:"parent"`
 		Slug        string        `json:"slug"`
 		Title       string        `json:"title"`
 		Subtitle    string        `json:"subtitle"`
@@ -194,7 +196,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.EndDate = alias.EndDate
 	content.Code = alias.Code
 	content.IdTranslate = alias.IdTranslate
-	content.ParentKey = alias.ParentKey
+	content.Parent = alias.Parent
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -205,6 +207,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
+		Id         string        `json:"id"`
 		Type        string        `json:"type"`
 		IdTranslate string        `json:"idTranslate"`
 		Slug        string        `json:"slug"`
@@ -226,8 +229,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Created     time.Time     `json:"created"`
 		Updated     time.Time     `json:"updated"`
 		Published   time.Time     `json:"published"`
-		Key         string        `json:"key"`
-		ParentKey   string        `json:"parentKey"`
+		Parent   string        `json:"parent"`
 		StartDate   time.Time     `json:"startDate"`
 		EndDate     time.Time     `json:"endDate"`
 	}
@@ -253,6 +255,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		hasStartDate,
 		hasEndDate,
 		Alias{
+			Id: content.Id(),
 			Type:        content.Type,
 			IdTranslate: content.IdTranslate,
 			Slug:        content.Slug,
@@ -275,8 +278,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Published:   content.Published,
 			StartDate:   content.StartDate,
 			EndDate:     content.EndDate,
-			Key:         content.EncodedKey(),
-			ParentKey:   content.ParentKey,
+			Parent:   content.Parent,
 		},
 	})
 }
@@ -286,7 +288,10 @@ func (content *Content) MarshalJSON() ([]byte, error) {
  */
 
 func (content *Content) Id() string {
-	return content.StringID()
+	if id := content.EncodedKey(); id != "" {
+		return id
+	}
+	return fmt.Sprintf("%d", content.ID)
 }
 
 func (content *Content) FromRepresentation(rtype spellbook.RepresentationType, data []byte) error {

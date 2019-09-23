@@ -264,6 +264,10 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
+	// todo: check locale uniqueness. Why wasnt it tested in update and it was in create?
+
+	// if the same slug already exists, we must return
+	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
@@ -275,34 +279,14 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 		q = q.WithField("Locale = ", other.Locale)
 	}
 
-	count, err := q.Count(ctx)
+	compare := Content{}
+	err := q.First(ctx, &compare)
 	if err != nil {
-		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
+		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying content correctness: %s", err.Error()))
 	}
-
-	if count > 0 {
-		var contents []*Content
-		err := q.GetMulti(ctx, &contents)
-		if err != nil {
-			log.Errorf(ctx, "could not retrieve contents %s", err.Error())
-			return spellbook.NewFieldError("check", errors.New("could not retrieve contents"))
-		}
-		valid := true
-		for _, c := range contents {
-			if c.EncodedKey() != content.EncodedKey() {
-				valid = false
-				break
-			}
-		}
-		if !valid {
-			if content.Code == "" {
-				msg := fmt.Sprintf("a content with slug  %s already exists. Slug must be unique.", content.Slug)
-				return spellbook.NewFieldError("slug", errors.New(msg))
-			} else {
-				msg := fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
-				return spellbook.NewFieldError("code", errors.New(msg))
-			}
-		}
+	if content.Id() != compare.Id() {
+		msg := fmt.Sprintf("a content with code %s or slug %s already exists. Code or slug must be unique.", content.Code, content.Slug)
+		return spellbook.NewFieldError("code", errors.New(msg))
 	}
 
 	content.Type = other.Type
@@ -321,7 +305,7 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 	content.Slug = other.Slug
-	content.ParentKey = other.ParentKey
+	content.Parent = other.Parent
 
 	if !other.IsPublished() {
 		// not set
