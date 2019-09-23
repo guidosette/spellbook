@@ -27,21 +27,21 @@ func (specialcode *SpecialCode) ToRepresentation(rtype RepresentationType) ([]by
 }
 
 func NewSpecialCodeController() *RestController {
-	man := specialCodeManager{}
+	man := SpecialCodeManager{}
 	return NewRestController(BaseRestHandler{Manager: man})
 }
 
-type specialCodeManager struct{}
+type SpecialCodeManager struct{}
 
-func (manager specialCodeManager) NewResource(ctx context.Context) (Resource, error) {
+func (manager SpecialCodeManager) NewResource(ctx context.Context) (Resource, error) {
 	return nil, NewUnsupportedError()
 }
 
-func (manager specialCodeManager) FromId(ctx context.Context, id string) (Resource, error) {
+func (manager SpecialCodeManager) FromId(ctx context.Context, id string) (Resource, error) {
 	return nil, NewUnsupportedError()
 }
 
-func (manager specialCodeManager) ListOf(ctx context.Context, opts ListOptions) ([]Resource, error) {
+func (manager SpecialCodeManager) ListOf(ctx context.Context, opts ListOptions) ([]Resource, error) {
 
 	ws := Application()
 
@@ -68,18 +68,18 @@ func (manager specialCodeManager) ListOf(ctx context.Context, opts ListOptions) 
 	return resources, nil
 }
 
-func (manager specialCodeManager) ListOfProperties(ctx context.Context, opts ListOptions) ([]string, error) {
+func (manager SpecialCodeManager) ListOfProperties(ctx context.Context, opts ListOptions) ([]string, error) {
 	return nil, NewUnsupportedError()
 }
 
-func (manager specialCodeManager) Create(ctx context.Context, res Resource, bundle []byte) error {
+func (manager SpecialCodeManager) Create(ctx context.Context, res Resource, bundle []byte) error {
 	return NewUnsupportedError()
 }
 
-func (manager specialCodeManager) Update(ctx context.Context, res Resource, bundle []byte) error {
+func (manager SpecialCodeManager) Update(ctx context.Context, res Resource, bundle []byte) error {
 	return NewUnsupportedError()
 }
 
-func (manager specialCodeManager) Delete(ctx context.Context, res Resource) error {
+func (manager SpecialCodeManager) Delete(ctx context.Context, res Resource) error {
 	return NewUnsupportedError()
 }

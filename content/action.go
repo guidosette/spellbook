@@ -66,7 +66,7 @@ func (action *Action) ToRepresentation(rtype spellbook.RepresentationType) ([]by
 }
 
 func NewActionController() *spellbook.RestController {
-	man := actionManager{}
+	man := ActionManager{}
 	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
@@ -74,17 +74,17 @@ func NewActionController() *spellbook.RestController {
 * Action manager
  */
 
-type actionManager struct{}
+type ActionManager struct{}
 
-func (manager actionManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager ActionManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager ActionManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager ActionManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
 	}
@@ -114,18 +114,18 @@ func (manager actionManager) ListOf(ctx context.Context, opts spellbook.ListOpti
 	return resources, nil
 }
 
-func (manager actionManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager ActionManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager ActionManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager ActionManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager actionManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager ActionManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	return spellbook.NewUnsupportedError()
 }

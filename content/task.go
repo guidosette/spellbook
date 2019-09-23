@@ -106,13 +106,13 @@ func (task *Task) ToRepresentation(rtype spellbook.RepresentationType) ([]byte, 
 }
 
 func NewTaskController(projectId string, locationId string, queueId string) *spellbook.RestController {
-	man := taskManager{}
+	man := TaskManager{}
 	initTaskManager(&man, projectId, locationId, queueId)
 	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
 func NewTaskControllerWithKey(key string, projectId string, locationId string, queueId string) *spellbook.RestController {
-	man := taskManager{}
+	man := TaskManager{}
 	initTaskManager(&man, projectId, locationId, queueId)
 	handler := spellbook.BaseRestHandler{Manager: man}
 	c := spellbook.NewRestController(handler)
@@ -120,7 +120,7 @@ func NewTaskControllerWithKey(key string, projectId string, locationId string, q
 	return c
 }
 
-func initTaskManager(man *taskManager, projectId string, locationId string, queueId string) {
+func initTaskManager(man *TaskManager, projectId string, locationId string, queueId string) {
 	man.projectid = projectId
 	man.locationid = locationId
 	man.queueid = queueId
@@ -136,17 +136,17 @@ func initTaskManager(man *taskManager, projectId string, locationId string, queu
 * Task manager
  */
 
-type taskManager struct {
+type TaskManager struct {
 	projectid  string
 	locationid string
 	queueid    string
 }
 
-func (manager taskManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager TaskManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Task{}, nil
 }
 
-func (manager taskManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager TaskManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
 	}
@@ -169,7 +169,7 @@ func (manager taskManager) FromId(ctx context.Context, id string) (spellbook.Res
 	//return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager TaskManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadAction) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadAction))
 	}
@@ -223,11 +223,11 @@ func (manager taskManager) ListOf(ctx context.Context, opts spellbook.ListOption
 	return resources, nil
 }
 
-func (manager taskManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager TaskManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager TaskManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteAction) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteAction))
 	}
@@ -263,7 +263,7 @@ func (manager taskManager) Create(ctx context.Context, res spellbook.Resource, b
 	return nil
 }
 
-func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager TaskManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionWriteAction) {
 		return spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionWriteAction))
 	}
@@ -296,7 +296,7 @@ func (manager taskManager) Update(ctx context.Context, res spellbook.Resource, b
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager taskManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager TaskManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	return spellbook.NewUnsupportedError()
 }
 
@@ -304,7 +304,7 @@ func (manager taskManager) Delete(ctx context.Context, res spellbook.Resource) e
 * Utils
  */
 
-func (manager taskManager) GetCloudTasksService(ctx context.Context) (*cloudtasks.Service, error) {
+func (manager TaskManager) GetCloudTasksService(ctx context.Context) (*cloudtasks.Service, error) {
 	c, err := google.DefaultClient(ctx, cloudtasks.CloudPlatformScope)
 	if err != nil {
 		return nil, err
@@ -317,7 +317,7 @@ func (manager taskManager) GetCloudTasksService(ctx context.Context) (*cloudtask
 	return cloudtasksService, nil
 }
 
-func (manager taskManager) GetQueue(ctx context.Context, cloudtasksService *cloudtasks.Service) (*cloudtasks.Queue, error) {
+func (manager TaskManager) GetQueue(ctx context.Context, cloudtasksService *cloudtasks.Service) (*cloudtasks.Queue, error) {
 	var myQueue *cloudtasks.Queue
 	parent := fmt.Sprintf("projects/%s/locations/%s", manager.projectid, manager.locationid)
 	reqQueues := cloudtasksService.Projects.Locations.Queues.List(parent)

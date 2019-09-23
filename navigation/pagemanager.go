@@ -15,19 +15,19 @@ func NewPageController() *spellbook.RestController {
 }
 
 func NewPageControllerWithKey(key string) *spellbook.RestController {
-	handler := spellbook.BaseRestHandler{Manager: pageManager{}}
+	handler := spellbook.BaseRestHandler{Manager: PageManager{}}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type pageManager struct{}
+type PageManager struct{}
 
-func (manager pageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager PageManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Page{}, nil
 }
 
-func (manager pageManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager PageManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPage) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPage))
 	}
@@ -41,7 +41,7 @@ func (manager pageManager) FromId(ctx context.Context, id string) (spellbook.Res
 	return &cont, nil
 }
 
-func (manager pageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager PageManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadPage) {
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadPage))
 	}
@@ -78,11 +78,11 @@ func (manager pageManager) ListOf(ctx context.Context, opts spellbook.ListOption
 	return resources, nil
 }
 
-func (manager pageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager PageManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager pageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager PageManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWritePage) {
@@ -132,7 +132,7 @@ func (manager pageManager) Create(ctx context.Context, res spellbook.Resource, b
 	return spellbook.NewFieldError("", errors.New(msg))
 }
 
-func (manager pageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager PageManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 
 	current := spellbook.IdentityFromContext(ctx)
 	if current == nil || !current.HasPermission(spellbook.PermissionWritePage) {
@@ -179,7 +179,7 @@ func (manager pageManager) Update(ctx context.Context, res spellbook.Resource, b
 	return nil
 }
 
-func (manager pageManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager PageManager) Delete(ctx context.Context, res spellbook.Resource) error {
 
 	p := res.(*Page)
 	err := model.Delete(ctx, p, nil)

@@ -68,7 +68,7 @@ func (category *Category) ToRepresentation(rtype spellbook.RepresentationType) (
 }
 
 func NewCategoryController() *spellbook.RestController {
-	man := categoryManager{}
+	man := CategoryManager{}
 	return spellbook.NewRestController(spellbook.BaseRestHandler{Manager: man})
 }
 
@@ -76,17 +76,17 @@ func NewCategoryController() *spellbook.RestController {
 * Category manager
  */
 
-type categoryManager struct{}
+type CategoryManager struct{}
 
-func (manager categoryManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager CategoryManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
+func (manager CategoryManager) FromId(ctx context.Context, id string) (spellbook.Resource, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager CategoryManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 
 	ws := spellbook.Application()
 
@@ -113,18 +113,18 @@ func (manager categoryManager) ListOf(ctx context.Context, opts spellbook.ListOp
 	return resources, nil
 }
 
-func (manager categoryManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+func (manager CategoryManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
 	return nil, spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager CategoryManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager CategoryManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	return spellbook.NewUnsupportedError()
 }
 
-func (manager categoryManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager CategoryManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	return spellbook.NewUnsupportedError()
 }
