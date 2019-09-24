@@ -102,7 +102,40 @@ func (manager SqlContentManager) ListOfProperties(ctx context.Context, opts spel
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadContent))
 	}
 
-	return nil, spellbook.NewUnsupportedError()
+	var property string
+	switch opts.Property {
+	case "Category":
+		property = "category"
+	case "Locale":
+		property = "locale"
+	case "Name":
+		property = "name"
+	case "Topic":
+		property = "topic"
+	case "":
+		return nil, spellbook.NewFieldError("property", fmt.Errorf("properties can't have no name"))
+	default:
+		return nil, datastore.ErrNoSuchEntity
+	}
+
+	var result []string
+	db := sql.FromContext(ctx)
+	rows, err := db.Raw(fmt.Sprintf("SELECT DISTINCT %s FROM contents", property)).Rows()
+	if err != nil {
+		log.Errorf(ctx, "error retrieving property list for property %s: %s", property, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			log.Errorf(ctx, "error retrieving property %s occurrencies: %s", property, err)
+			return nil, err
+		}
+		result = append(result, p)
+	}
+	return result, nil
 }
 
 func (manager SqlContentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
