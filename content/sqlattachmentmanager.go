@@ -98,7 +98,30 @@ func (manager SqlAttachmentManager) ListOfProperties(ctx context.Context, opts s
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadMedia))
 	}
 
-	return nil, spellbook.NewUnsupportedError()
+	if opts.Property != "Group" {
+		return nil, errors.New("no property found")
+	}
+
+	property := "group"
+
+	var result []string
+	db := sql.FromContext(ctx)
+	rows, err := db.Raw(fmt.Sprintf("SELECT DISTINCT %q FROM attachments", property)).Rows()
+	if err != nil {
+		log.Errorf(ctx, "error retrieving property list for property %s: %s", property, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			log.Errorf(ctx, "error retrieving property %s occurrencies: %s", property, err)
+			return nil, err
+		}
+		result = append(result, p)
+	}
+	return result, nil
 }
 
 func (manager SqlAttachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
