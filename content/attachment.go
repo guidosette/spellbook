@@ -21,8 +21,8 @@ const (
 )
 
 type Attachment struct {
-	spellbook.GormModel `model:"-"`
 	model.Model      `json:"-"`
+	ID uint `model:"-";json:"-"`
 	Name             string
 	Description      string    `model:"noindex"`
 	ResourceUrl      string    `model:"noindex"`
@@ -31,7 +31,7 @@ type Attachment struct {
 	Type             string
 	ParentKey        string  `gorm:"NOT NULL"`
 	// inner foreign key when using sql backend
-	ParentID         sql.NullInt64     `model:"-";json:"-"`
+	ParentID         sql.NullInt64 `model:"-";json:"-";gorm:"type:integer"`
 	Created          time.Time
 	Updated          time.Time
 	Uploader         string

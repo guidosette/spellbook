@@ -96,8 +96,8 @@ const PublicationStatePublished PublicationState = "PUBLISHED"
 const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
-	spellbook.GormModel `model:"-"`
 	model.Model `json:"-"`
+	ID uint `model:"-";json:"-"`
 	Type        string `model:"search"`
 	IdTranslate string `gorm:"UNIQUE_INDEX:content_tanslate"`
 	Slug        string `gorm:"UNIQUE, NOT NULL"`
