@@ -31,7 +31,7 @@ type Attachment struct {
 	Type             string
 	ParentKey        string  `gorm:"NOT NULL"`
 	// inner foreign key when using sql backend
-	ParentID         sql.NullInt64 `model:"-";json:"-";gorm:"type:integer"`
+	ParentID         sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
 	Created          time.Time
 	Updated          time.Time
 	Uploader         string

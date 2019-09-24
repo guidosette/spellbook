@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
-	"net/url"
 	"reflect"
 	"sort"
 	"time"
@@ -190,9 +189,6 @@ func (manager ContentManager) Create(ctx context.Context, res spellbook.Resource
 		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
-	if content.Slug == "" {
-		content.Slug = url.PathEscape(content.Title)
-	}
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
@@ -260,6 +256,10 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 		return spellbook.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
 
+	if other.Type == "" {
+		return spellbook.NewFieldError("type", errors.New("type can't be empty"))
+	}
+
 	if other.Title == "" {
 		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
@@ -296,7 +296,7 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 	content.Topic = other.Topic
 	content.Locale = other.Locale
 	content.Description = other.Description
-	content.Code = other.Code
+	content.setCode(other.Code)
 	content.Body = other.Body
 	content.Cover = other.Cover
 	content.Revision = other.Revision
@@ -304,7 +304,7 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 	content.Order = other.Order
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
-	content.Slug = other.Slug
+	content.setSlug(other.Slug)
 	content.Parent = other.Parent
 
 	if !other.IsPublished() {

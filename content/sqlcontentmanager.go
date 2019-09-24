@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -168,10 +167,6 @@ func (manager SqlContentManager) Create(ctx context.Context, res spellbook.Resou
 		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
 
-	if content.Slug == "" {
-		content.Slug = url.PathEscape(content.Title)
-	}
-
 	if !content.StartDate.IsZero() && !content.EndDate.IsZero() && content.EndDate.Before(content.StartDate) {
 		msg := fmt.Sprintf("end date %v can't be before start date %v", content.EndDate, content.StartDate)
 		return spellbook.NewFieldError("endDate", errors.New(msg))
@@ -205,6 +200,10 @@ func (manager SqlContentManager) Update(ctx context.Context, res spellbook.Resou
 		return spellbook.NewFieldError("", fmt.Errorf("invalid json for content %s: %s", content.StringID(), err.Error()))
 	}
 
+	if other.Type == "" {
+		return spellbook.NewFieldError("type", errors.New("type can't be empty"))
+	}
+
 	if other.Title == "" {
 		return spellbook.NewFieldError("title", errors.New("title can't be empty"))
 	}
@@ -218,7 +217,7 @@ func (manager SqlContentManager) Update(ctx context.Context, res spellbook.Resou
 	content.Topic = other.Topic
 	content.Locale = other.Locale
 	content.Description = other.Description
-	content.Code = other.Code
+	content.setCode(other.Code)
 	content.Body = other.Body
 	content.Cover = other.Cover
 	content.Revision = other.Revision
@@ -226,7 +225,7 @@ func (manager SqlContentManager) Update(ctx context.Context, res spellbook.Resou
 	content.Order = other.Order
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
-	content.Slug = other.Slug
+	content.setSlug(other.Slug)
 	content.Parent = other.Parent
 
 	if !other.IsPublished() {

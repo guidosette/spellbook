@@ -1,6 +1,7 @@
 package content
 
 import (
+	"database/sql"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
@@ -97,22 +98,23 @@ const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
 	model.Model `json:"-"`
-	ID uint `model:"-";json:"-"`
+	ID uint `model:"-" json:"-"`
 	Type        string `model:"search"`
 	IdTranslate string `gorm:"UNIQUE_INDEX:content_tanslate"`
-	Slug        string `gorm:"UNIQUE, NOT NULL"`
+	Slug        string `gorm:"-"`
+	SqlSlug sql.NullString `model:"-" gorm:"column:slug;UNIQUE_INDEX:content_slug"`
 	Title       string `model:"search"`
 	Subtitle    string `model:"search"`
 	Body        string `model:"search,noindex,HTML"`
 	Tags        string `model:"search"`
-	Category    string `model:"search,atom";page:"gettable,category"`
+	Category    string `model:"search,atom" page:"gettable,category"`
 	Topic       string `model:"search"`
-	Locale      string `model:"search,atom";gorm:"UNIQUE_INDEX:content_tanslate"`
+	Locale      string `model:"search,atom" gorm:"NOT NULL"`
 	Description string `model:"search"`
 	Cover       string
 	Revision    int
 	Order       int           `model:"search"`
-	Attachments []*Attachment `model:"-";gorm:"foreignkey:ParentID"`
+	Attachments []*Attachment `model:"-" gorm:"foreignkey:ParentID"`
 	// username of the author
 	Author           string `model:"search"`
 	Editor           string `model:"search"`
@@ -121,11 +123,48 @@ type Content struct {
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
 	Parent        string           `model:"search,atom"`
-	Code             string `gorm:"UNIQUE"`
+	Code             string `gorm:"-"`
+	SqlCode   sql.NullString `model:"-" gorm:"column:code;UNIQUE"`
 
 	// KeyTypeEvent
 	StartDate time.Time
 	EndDate   time.Time
+}
+
+// code setters and getters
+func (content *Content) setCode(code string) {
+	content.Code = code
+	if code == "" {
+		content.SqlCode.Valid = false
+		return
+	}
+	content.SqlCode.Valid = true
+	content.SqlCode.String = code
+}
+
+func (content *Content) getCode() string {
+	if content.SqlCode.Valid {
+		return content.SqlCode.String
+	}
+	return content.Code
+}
+
+// slug setter and getter
+func (content *Content) setSlug(slug string) {
+	content.Slug = slug
+	if slug == "" {
+		content.SqlSlug.Valid = false
+		return
+	}
+	content.SqlSlug.Valid = true
+	content.SqlSlug.String = slug
+}
+
+func (content *Content) getSlug() string {
+	if content.SqlSlug.Valid {
+		return content.SqlSlug.String
+	}
+	return content.Slug
 }
 
 func (content Content) IsPublished() bool {
@@ -176,7 +215,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	}
 
 	content.Type = alias.Type
-	content.Slug = alias.Slug
+	content.setSlug(alias.Slug)
 	content.Title = alias.Title
 	content.Subtitle = alias.Subtitle
 	content.Body = alias.Body
@@ -194,7 +233,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.Updated = alias.Updated
 	content.StartDate = alias.StartDate
 	content.EndDate = alias.EndDate
-	content.Code = alias.Code
+	content.setCode(alias.Code)
 	content.IdTranslate = alias.IdTranslate
 	content.Parent = alias.Parent
 	if alias.IsPublished {
@@ -258,7 +297,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Id: content.Id(),
 			Type:        content.Type,
 			IdTranslate: content.IdTranslate,
-			Slug:        content.Slug,
+			Slug:        content.getSlug(),
 			Title:       content.Title,
 			Subtitle:    content.Subtitle,
 			Body:        content.Body,
@@ -273,7 +312,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Attachments: content.Attachments,
 			Author:      content.Author,
 			Created:     content.Created,
-			Code:        content.Code,
+			Code:        content.getCode(),
 			Updated:     content.Updated,
 			Published:   content.Published,
 			StartDate:   content.StartDate,
