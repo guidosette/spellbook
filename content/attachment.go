@@ -1,10 +1,12 @@
 package content
 
 import (
+	"database/sql"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -21,18 +23,42 @@ const (
 type Attachment struct {
 	spellbook.GormModel `model:"-"`
 	model.Model      `json:"-"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description";model:"noindex"`
-	ResourceUrl      string    `json:"resourceUrl";model:"noindex"`
-	ResourceThumbUrl string    `json:"resourceThumbUrl";model:"noindex"`
-	Group            string    `json:"group"`
-	Type             string    `json:"type"`
-	ParentKey        string    `json:"parentKey"` // encode key of content
-	Created          time.Time `json:"created"`
-	Updated          time.Time `json:"updated"`
-	Uploader         string    `json:"uploader"`
-	AltText          string    `json:"altText"`
-	Seo              int64     `json:"seo"`
+	Name             string
+	Description      string    `model:"noindex"`
+	ResourceUrl      string    `model:"noindex"`
+	ResourceThumbUrl string    `model:"noindex"`
+	Group            string
+	Type             string
+	ParentKey        string  `gorm:"NOT NULL"`
+	// inner foreign key when using sql backend
+	ParentID         sql.NullInt64     `model:"-";json:"-"`
+	Created          time.Time
+	Updated          time.Time
+	Uploader         string
+	AltText          string
+}
+
+func (attachment *Attachment) setParentKey(key string) {
+	if key == AttachmentGlobalParent {
+		attachment.ParentID.Valid = false
+		attachment.ParentKey = key
+		return
+	}
+
+	if v, err := strconv.Atoi(key); err == nil {
+		attachment.ParentID.Int64 = int64(v)
+		attachment.ParentID.Valid = true
+	}
+	attachment.ParentKey = key
+}
+
+// returns the global key if there is no foreign key set
+// or returns the parent key if a foreign key has been set
+func (attachment *Attachment) getParentKey() string {
+	if attachment.ParentID.Valid {
+		return fmt.Sprintf("%d", attachment.ParentID.Int64)
+	}
+	return AttachmentGlobalParent
 }
 
 func (attachment *Attachment) UnmarshalJSON(data []byte) error {
@@ -49,7 +75,6 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
 		AltText          string    `json:"altText"`
-		Seo              int64     `json:"seo"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -63,19 +88,18 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.ResourceThumbUrl = alias.ResourceThumbUrl
 	attachment.Group = alias.Group
 	attachment.Type = alias.Type
-	attachment.ParentKey = alias.ParentKey
+	attachment.setParentKey(alias.ParentKey)
 	attachment.Created = alias.Created
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
 	attachment.AltText = alias.AltText
-	attachment.Seo = alias.Seo
 
 	return nil
 }
 
 func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Id               string     `json:"id"`
+		Id               string    `json:"id"`
 		Name             string    `json:"name"`
 		Description      string    `json:"description"`
 		ResourceUrl      string    `json:"resourceUrl"`
@@ -87,7 +111,6 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
 		AltText          string    `json:"altText"`
-		Seo              int64     `json:"seo"`
 	}
 
 	return json.Marshal(&struct {
@@ -101,12 +124,11 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			ResourceThumbUrl: attachment.ResourceThumbUrl,
 			Group:            attachment.Group,
 			Type:             attachment.Type,
-			ParentKey:        attachment.ParentKey,
+			ParentKey:        attachment.getParentKey(),
 			Created:          attachment.Created,
 			Updated:          attachment.Updated,
 			Uploader:         attachment.Uploader,
 			AltText:          attachment.AltText,
-			Seo:              attachment.Seo,
 		},
 	})
 }

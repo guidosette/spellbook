@@ -112,7 +112,7 @@ type Content struct {
 	Cover       string
 	Revision    int
 	Order       int           `model:"search"`
-	Attachments []*Attachment `model:"-"`
+	Attachments []*Attachment `model:"-";gorm:"foreignkey:ParentID"`
 	// username of the author
 	Author           string `model:"search"`
 	Editor           string `model:"search"`

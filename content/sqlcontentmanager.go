@@ -49,7 +49,7 @@ func (manager SqlContentManager) FromId(ctx context.Context, id string) (spellbo
 		log.Errorf(ctx, msg)
 		return nil, spellbook.NewFieldError("id", errors.New(msg))
 	}
-	if res := db.First(&content, intId); res.Error != nil {
+	if res := db.First(&content, intId).Association("Attachments"); res.Error != nil {
 		// todo: define the not found error by other means than datastore
 		return nil, datastore.ErrNoSuchEntity
 	}
