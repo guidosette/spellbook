@@ -96,6 +96,8 @@ type PublicationState string
 const PublicationStatePublished PublicationState = "PUBLISHED"
 const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
+const AttachmentParentTypeContent = "content"
+
 type Content struct {
 	model.Model `json:"-"`
 	ID          uint           `model:"-" json:"-"`
