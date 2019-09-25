@@ -49,7 +49,6 @@ func (manager SqlContentManager) FromId(ctx context.Context, id string) (spellbo
 		return nil, spellbook.NewFieldError("id", errors.New(msg))
 	}
 
-
 	if res := db.First(&content, intId).Related(&content.Attachments, "parent_id"); res.Error != nil {
 		// todo: define the not found error by other means than datastore
 		log.Errorf(ctx, "error retrieving attachment %d: %s", intId, res.Error)
@@ -71,7 +70,8 @@ func (manager SqlContentManager) ListOf(ctx context.Context, opts spellbook.List
 	db = db.Offset(opts.Page * opts.Size)
 
 	for _, filter := range opts.Filters {
-		db = db.Where(filter.Field + " = ?", filter.Value)
+		field := sql.ToColumnName(filter.Field)
+		db = db.Where(fmt.Sprintf("%q = ?", field), filter.Value)
 	}
 
 	if opts.Order != "" {
@@ -281,4 +281,3 @@ func (manager SqlContentManager) Delete(ctx context.Context, res spellbook.Resou
 
 	return nil
 }
-

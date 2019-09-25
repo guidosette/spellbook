@@ -175,6 +175,14 @@ func (manager AttachmentManager) Create(ctx context.Context, res spellbook.Resou
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
+	// test the attachment parent type
+	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
+		if !sa.IsSupported(attachment) {
+			msg := fmt.Sprintf("unsupported parent type %q for attachment", attachment.ParentType)
+			return spellbook.NewFieldError("parentType", errors.New(msg))
+		}
+	}
+
 	attachment.Created = time.Now().UTC()
 	attachment.Uploader = current.(identity.User).Username()
 
@@ -208,14 +216,25 @@ func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resou
 	attachment.ResourceUrl = other.ResourceUrl
 	attachment.ResourceThumbUrl = other.ResourceThumbUrl
 	attachment.Group = other.Group
+	attachment.ParentType = other.ParentType
+
+	// test the attachment parent type
+	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
+		if !sa.IsSupported(attachment) {
+			msg := fmt.Sprintf("unsupported parent type %q for attachment", attachment.ParentType)
+			return spellbook.NewFieldError("parentType", errors.New(msg))
+		}
+	}
+
 	attachment.setParentKey(other.ParentKey)
-	attachment.Updated = time.Now().UTC()
-	attachment.AltText = other.AltText
 
 	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
+
+	attachment.Updated = time.Now().UTC()
+	attachment.AltText = other.AltText
 
 	return model.Update(ctx, attachment)
 }

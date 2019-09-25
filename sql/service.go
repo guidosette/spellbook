@@ -59,3 +59,7 @@ func FromContext(ctx context.Context) *gorm.DB {
 	}
 	return nil
 }
+
+func ToColumnName(name string) string {
+	return gorm.ToColumnName(name)
+}

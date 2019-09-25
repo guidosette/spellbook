@@ -24,7 +24,7 @@ func NewSqlAttachmentControllerWithKey(key string) *spellbook.RestController {
 	return c
 }
 
-type SqlAttachmentManager struct {}
+type SqlAttachmentManager struct{}
 
 func (manager SqlAttachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Attachment{}, nil
@@ -70,6 +70,11 @@ func (manager SqlAttachmentManager) ListOf(ctx context.Context, opts spellbook.L
 	var attachments []*Attachment
 	db := sql.FromContext(ctx)
 	db = db.Offset(opts.Page * opts.Size)
+
+	for _, filter := range opts.Filters {
+		field := sql.ToColumnName(filter.Field)
+		db = db.Where(fmt.Sprintf("%q = ?", field), filter.Value)
+	}
 
 	if opts.Order != "" {
 		dir := " asc"
@@ -144,6 +149,14 @@ func (manager SqlAttachmentManager) Create(ctx context.Context, res spellbook.Re
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
+	// test the attachment parent type
+	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
+		if !sa.IsSupported(attachment) {
+			msg := fmt.Sprintf("unsupported parent type %q for attachment", attachment.ParentType)
+			return spellbook.NewFieldError("parentType", errors.New(msg))
+		}
+	}
+
 	attachment.Created = time.Now().UTC()
 	attachment.Uploader = current.(identity.User).Username()
 
@@ -177,14 +190,25 @@ func (manager SqlAttachmentManager) Update(ctx context.Context, res spellbook.Re
 	attachment.ResourceUrl = other.ResourceUrl
 	attachment.ResourceThumbUrl = other.ResourceThumbUrl
 	attachment.Group = other.Group
+	attachment.ParentType = other.ParentType
+
+	// test the attachment parent type
+	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
+		if !sa.IsSupported(attachment) {
+			msg := fmt.Sprintf("unsupported parent type %q for attachment", attachment.ParentType)
+			return spellbook.NewFieldError("parentType", errors.New(msg))
+		}
+	}
+
 	attachment.setParentKey(other.ParentKey)
-	attachment.Updated = time.Now().UTC()
-	attachment.AltText = other.AltText
 
 	if attachment.ParentKey == "" {
 		msg := fmt.Sprintf("attachment parent can't be empty. Use %s as a parent for global attachments", AttachmentGlobalParent)
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
+
+	attachment.Updated = time.Now().UTC()
+	attachment.AltText = other.AltText
 
 	db := sql.FromContext(ctx)
 	if res := db.Save(&attachment); res.Error != nil {

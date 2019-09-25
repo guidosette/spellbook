@@ -22,20 +22,21 @@ const (
 
 type Attachment struct {
 	model.Model      `json:"-"`
-	ID uint `model:"-";json:"-"`
+	ID               uint `model:"-";json:"-"`
 	Name             string
-	Description      string    `model:"noindex"`
-	ResourceUrl      string    `model:"noindex"`
-	ResourceThumbUrl string    `model:"noindex"`
+	AltText          string
+	Description      string `model:"noindex"`
+	ResourceUrl      string `model:"noindex"`
+	ResourceThumbUrl string `model:"noindex"`
 	Group            string
 	Type             string
-	ParentKey        string  `gorm:"NOT NULL"`
+	ParentKey        string
+	ParentType       string `gorm:"NOT NULL"`
 	// inner foreign key when using sql backend
-	ParentID         sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
-	Created          time.Time
-	Updated          time.Time
-	Uploader         string
-	AltText          string
+	ParentID sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
+	Created  time.Time
+	Updated  time.Time
+	Uploader string
 }
 
 func (attachment *Attachment) setParentKey(key string) {
@@ -71,6 +72,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		Group            string    `json:"group"`
 		Type             string    `json:"type"`
 		ParentKey        string    `json:"parentKey"`
+		ParentType       string    `json:"parentType"`
 		Created          time.Time `json:"created"`
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
@@ -89,6 +91,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.Group = alias.Group
 	attachment.Type = alias.Type
 	attachment.setParentKey(alias.ParentKey)
+	attachment.ParentType = alias.ParentType
 	attachment.Created = alias.Created
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
@@ -107,6 +110,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Group            string    `json:"group"`
 		Type             string    `json:"type"`
 		ParentKey        string    `json:"parentKey"`
+		ParentType       string    `json:"parentType"`
 		Created          time.Time `json:"created"`
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
@@ -125,6 +129,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			Group:            attachment.Group,
 			Type:             attachment.Type,
 			ParentKey:        attachment.getParentKey(),
+			ParentType:       attachment.ParentType,
 			Created:          attachment.Created,
 			Updated:          attachment.Updated,
 			Uploader:         attachment.Uploader,
@@ -134,7 +139,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 }
 
 func (attachment *Attachment) Id() string {
-	if id  := attachment.EncodedKey(); id != "" {
+	if id := attachment.EncodedKey(); id != "" {
 		return id
 	}
 	return fmt.Sprintf("%d", attachment.ID)

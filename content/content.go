@@ -98,19 +98,19 @@ const PublicationStateUnpublished PublicationState = "UNPUBLISHED"
 
 type Content struct {
 	model.Model `json:"-"`
-	ID uint `model:"-" json:"-"`
-	Type        string `model:"search"`
-	IdTranslate string `gorm:"UNIQUE_INDEX:content_tanslate"`
-	Slug        string `gorm:"-"`
-	SqlSlug sql.NullString `model:"-" gorm:"column:slug;UNIQUE_INDEX:content_slug"`
-	Title       string `model:"search"`
-	Subtitle    string `model:"search"`
-	Body        string `model:"search,noindex,HTML"`
-	Tags        string `model:"search"`
-	Category    string `model:"search,atom" page:"gettable,category"`
-	Topic       string `model:"search"`
-	Locale      string `model:"search,atom" gorm:"NOT NULL"`
-	Description string `model:"search"`
+	ID          uint           `model:"-" json:"-"`
+	Type        string         `model:"search"`
+	IdTranslate string         `gorm:"UNIQUE_INDEX:content_tanslate"`
+	Slug        string         `gorm:"-"`
+	SqlSlug     sql.NullString `model:"-" gorm:"column:slug;UNIQUE_INDEX:content_slug"`
+	Title       string         `model:"search"`
+	Subtitle    string         `model:"search"`
+	Body        string         `model:"search,noindex,HTML"`
+	Tags        string         `model:"search"`
+	Category    string         `model:"search,atom" page:"gettable,category"`
+	Topic       string         `model:"search"`
+	Locale      string         `model:"search,atom" gorm:"NOT NULL"`
+	Description string         `model:"search"`
 	Cover       string
 	Revision    int
 	Order       int           `model:"search"`
@@ -122,9 +122,9 @@ type Content struct {
 	Updated          time.Time        `model:"search"`
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
-	Parent        string           `model:"search,atom"`
-	Code             string `gorm:"-"`
-	SqlCode   sql.NullString `model:"-" gorm:"column:code;UNIQUE"`
+	Parent           string           `model:"search,atom"`
+	Code             string           `gorm:"-"`
+	SqlCode          sql.NullString   `model:"-" gorm:"column:code;UNIQUE"`
 
 	// KeyTypeEvent
 	StartDate time.Time
@@ -184,7 +184,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	alias := struct {
 		Type        string        `json:"type"`
 		IdTranslate string        `json:"idTranslate"`
-		Parent  string        `json:"parent"`
+		Parent      string        `json:"parent"`
 		Slug        string        `json:"slug"`
 		Title       string        `json:"title"`
 		Subtitle    string        `json:"subtitle"`
@@ -246,7 +246,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 
 func (content *Content) MarshalJSON() ([]byte, error) {
 	type Alias struct {
-		Id         string        `json:"id"`
+		Id          string        `json:"id"`
 		Type        string        `json:"type"`
 		IdTranslate string        `json:"idTranslate"`
 		Slug        string        `json:"slug"`
@@ -268,7 +268,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		Created     time.Time     `json:"created"`
 		Updated     time.Time     `json:"updated"`
 		Published   time.Time     `json:"published"`
-		Parent   string        `json:"parent"`
+		Parent      string        `json:"parent"`
 		StartDate   time.Time     `json:"startDate"`
 		EndDate     time.Time     `json:"endDate"`
 	}
@@ -294,7 +294,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 		hasStartDate,
 		hasEndDate,
 		Alias{
-			Id: content.Id(),
+			Id:          content.Id(),
 			Type:        content.Type,
 			IdTranslate: content.IdTranslate,
 			Slug:        content.getSlug(),
@@ -317,7 +317,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Published:   content.Published,
 			StartDate:   content.StartDate,
 			EndDate:     content.EndDate,
-			Parent:   content.Parent,
+			Parent:      content.Parent,
 		},
 	})
 }
