@@ -3,6 +3,7 @@ package identity
 import (
 	"crypto/sha1"
 	"crypto/sha256"
+	"database/sql"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/base64"
@@ -24,17 +25,36 @@ const (
 
 type User struct {
 	model.Model `json:"-"`
+	SqlUsername string `model:"-" gorm:"PRIMARY_KEY;column:username"`
 	//Resource
-	Name    string
-	Surname string
+	Name    string `gorm:"NOT NULL"`
+	Surname string `gorm:"NOT NULL"`
 	//username    string `model:"-"`
-	Email      string
-	Password   string
-	Token      string
-	Locale     string
-	Permission spellbook.Permission
+	Email      string `gorm:"NOT NULL;UNIQUE_INDEX:idx_users_email"`
+	Password   string `gorm:"NOT NULL"`
+	Token      string `gorm:"-"`
+	SqlToken sql.NullString `model:"-" gorm:"UNIQUE_INDEX:idx_users_token;column:token"`
+	Locale     string `gorm:"NOT NULL"`
+	Permission spellbook.Permission `gorm:"NOT NULL"`
 	LastLogin  time.Time
 	gUser      *guser.User `model:"-",json:"-"`
+}
+
+func (user *User) setToken(tkn string) {
+	user.Token = tkn
+	if tkn == "" {
+		user.SqlToken.Valid = false
+		return
+	}
+	user.SqlToken.Valid = true
+	user.SqlToken.String = tkn
+}
+
+func (user *User) getToken() string {
+	if user.SqlToken.Valid {
+		return user.SqlToken.String
+	}
+	return user.Token
 }
 
 func (user *User) UnmarshalJSON(data []byte) error {
@@ -138,6 +158,9 @@ func (user User) Username() string {
 	if user.IsGUser() {
 		return user.gUser.String()
 	}
+	if user.EncodedKey() == "" {
+		return user.SqlUsername
+	}
 	return user.StringID()
 }
 
@@ -151,7 +174,7 @@ func HashPassword(password string, salt string) string {
 }
 
 func (user User) GenerateToken() (string, error) {
-	if user.Key == nil {
+	if user.Id() == "" {
 		return "", errors.New("can't generate token. User does not exists")
 	}
 	hash := user.hash()
