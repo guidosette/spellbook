@@ -22,3 +22,5 @@ require (
 	google.golang.org/grpc v1.23.0 // indirect
 	honnef.co/go/tools v0.0.1-2019.2.2 // indirect
 )
+
+replace github.com/jinzhu/gorm => github.com/luigitni/gorm v1.9.11-0.20190926160618-762298bba304

@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
@@ -77,10 +76,6 @@ func (manager SqlTokenManager) Create(ctx context.Context, res spellbook.Resourc
 	db := sql.FromContext(ctx)
 	err := db.Where("username = ?", token.Username).First(u).Error
 
-	if err == gorm.ErrRecordNotFound {
-		return datastore.ErrNoSuchEntity
-	}
-
 	if err != nil {
 		return err
 	}
@@ -88,7 +83,7 @@ func (manager SqlTokenManager) Create(ctx context.Context, res spellbook.Resourc
 	salt := spellbook.Application().Options().Salt
 	hp := HashPassword(token.Password, salt)
 	if u.Password != hp {
-		return datastore.ErrNoSuchEntity
+		return gorm.ErrRecordNotFound
 	}
 
 	tv, err := u.GenerateToken()

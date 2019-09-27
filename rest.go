@@ -6,6 +6,7 @@ import (
 	"decodica.com/flamel"
 	"errors"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"google.golang.org/appengine/log"
 	"net/http"
 	"strconv"
@@ -273,6 +274,9 @@ func (handler BaseRestHandler) ErrorToStatus(ctx context.Context, err error, out
 		return flamel.HttpResponse{Status: http.StatusForbidden}
 	default:
 		if err == datastore.ErrNoSuchEntity {
+			return flamel.HttpResponse{Status: http.StatusNotFound}
+		}
+		if err == gorm.ErrRecordNotFound {
 			return flamel.HttpResponse{Status: http.StatusNotFound}
 		}
 		return flamel.HttpResponse{Status: http.StatusInternalServerError}

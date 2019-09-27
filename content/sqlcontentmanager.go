@@ -1,13 +1,13 @@
 package content
 
 import (
-	"cloud.google.com/go/datastore"
 	"context"
 	"decodica.com/spellbook"
 	"decodica.com/spellbook/identity"
 	"decodica.com/spellbook/sql"
 	"errors"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"google.golang.org/appengine/log"
 	"strconv"
 	"strings"
@@ -53,7 +53,7 @@ func (manager SqlContentManager) FromId(ctx context.Context, id string) (spellbo
 	if res := db.Where("parent_type = ?", AttachmentParentTypeContent).Find(&content.Attachments); res.Error != nil {
 		// todo: define the not found error by other means than datastore
 		log.Errorf(ctx, "error retrieving attachment %d: %s", intId, res.Error)
-		return nil, datastore.ErrNoSuchEntity
+		return nil, res.Error
 	}
 
 	return &content, nil
@@ -115,7 +115,7 @@ func (manager SqlContentManager) ListOfProperties(ctx context.Context, opts spel
 	case "":
 		return nil, spellbook.NewFieldError("property", fmt.Errorf("properties can't have no name"))
 	default:
-		return nil, datastore.ErrNoSuchEntity
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	var result []string
