@@ -49,11 +49,11 @@ func (manager SqlContentManager) FromId(ctx context.Context, id string) (spellbo
 		return nil, spellbook.NewFieldError("id", errors.New(msg))
 	}
 
-	db = db.First(&content, intId).Related(&content.Attachments, "parent_id")
-	if res := db.Where("parent_type = ?", AttachmentParentTypeContent).Find(&content.Attachments); res.Error != nil {
-		// todo: define the not found error by other means than datastore
-		log.Errorf(ctx, "error retrieving attachment %d: %s", intId, res.Error)
-		return nil, res.Error
+	//db = db.First(&content, intId).Related(&content.Attachments, "parent_id")
+	db = db.First(&content, intId).Where("parent_type = ?", AttachmentParentTypeContent)
+	if err := db.Related(&content.Attachments, "parent_id").Error; err != nil {
+		log.Errorf(ctx, "error retrieving attachment %d: %s", intId, err)
+		return nil, err
 	}
 
 	return &content, nil

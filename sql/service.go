@@ -42,7 +42,8 @@ func (service *Service) Initialize() {
 
 // adds the appengine client to the context
 func (service *Service) OnStart(ctx context.Context) context.Context {
-	return context.WithValue(ctx, sqlKey, service.db)
+	db := service.db.New()
+	return context.WithValue(ctx, sqlKey, db)
 }
 
 func (service *Service) OnEnd(ctx context.Context) {}
