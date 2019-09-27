@@ -238,6 +238,11 @@ func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resou
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
+	if attachment.ResourceThumbUrl == "" {
+		log.Infof(ctx, "No thumbnail provided for attachment %s, the image url will be used", attachment.Name)
+		attachment.ResourceThumbUrl = attachment.ResourceUrl
+	}
+
 	attachment.Updated = time.Now().UTC()
 	attachment.AltText = other.AltText
 

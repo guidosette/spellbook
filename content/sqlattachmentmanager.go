@@ -149,6 +149,11 @@ func (manager SqlAttachmentManager) Create(ctx context.Context, res spellbook.Re
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
+	if attachment.ResourceThumbUrl == "" {
+		log.Infof(ctx, "No thumbnail provided for attachment %s, the image url will be used", attachment.Name)
+		attachment.ResourceThumbUrl = attachment.ResourceUrl
+	}
+
 	// test the attachment parent type
 	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
 		if !sa.IsSupported(attachment) {
@@ -198,6 +203,11 @@ func (manager SqlAttachmentManager) Update(ctx context.Context, res spellbook.Re
 			msg := fmt.Sprintf("unsupported parent type %q for attachment", attachment.ParentType)
 			return spellbook.NewFieldError("parentType", errors.New(msg))
 		}
+	}
+
+	if attachment.ResourceThumbUrl == "" {
+		log.Infof(ctx, "No thumbnail provided for attachment %s, the image url will be used", attachment.Name)
+		attachment.ResourceThumbUrl = attachment.ResourceUrl
 	}
 
 	attachment.setParentKey(other.ParentKey)
