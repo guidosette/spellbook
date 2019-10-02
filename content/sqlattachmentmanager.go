@@ -196,6 +196,7 @@ func (manager SqlAttachmentManager) Update(ctx context.Context, res spellbook.Re
 	attachment.ResourceThumbUrl = other.ResourceThumbUrl
 	attachment.Group = other.Group
 	attachment.ParentType = other.ParentType
+	attachment.DisplayOrder = other.DisplayOrder
 
 	// test the attachment parent type
 	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {

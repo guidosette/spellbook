@@ -33,10 +33,11 @@ type Attachment struct {
 	ParentKey        string
 	ParentType       string `gorm:"NOT NULL"`
 	// inner foreign key when using sql backend
-	ParentID sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
-	Created  time.Time
-	Updated  time.Time
-	Uploader string
+	ParentID     sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
+	Created      time.Time
+	Updated      time.Time
+	Uploader     string
+	DisplayOrder int
 }
 
 func (attachment *Attachment) setParentKey(key string) {
@@ -59,6 +60,9 @@ func (attachment *Attachment) getParentKey() string {
 	if attachment.ParentID.Valid {
 		return fmt.Sprintf("%d", attachment.ParentID.Int64)
 	}
+	if attachment.ParentKey != "" {
+		return attachment.ParentKey
+	}
 	return AttachmentGlobalParent
 }
 
@@ -77,6 +81,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
 		AltText          string    `json:"altText"`
+		DisplayOrder     int       `json:"displayOrder"`
 	}{}
 
 	err := json.Unmarshal(data, &alias)
@@ -96,6 +101,7 @@ func (attachment *Attachment) UnmarshalJSON(data []byte) error {
 	attachment.Updated = alias.Updated
 	attachment.Uploader = alias.Uploader
 	attachment.AltText = alias.AltText
+	attachment.DisplayOrder = alias.DisplayOrder
 
 	return nil
 }
@@ -115,6 +121,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 		Updated          time.Time `json:"updated"`
 		Uploader         string    `json:"uploader"`
 		AltText          string    `json:"altText"`
+		DisplayOrder     int       `json:"displayOrder"`
 	}
 
 	return json.Marshal(&struct {
@@ -134,6 +141,7 @@ func (attachment *Attachment) MarshalJSON() ([]byte, error) {
 			Updated:          attachment.Updated,
 			Uploader:         attachment.Uploader,
 			AltText:          attachment.AltText,
+			DisplayOrder:     attachment.DisplayOrder,
 		},
 	})
 }

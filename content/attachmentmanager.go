@@ -222,6 +222,7 @@ func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resou
 	attachment.ResourceThumbUrl = other.ResourceThumbUrl
 	attachment.Group = other.Group
 	attachment.ParentType = other.ParentType
+	attachment.DisplayOrder = other.DisplayOrder
 
 	// test the attachment parent type
 	if sa := SupportedAttachmentsFromContext(ctx); sa != nil {
