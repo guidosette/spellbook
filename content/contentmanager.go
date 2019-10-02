@@ -47,6 +47,7 @@ func (manager ContentManager) FromId(ctx context.Context, id string) (spellbook.
 	// attachment
 	q := model.NewQuery((*Attachment)(nil))
 	q = q.WithField("ParentKey =", cont.Id())
+	q = q.OrderBy("DisplayOrder", model.ASC)
 	if err := q.GetMulti(ctx, &cont.Attachments); err != nil {
 		log.Errorf(ctx, "could not retrieve content %s attachments: %s", id, err.Error())
 		return nil, err

@@ -10,7 +10,6 @@ import (
 	"google.golang.org/appengine/log"
 	"reflect"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -43,14 +42,9 @@ func (manager AttachmentManager) FromId(ctx context.Context, strId string) (spel
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
-	id, err := strconv.ParseInt(strId, 10, 64)
-	if err != nil {
-		return nil, spellbook.NewFieldError(strId, err)
-	}
-
 	att := Attachment{}
-	if err := model.FromIntID(ctx, &att, id, nil); err != nil {
-		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, err.Error())
+	if err := model.FromEncodedKey(ctx, &att, strId); err != nil {
+		log.Errorf(ctx, "could not retrieve attachment %s: %s", strId, err.Error())
 		return nil, err
 	}
 
