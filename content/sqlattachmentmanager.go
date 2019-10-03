@@ -2,36 +2,35 @@ package content
 
 import (
 	"context"
-	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"decodica.com/spellbook/identity"
+	"decodica.com/spellbook/sql"
 	"errors"
 	"fmt"
 	"google.golang.org/appengine/log"
-	"reflect"
-	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
 
-func NewAttachmentController() *spellbook.RestController {
-	return NewAttachmentControllerWithKey("")
+func NewSqlAttachmentController() *spellbook.RestController {
+	return NewSqlAttachmentControllerWithKey("")
 }
 
-func NewAttachmentControllerWithKey(key string) *spellbook.RestController {
-	man := AttachmentManager{}
-	handler := spellbook.BaseRestHandler{Manager: man}
+func NewSqlAttachmentControllerWithKey(key string) *spellbook.RestController {
+	handler := spellbook.BaseRestHandler{Manager: SqlAttachmentManager{}}
 	c := spellbook.NewRestController(handler)
 	c.Key = key
 	return c
 }
 
-type AttachmentManager struct{}
+type SqlAttachmentManager struct{}
 
-func (manager AttachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
+func (manager SqlAttachmentManager) NewResource(ctx context.Context) (spellbook.Resource, error) {
 	return &Attachment{}, nil
 }
 
-func (manager AttachmentManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
+func (manager SqlAttachmentManager) FromId(ctx context.Context, strId string) (spellbook.Resource, error) {
 
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
@@ -42,16 +41,23 @@ func (manager AttachmentManager) FromId(ctx context.Context, strId string) (spel
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
+	id, err := strconv.ParseInt(strId, 10, 64)
+	if err != nil {
+		return nil, spellbook.NewFieldError(strId, err)
+	}
+
 	att := Attachment{}
-	if err := model.FromEncodedKey(ctx, &att, strId); err != nil {
-		log.Errorf(ctx, "could not retrieve attachment %s: %s", strId, err.Error())
+
+	db := sql.FromContext(ctx)
+	if res := db.First(&att, id); res.Error != nil {
+		log.Errorf(ctx, "could not retrieve attachment %s: %s", id, res.Error.Error())
 		return nil, err
 	}
 
 	return &att, nil
 }
 
-func (manager AttachmentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
+func (manager SqlAttachmentManager) ListOf(ctx context.Context, opts spellbook.ListOptions) ([]spellbook.Resource, error) {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionReadContent
@@ -62,94 +68,68 @@ func (manager AttachmentManager) ListOf(ctx context.Context, opts spellbook.List
 	}
 
 	var attachments []*Attachment
-	q := model.NewQuery(&Attachment{})
-	q = q.OffsetBy(opts.Page * opts.Size)
-
-	if opts.Order != "" {
-		dir := model.ASC
-		if opts.Descending {
-			dir = model.DESC
-		}
-		q = q.OrderBy(opts.Order, dir)
-	}
+	db := sql.FromContext(ctx)
+	db = db.Offset(opts.Page * opts.Size)
 
 	for _, filter := range opts.Filters {
-		if filter.Field != "" {
-			q = q.WithField(filter.Field+" =", filter.Value)
-		}
+		field := sql.ToColumnName(filter.Field)
+		db = db.Where(fmt.Sprintf("%q = ?", field), filter.Value)
 	}
 
-	// get one more so we know if we are done
-	q = q.Limit(opts.Size + 1)
-	err := q.GetMulti(ctx, &attachments)
-	if err != nil {
-		return nil, err
+	if opts.Order != "" {
+		dir := " asc"
+		if opts.Descending {
+			dir = " desc"
+		}
+		db = db.Order(fmt.Sprintf("%q %s", strings.ToLower(opts.Order), dir))
+	}
+
+	db = db.Limit(opts.Size + 1)
+	if res := db.Find(&attachments); res.Error != nil {
+		log.Errorf(ctx, "error retrieving content: %s", res.Error.Error())
+		return nil, res.Error
 	}
 
 	resources := make([]spellbook.Resource, len(attachments))
 	for i := range attachments {
 		resources[i] = attachments[i]
 	}
-
 	return resources, nil
 }
 
-func (manager AttachmentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
-	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionReadContent) && !current.HasPermission(spellbook.PermissionReadMedia)) {
-		var p spellbook.Permission
-		p = spellbook.PermissionReadContent
-		if !current.HasPermission(spellbook.PermissionReadMedia) {
-			p = spellbook.PermissionReadMedia
-		}
-		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
+func (manager SqlAttachmentManager) ListOfProperties(ctx context.Context, opts spellbook.ListOptions) ([]string, error) {
+
+	if current := spellbook.IdentityFromContext(ctx); current == nil || !current.HasPermission(spellbook.PermissionReadMedia) {
+		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadMedia))
 	}
 
-	a := []string{"Group"} // list property accepted
-	name := opts.Property
-
-	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
-	if i < len(a) && a[i] == name {
-		// found
-	} else {
+	if opts.Property != "Group" {
 		return nil, errors.New("no property found")
 	}
 
-	var conts []*Attachment
-	q := model.NewQuery(&Attachment{})
-	q = q.OffsetBy(opts.Page * opts.Size)
+	property := "group"
 
-	if opts.Order != "" {
-		dir := model.ASC
-		if opts.Descending {
-			dir = model.DESC
-		}
-		q = q.OrderBy(opts.Order, dir)
-	}
-
-	for _, filter := range opts.Filters {
-		if filter.Field != "" {
-			q = q.WithField(filter.Field+" =", filter.Value)
-		}
-	}
-
-	q = q.Distinct(name)
-	q = q.Limit(opts.Size + 1)
-	err := q.GetAll(ctx, &conts)
+	var result []string
+	db := sql.FromContext(ctx)
+	rows, err := db.Raw(fmt.Sprintf("SELECT DISTINCT %q FROM attachments", property)).Rows()
 	if err != nil {
-		log.Errorf(ctx, "Error retrieving result: %+v", err)
+		log.Errorf(ctx, "error retrieving property list for property %s: %s", property, err)
 		return nil, err
 	}
-	var result []string
-	for _, c := range conts {
-		value := reflect.ValueOf(c).Elem().FieldByName(name).String()
-		if len(value) > 0 {
-			result = append(result, value)
+	defer rows.Close()
+
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			log.Errorf(ctx, "error retrieving property %s occurrencies: %s", property, err)
+			return nil, err
 		}
+		result = append(result, p)
 	}
 	return result, nil
 }
 
-func (manager AttachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager SqlAttachmentManager) Create(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	current := spellbook.IdentityFromContext(ctx)
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
@@ -185,16 +165,16 @@ func (manager AttachmentManager) Create(ctx context.Context, res spellbook.Resou
 	attachment.Created = time.Now().UTC()
 	attachment.Uploader = current.(identity.User).Username()
 
-	err := model.Create(ctx, attachment)
-	if err != nil {
-		log.Errorf(ctx, "error creating attachment %s: %s", attachment.Name, err)
-		return err
+	db := sql.FromContext(ctx)
+	if res := db.Create(&attachment); res.Error != nil {
+		log.Errorf(ctx, "error creating post %s: %s", attachment.Name, res.Error)
+		return res.Error
 	}
 
 	return nil
 }
 
-func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
+func (manager SqlAttachmentManager) Update(ctx context.Context, res spellbook.Resource, bundle []byte) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionWriteContent
@@ -226,6 +206,11 @@ func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resou
 		}
 	}
 
+	if attachment.ResourceThumbUrl == "" {
+		log.Infof(ctx, "No thumbnail provided for attachment %s, the image url will be used", attachment.Name)
+		attachment.ResourceThumbUrl = attachment.ResourceUrl
+	}
+
 	attachment.setParentKey(other.ParentKey)
 
 	if attachment.ParentKey == "" {
@@ -233,18 +218,18 @@ func (manager AttachmentManager) Update(ctx context.Context, res spellbook.Resou
 		return spellbook.NewFieldError("parent", errors.New(msg))
 	}
 
-	if attachment.ResourceThumbUrl == "" {
-		log.Infof(ctx, "No thumbnail provided for attachment %s, the image url will be used", attachment.Name)
-		attachment.ResourceThumbUrl = attachment.ResourceUrl
-	}
-
 	attachment.Updated = time.Now().UTC()
 	attachment.AltText = other.AltText
 
-	return model.Update(ctx, attachment)
+	db := sql.FromContext(ctx)
+	if res := db.Save(&attachment); res.Error != nil {
+		log.Errorf(ctx, "error updating attachment %s: %s", attachment.Name, res.Error.Error())
+		return res.Error
+	}
+	return nil
 }
 
-func (manager AttachmentManager) Delete(ctx context.Context, res spellbook.Resource) error {
+func (manager SqlAttachmentManager) Delete(ctx context.Context, res spellbook.Resource) error {
 	if current := spellbook.IdentityFromContext(ctx); current == nil || (!current.HasPermission(spellbook.PermissionWriteContent) && !current.HasPermission(spellbook.PermissionWriteMedia)) {
 		var p spellbook.Permission
 		p = spellbook.PermissionWriteContent
@@ -255,10 +240,10 @@ func (manager AttachmentManager) Delete(ctx context.Context, res spellbook.Resou
 	}
 
 	attachment := res.(*Attachment)
-	err := model.Delete(ctx, attachment, nil)
-	if err != nil {
-		log.Errorf(ctx, "error deleting attachment %s: %s", attachment.Name, err.Error())
-		return err
+	db := sql.FromContext(ctx)
+	if res := db.Delete(attachment); res.Error != nil {
+		log.Errorf(ctx, "error deleting attachment %s: %s", attachment.Name, res.Error.Error())
+		return res.Error
 	}
 
 	return nil
