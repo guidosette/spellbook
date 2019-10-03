@@ -50,7 +50,7 @@ func (manager SqlContentManager) FromId(ctx context.Context, id string) (spellbo
 	}
 
 	//db = db.First(&content, intId).Related(&content.Attachments, "parent_id")
-	db = db.First(&content, intId).Where("parent_type = ?", AttachmentParentTypeContent)
+	db = db.First(&content, intId).Where("parent_type = ?", AttachmentParentTypeContent).Order("display_order asc")
 	if err := db.Related(&content.Attachments, "parent_id").Error; err != nil {
 		log.Errorf(ctx, "error retrieving attachment %d: %s", intId, err)
 		return nil, err

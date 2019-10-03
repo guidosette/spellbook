@@ -34,10 +34,10 @@ type Attachment struct {
 	ParentType       string `gorm:"NOT NULL"`
 	// inner foreign key when using sql backend
 	ParentID     sql.NullInt64 `model:"-" json:"-" gorm:"type:integer"`
+	DisplayOrder int
 	Created      time.Time
 	Updated      time.Time
 	Uploader     string
-	DisplayOrder int
 }
 
 func (attachment *Attachment) setParentKey(key string) {
