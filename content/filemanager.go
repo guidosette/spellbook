@@ -11,6 +11,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine/file"
 	"google.golang.org/appengine/log"
+	"image"
 	"strings"
 )
 
@@ -222,7 +223,21 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	}
 
 	// build the filename
-	filename := fmt.Sprintf("%s%s/%s", typ, namespace, name)
+	filename := ""
+	var image image.Image
+	if strings.Contains(fh.Header.Get("Content-Type"), "image/") {
+		// get image
+		image, err = imaging.Decode(f)
+		if err != nil {
+			msg := fmt.Sprintf("error in opening image %s", err)
+			return spellbook.NewFieldError("bucket", errors.New(msg))
+		}
+		imageWidth := image.Bounds().Max.X
+		imageHeight := image.Bounds().Max.Y
+		filename = fmt.Sprintf("%s%s/%d/%d/%s", typ, namespace, imageWidth, imageHeight, name)
+	} else {
+		filename = fmt.Sprintf("%s%s/%s", typ, namespace, name)
+	}
 
 	// handle the upload to Google Cloud Storage
 	bucket, err := manager.BucketName(ctx)
@@ -257,13 +272,7 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	rfile.Name = name
 
 	// -----------------------------thumbnail
-	if strings.Contains(writer.ContentType, "image/") {
-		// get image
-		image, err := imaging.Decode(f)
-		if err != nil {
-			msg := fmt.Sprintf("error in opening image %s", err)
-			return spellbook.NewFieldError("bucket", errors.New(msg))
-		}
+	if image != nil {
 		// create thumbnail
 		fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
 		afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
