@@ -104,7 +104,7 @@ func (manager AttachmentManager) ListOfProperties(ctx context.Context, opts spel
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(p))
 	}
 
-	a := []string{"Group"} // list property accepted
+	a := []string{"Group", "ParentKey"} // list property accepted
 	name := opts.Property
 
 	i := sort.Search(len(a), func(i int) bool { return name <= a[i] })
