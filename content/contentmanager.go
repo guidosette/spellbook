@@ -306,7 +306,7 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 	content.Updated = time.Now().UTC()
 	content.Tags = other.Tags
 	content.setSlug(other.Slug)
-	content.Parent = other.Parent
+	content.ParentKey = other.ParentKey
 
 	if !other.IsPublished() {
 		// not set

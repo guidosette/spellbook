@@ -124,7 +124,8 @@ type Content struct {
 	Updated          time.Time        `model:"search"`
 	Published        time.Time        `model:"search"`
 	PublicationState PublicationState `model:"search,atom"`
-	Parent           string           `model:"search,atom"`
+	// todo: add slq parent id to the content model
+	ParentKey           string           `model:"search,atom" gorm:"column:parent"`
 	Code             string           `gorm:"-"`
 	SqlCode          sql.NullString   `model:"-" gorm:"column:code;UNIQUE"`
 
@@ -237,7 +238,7 @@ func (content *Content) UnmarshalJSON(data []byte) error {
 	content.EndDate = alias.EndDate
 	content.setCode(alias.Code)
 	content.IdTranslate = alias.IdTranslate
-	content.Parent = alias.Parent
+	content.ParentKey = alias.Parent
 	if alias.IsPublished {
 		content.Published = time.Now().UTC()
 	}
@@ -319,7 +320,7 @@ func (content *Content) MarshalJSON() ([]byte, error) {
 			Published:   content.Published,
 			StartDate:   content.StartDate,
 			EndDate:     content.EndDate,
-			Parent:      content.Parent,
+			Parent:      content.ParentKey,
 		},
 	})
 }
