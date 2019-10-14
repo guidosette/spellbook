@@ -275,7 +275,8 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	if image != nil {
 		// create thumbnail
 		fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
-		afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
+		afterImage := imaging.Fit(image, 150, 150, imaging.Linear)
+		//afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
 		// Save thumbnail
 		wc := handle.Object(fileNameThumbnail).NewWriter(ctx)
 		wc.ContentType = fh.Header.Get("Content-Type")
