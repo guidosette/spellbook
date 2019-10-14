@@ -280,7 +280,7 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 		// Save thumbnail
 		wc := handle.Object(fileNameThumbnail).NewWriter(ctx)
 		wc.ContentType = fh.Header.Get("Content-Type")
-		if imaging.Encode(wc, afterImage, imaging.JPEG); err != nil {
+		if err := imaging.Encode(wc, afterImage, imaging.JPEG); err != nil {
 			msg := fmt.Sprintf("%s in saving image thumbnail", err.Error())
 			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
