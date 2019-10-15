@@ -1,10 +1,10 @@
 package content
 
 import (
+	"cloud.google.com/go/datastore"
 	"decodica.com/flamel/model"
 	"decodica.com/spellbook"
 	"encoding/json"
-	"google.golang.org/appengine"
 	"regexp"
 	"time"
 )
@@ -21,7 +21,7 @@ type Place struct {
 	Country      string             `json:"country"`
 	Phone        string             `json:"phone"`
 	Description  string             `json:"description";model:"noindex"`
-	Position     appengine.GeoPoint `model:"search"`
+	Position     datastore.GeoPoint `model:"search"`
 	Website      string             `json:"website"`
 	Created      time.Time          `json:"created"`
 	Updated      time.Time          `json:"updated"`
@@ -71,7 +71,7 @@ func (place *Place) UnmarshalJSON(data []byte) error {
 	place.Website = alias.Website
 	place.Created = alias.Created
 	place.Updated = alias.Updated
-	place.Position = appengine.GeoPoint{Lat: alias.Lat, Lng: alias.Lng}
+	place.Position = datastore.GeoPoint{Lat: alias.Lat, Lng: alias.Lng}
 
 	return nil
 }
