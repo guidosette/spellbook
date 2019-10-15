@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/file"
 	"google.golang.org/appengine/log"
 	"image"
+	"net/http"
 	"strings"
 )
 
@@ -222,21 +223,31 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 		return spellbook.NewFieldError("read", err)
 	}
 
+	// test if the file is an image
+	// properly detect mime type
+	test := buffer
+	if fh.Size > 512 {
+		test = test[:512]
+	}
+
+	// retrieve the mime type
+	ctype := http.DetectContentType(test)
+
 	// build the filename
-	filename := ""
-	var image image.Image
-	if strings.Contains(fh.Header.Get("Content-Type"), "image/") {
+	var img image.Image
+	fpath := ""
+	if strings.Contains(ctype, "image/") {
 		// get image
-		image, err = imaging.Decode(f)
+		img, err = imaging.Decode(f)
 		if err != nil {
 			msg := fmt.Sprintf("error in opening image %s", err)
 			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
-		imageWidth := image.Bounds().Max.X
-		imageHeight := image.Bounds().Max.Y
-		filename = fmt.Sprintf("%s%s/%d/%d/%s", typ, namespace, imageWidth, imageHeight, name)
+		imageWidth := img.Bounds().Max.X
+		imageHeight := img.Bounds().Max.Y
+		fpath = fmt.Sprintf("%s%s/%d/%d", typ, namespace, imageWidth, imageHeight)
 	} else {
-		filename = fmt.Sprintf("%s%s/%s", typ, namespace, name)
+		fpath = fmt.Sprintf("%s%s/%s", typ, namespace)
 	}
 
 	// handle the upload to Google Cloud Storage
@@ -252,9 +263,13 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	}
 	defer client.Close()
 
+	filename := fmt.Sprintf("%s/%s", fpath, name)
+
 	handle := client.Bucket(bucket)
-	writer := handle.Object(filename).NewWriter(ctx)
-	writer.ContentType = fh.Header.Get("Content-Type")
+
+	obj := handle.Object(filename)
+	writer := obj.NewWriter(ctx)
+	writer.ContentType = ctype
 
 	if _, err := writer.Write(buffer); err != nil {
 		msg := fmt.Sprintf("upload: unable to write file %s to bucket %s: %s", filename, bucket, err.Error())
@@ -271,19 +286,20 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	rfile.ResourceUrl = uri
 	rfile.Name = name
 
-	// -----------------------------thumbnail
-	if image != nil {
+	// handle image resizing and thumb generation
+	if img != nil {
 		// create thumbnail
 		fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
-		afterImage := imaging.Fit(image, 150, 150, imaging.Linear)
+		afterImage := imaging.Fit(img, 150, 150, imaging.Linear)
 		//afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
 		// Save thumbnail
 		wc := handle.Object(fileNameThumbnail).NewWriter(ctx)
-		wc.ContentType = fh.Header.Get("Content-Type")
+		wc.ContentType = ctype
 		if err := imaging.Encode(wc, afterImage, imaging.JPEG); err != nil {
 			msg := fmt.Sprintf("%s in saving image thumbnail", err.Error())
 			return spellbook.NewFieldError("bucket", errors.New(msg))
 		}
+
 		if err = wc.Close(); err != nil {
 			msg := fmt.Sprintf("CreateFileThumbnail: unable to close bucket %q, file %q: %v", bucket, fileNameThumbnail, err)
 			return spellbook.NewFieldError("bucket", errors.New(msg))

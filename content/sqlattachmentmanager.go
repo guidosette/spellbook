@@ -103,11 +103,15 @@ func (manager SqlAttachmentManager) ListOfProperties(ctx context.Context, opts s
 		return nil, spellbook.NewPermissionError(spellbook.PermissionName(spellbook.PermissionReadMedia))
 	}
 
-	if opts.Property != "Group" {
+	var property string
+	switch opts.Property {
+	case "Group":
+		property = "group"
+	case "ParentKey":
+		property = "parent_key"
+	default:
 		return nil, errors.New("no property found")
 	}
-
-	property := "group"
 
 	var result []string
 	db := sql.FromContext(ctx)
