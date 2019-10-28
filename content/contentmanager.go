@@ -195,9 +195,11 @@ func (manager ContentManager) Create(ctx context.Context, res spellbook.Resource
 	q := model.NewQuery((*Content)(nil))
 
 	// if is a special content, we check that the content doesn't already exist
+	reason := "code"
 	if content.Code == "" {
 		q = q.WithField("Slug =", content.Slug)
 		q = q.WithField("Locale = ", content.Locale)
+		reason = "slug"
 	} else {
 		q = q.WithField("Code =", content.Code)
 		q = q.WithField("Locale = ", content.Locale)
@@ -206,13 +208,9 @@ func (manager ContentManager) Create(ctx context.Context, res spellbook.Resource
 	if err != nil {
 		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying slug uniqueness: %s", err.Error()))
 	}
+
 	if count > 0 {
-		msg := ""
-		if content.Code == "" {
-			msg = fmt.Sprintf("a content with slug  %s already exists. Slug must be unique.", content.Slug)
-		} else {
-			msg = fmt.Sprintf("a content with code %s already exists. Code must be unique.", content.Code)
-		}
+		msg := fmt.Sprintf("a content with the same %s already exists.", reason)
 		return spellbook.NewFieldError("slug", errors.New(msg))
 	}
 
@@ -272,9 +270,12 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 	// if the same slug already exists, we must return
 	// otherwise we would overwrite an existing entry, which is not in the spirit of the create method
 	q := model.NewQuery((*Content)(nil))
+
+	reason := "code"
 	if other.Code == "" {
 		q = q.WithField("Slug =", other.Slug)
 		q = q.WithField("Locale = ", other.Locale)
+		reason = "slug"
 	} else {
 		q = q.WithField("Code =", other.Code)
 		q = q.WithField("Locale = ", other.Locale)
@@ -282,9 +283,14 @@ func (manager ContentManager) Update(ctx context.Context, res spellbook.Resource
 
 	compare := Content{}
 	err := q.First(ctx, &compare)
+	if err == datastore.ErrNoSuchEntity && compare.EncodedKey() != content.EncodedKey() {
+		return spellbook.NewFieldError("slug", fmt.Errorf("a content with the same %s already exists", reason))
+	}
+
 	if err != nil {
 		return spellbook.NewFieldError("slug", fmt.Errorf("error verifying content correctness: %s", err.Error()))
 	}
+
 	if content.Id() != compare.Id() {
 		msg := fmt.Sprintf("a content with code %s or slug %s already exists. Code or slug must be unique.", content.Code, content.Slug)
 		return spellbook.NewFieldError("code", errors.New(msg))
