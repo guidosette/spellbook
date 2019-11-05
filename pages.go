@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const (
@@ -324,6 +325,11 @@ func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutp
 	if page.DataHandler != nil {
 		data = page.DataHandler.AssignData(ctx)
 	}
+
+	parms := flamel.InputsFromContext(ctx)
+	page.Url = parms[flamel.KeyRequestURL].Value()
+	// url without lang
+	page.Url = strings.Replace(page.Url, "/"+lang, "", 1)
 
 	renderer.Data = struct {
 		Url      string
