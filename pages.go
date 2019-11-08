@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const (
@@ -221,7 +222,11 @@ func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutp
 			j, _ := json.Marshal(data)
 			return template.HTML(j)
 		},
+		"ToHtml": func(s string) template.HTML {
+			return template.HTML(s)
+		},
 	}
+
 	if page.FuncHandler != nil {
 		customFuncMap := page.FuncHandler.AssignFuncMap(ctx)
 		for k, v := range customFuncMap {
@@ -324,6 +329,11 @@ func (page *LocalizedPage) Process(ctx context.Context, out *flamel.ResponseOutp
 	if page.DataHandler != nil {
 		data = page.DataHandler.AssignData(ctx)
 	}
+
+	parms := flamel.InputsFromContext(ctx)
+	page.Url = parms[flamel.KeyRequestURL].Value()
+	// url without lang
+	page.Url = strings.Replace(page.Url, "/"+lang, "", 1)
 
 	renderer.Data = struct {
 		Url      string

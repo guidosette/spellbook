@@ -14,6 +14,7 @@ import (
 	"image"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func NewFileController() *spellbook.RestController {
@@ -247,8 +248,15 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 		imageHeight := img.Bounds().Max.Y
 		fpath = fmt.Sprintf("%s%s/%d/%d", typ, namespace, imageWidth, imageHeight)
 	} else {
-		fpath = fmt.Sprintf("%s%s/%s", typ, namespace)
+		fpath = fmt.Sprintf("%s%s", typ, namespace)
 	}
+
+	// add timestamp
+	now := time.Now()
+	const format = "02_01_2006_15_04"
+	var location, _ = time.LoadLocation("Europe/Rome")
+	now = now.In(location)
+	fpath = fmt.Sprintf("%s/%s", fpath, now.Format(format))
 
 	// handle the upload to Google Cloud Storage
 	bucket, err := manager.BucketName(ctx)
@@ -289,7 +297,9 @@ func (manager FileManager) Create(ctx context.Context, res spellbook.Resource, b
 	// handle image resizing and thumb generation
 	if img != nil {
 		// create thumbnail
-		fileNameThumbnail := fmt.Sprintf("%s%s/thumb/%s", typ, namespace, name)
+		const ThumbFolderName = "thumb"
+
+		fileNameThumbnail := fmt.Sprintf("%s/%s/%s", fpath, ThumbFolderName, name)
 		afterImage := imaging.Fit(img, 150, 150, imaging.Linear)
 		//afterImage := imaging.Thumbnail(image, 100, 100, imaging.Linear)
 		// Save thumbnail
