@@ -102,7 +102,7 @@ type Content struct {
 	model.Model `json:"-"`
 	ID          uint           `model:"-" json:"-"`
 	Type        string         `model:"search"`
-	IdTranslate string         `gorm:"UNIQUE_INDEX:content_tanslate"`
+	IdTranslate string         `gorm:"UNIQUE_INDEX:content_idtranslate_locale"`
 	Slug        string         `gorm:"-"`
 	SqlSlug     sql.NullString `model:"-" gorm:"column:slug;UNIQUE_INDEX:content_slug"`
 	Title       string         `model:"search"`
@@ -111,7 +111,7 @@ type Content struct {
 	Tags        string         `model:"search"`
 	Category    string         `model:"search,atom" page:"gettable,category"`
 	Topic       string         `model:"search"`
-	Locale      string         `model:"search,atom" gorm:"NOT NULL;UNIQUE_INDEX:content_code_locale"`
+	Locale      string         `model:"search,atom" gorm:"NOT NULL;UNIQUE_INDEX:content_code_locale,content_idtranslate_locale"`
 	Description string         `model:"search"`
 	Cover       string
 	Revision    int
