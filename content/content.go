@@ -111,7 +111,7 @@ type Content struct {
 	Tags        string         `model:"search"`
 	Category    string         `model:"search,atom" page:"gettable,category"`
 	Topic       string         `model:"search"`
-	Locale      string         `model:"search,atom" gorm:"NOT NULL"`
+	Locale      string         `model:"search,atom" gorm:"NOT NULL;UNIQUE_INDEX:content_code_locale"`
 	Description string         `model:"search"`
 	Cover       string
 	Revision    int
@@ -127,7 +127,7 @@ type Content struct {
 	// todo: add slq parent id to the content model
 	ParentKey           string           `model:"search,atom" gorm:"column:parent"`
 	Code             string           `gorm:"-"`
-	SqlCode          sql.NullString   `model:"-" gorm:"column:code;UNIQUE"`
+	SqlCode          sql.NullString   `model:"-" gorm:"column:code;UNIQUE_INDEX:content_code_locale"`
 
 	// KeyTypeEvent
 	StartDate time.Time
