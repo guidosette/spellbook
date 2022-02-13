@@ -1,0 +1,80 @@
+<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			{{action}} User: {{user.username}}
+		</mat-card-title>
+		<form [formGroup]="userForm" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(userForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('username') ? '*' : ''}} Username" formControlName="username" id="username"
+							[readonly]="user.username">
+					<mat-error *ngIf="hasError('username', 'required')">Username is required</mat-error>
+					<mat-error *ngIf="hasError('username', 'maxLength')">Username is too long</mat-error>
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput type="password" placeholder="{{hasMandatory('password') ? '*' : ''}} Password" formControlName="password" id="password">
+					<mat-error *ngIf="hasError('password', 'required')">Password is required</mat-error>
+					<mat-error *ngIf="hasError('password', 'minLength')">Password must be at least 8 characters long
+					</mat-error>
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput type="email" placeholder="{{hasMandatory('email') ? '*' : ''}} Email" formControlName="email" id="email">
+					<mat-error *ngIf="hasError('email', 'required')">Email is required</mat-error>
+					<mat-error *ngIf="hasError('email', 'email')">Not a valid email</mat-error>
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('name') ? '*' : ''}} Name" formControlName="name" id="name">
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('surname') ? '*' : ''}} Surname" formControlName="surname" id="surname">
+				</mat-form-field>
+
+				<div class="mat-form-field-wrapper" fxFlexFill>
+					<mat-expansion-panel fxFlexFill *ngIf="showPermissions()">
+						<mat-expansion-panel-header>
+							<mat-panel-title>
+								<div fxLayout="row" fxLayoutAlign="start center">
+									Permissions
+									<mat-icon fxLayoutAlign="center" matListIcon>supervisor_account</mat-icon>
+								</div>
+							</mat-panel-title>
+							<mat-panel-description>
+							</mat-panel-description>
+						</mat-expansion-panel-header>
+						<div fxLayout="column" fxLayoutAlign="space-evently start">
+							<div *ngFor="let permission of permissions">
+								<mat-checkbox (click)="changeValueCheckBox($event, permission)" *ngIf="permission.isOnlyLabel()" formControlName="{{permission.label}}"
+										id="{{permission.label}}">{{permission.label}}</mat-checkbox>
+								<mat-checkbox *ngIf="!permission.isOnlyLabel()" formControlName="{{permission.value}}"
+										id="{{permission.value}}">{{permission.label}}</mat-checkbox>
+								<div *ngFor="let children of permission.children" style="margin-left:30px;">
+									<mat-checkbox *ngIf="children.isOnlyLabel()" formControlName="{{children.label}}"
+											id="{{children.label}}">{{children.label}}</mat-checkbox>
+									<mat-checkbox *ngIf="!children.isOnlyLabel()" formControlName="{{children.value}}"
+											id="{{children.value}}">{{children.label}}</mat-checkbox>
+								</div>
+							</div>
+						</div>
+
+					</mat-expansion-panel>
+				</div>
+
+				<mat-checkbox class="mat-form-field-wrapper" formControlName="enabled" id="enabled">Enabled
+				</mat-checkbox>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!userForm.valid && action === 'Create'">
+					{{action}}
+					<mat-icon *ngIf="user.username" matListIcon>edit</mat-icon>
+					<mat-icon *ngIf="!user.username" matListIcon>fiber_new</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

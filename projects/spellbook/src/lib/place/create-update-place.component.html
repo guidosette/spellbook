@@ -1,0 +1,116 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			{{action}} Place: {{place.name}}
+		</mat-card-title>
+
+		<form [formGroup]="formGroup" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(formGroup.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('name') ? '*' : ''}} Name" formControlName="name" id="name">
+					<mat-error *ngIf="hasError('name', 'required')">Name is required</mat-error>
+					<mat-error *ngIf="hasError('name', 'minLength')">Name is too short</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('address') ? '*' : ''}} Address" formControlName="address" id="address"
+							autocorrect="off" autocapitalize="off" spellcheck="off" #search>
+					<mat-error *ngIf="hasError('address', 'required')">Address is required</mat-error>
+					<mat-error *ngIf="hasError('address', 'minLength')">Address is too short</mat-error>
+				</mat-form-field>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('city') ? '*' : ''}} City" formControlName="city" id="city">
+					</mat-form-field>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('area') ? '*' : ''}} Administrative Area" formControlName="area" id="area">
+					</mat-form-field>
+				</div>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('streetNumber') ? '*' : ''}} Street" formControlName="street" id="street">
+					</mat-form-field>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('country') ? '*' : ''}} Street number" formControlName="streetNumber" id="streetNumber">
+					</mat-form-field>
+				</div>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('postalCode') ? '*' : ''}} Postal code" formControlName="postalCode" id="postalCode">
+					</mat-form-field>
+					<mat-form-field fxFlex="45">
+						<input matInput type="text" readonly placeholder="{{hasMandatory('country') ? '*' : ''}} Country" formControlName="country" id="country">
+					</mat-form-field>
+				</div>
+
+				<!--				POSITION-->
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field [hidden]="true" fxFlex="45">
+						<input matInput type="number" placeholder="{{hasMandatory('lat') ? '*' : ''}} Lat" formControlName="lat" id="lat">
+						<mat-error *ngIf="hasError('lat', 'required')">Latitude is required</mat-error>
+					</mat-form-field>
+					<mat-form-field [hidden]="true" fxFlex="45">
+						<input matInput type="number" placeholder="{{hasMandatory('lng') ? '*' : ''}} Lng" formControlName="lng" id="lng">
+						<mat-error *ngIf="hasError('lng', 'required')">Longitude is required</mat-error>
+					</mat-form-field>
+				</div>
+				<!--				MAP-->
+				<agm-map
+						[latitude]="place.lat"
+						[longitude]="place.lng"
+						[zoom]="zoom"
+						[disableDefaultUI]="false"
+						[zoomControl]="false">
+					<agm-marker
+							[latitude]="place.lat"
+							[longitude]="place.lng"
+							(markerClick)="clickedMarker(place.address)"
+							[label]="place.name | slice : 0:2"
+							[markerDraggable]="true"
+							(dragEnd)="markerDragEnd(place, $event)">
+						<agm-info-window>
+							<strong>{{place.description}}</strong>
+						</agm-info-window>
+					</agm-marker>
+				</agm-map>
+
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('phone') ? '*' : ''}} Phone" formControlName="phone" id="phone"
+							ng-pattern="/^[7-9][0-9]{9}$/">
+				</mat-form-field>
+
+				<mat-form-field>
+					<textarea matInput placeholder="{{hasMandatory('description') ? '*' : ''}} Description" formControlName="description"
+							id="description"></textarea>
+				</mat-form-field>
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('website') ? '*' : ''}} Website" formControlName="website" id="website">
+				</mat-form-field>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!formGroup.valid && action === 'Create'">
+					{{action}}
+					<mat-icon *ngIf="place.id" matListIcon>edit</mat-icon>
+					<mat-icon *ngIf="!place.id" matListIcon>fiber_new</mat-icon>
+				</button>
+				<button mat-raised-button type="button" color="warn" (click)="delete()"
+						*ngIf="action !== 'Create'">
+					Delete
+					<mat-icon mat-raised-button>delete</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+
+	</mat-card>
+</div>

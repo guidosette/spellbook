@@ -1,0 +1,37 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			<div fxLayout="row" fxLayoutAlign="start center">
+				Upload file: {{this.type ? this.type.name : 'Any'}}
+				<mat-icon class="space-h" fxLayoutAlign="center" matListIcon>cloud_upload</mat-icon>
+			</div>
+		</mat-card-title>
+		<form [formGroup]="attachmentForm" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(attachmentForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<div fxLayout="column" fxLayoutAlign="start" fxFlexFill>
+					<input #resource *ngIf="!multipleMode"
+							type="file"
+							accept="{{getFileAcceptForType(attachment.type)}}"
+							(change)="processFile(resource)">
+					<input #resource *ngIf="multipleMode"
+							multiple
+							type="file"
+							accept="{{getFileAcceptForType(attachment.type)}}"
+							(change)="processFile(resource)">
+					<input matInput type="text" placeholder="url" formControlName="url" id="url" [readonly]="true"
+							[hidden]="true">
+					<mat-error *ngIf="hasError('url', 'required')">Url is required</mat-error>
+					<label *ngIf="multipleMode && isLoading">uploading {{nUploading}} / {{nUploadingTot}}</label>
+				</div>
+				<div fxLayout="row" fxLayoutAlign="start center">
+
+					<mat-spinner *ngIf="isLoading"></mat-spinner>
+				</div>
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="errorUpload">{{errorUpload}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

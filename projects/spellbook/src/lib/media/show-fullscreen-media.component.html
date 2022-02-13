@@ -1,0 +1,10 @@
+<div fxLayout="column" fxLayoutAlign="center center" fxFlexFill>
+	<div fxLayout="row" fxLayoutAlign="end center" class="width-full">
+		<mat-icon (click)="back()" class="filters-button-reset">clear</mat-icon>
+	</div>
+
+	<div [ngStyle]="{background: utils.formatBackgroundUrl(item?.resourceUrl)}"
+			class="fullscreen-image preview-img-fullscreen"></div>
+</div>
+
+

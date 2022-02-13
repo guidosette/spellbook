@@ -1,0 +1,71 @@
+$break: 991px;
+
+mat-form-field[hidden] {
+  display: none;
+}
+
+.cover_button {
+  width: 100px;
+}
+
+.cover_image {
+  height: 200px;
+  width: 100%;
+  margin-left: 10px;
+  margin-right: 10px;
+  border-style: dotted;
+  border-color: #fff;
+  border-width: 1px;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+.cover_spinner {
+  height: 50px;
+  width: 50px;
+  margin-left: 30px;
+}
+
+mat-accordion{
+  margin-bottom: 20px;
+}
+
+.scroll_content {
+  overflow: auto;
+}
+
+mat-card {
+  width: 70%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+mat-card > * {
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+@media screen and (max-width: $break) {
+  mat-card {
+	width: 90%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+  }
+}
+
+agm-map {
+  height: 300px;
+  width: 100%;
+  margin-bottom: 20px;
+
+  color: black;
+
+}
+
+.agm-info-window-content {
+	color: black;
+}

@@ -1,0 +1,73 @@
+<div class="header" fxLayout="row" fxFlexAlign="space-between">
+	<div fxLayout="row" fxFlexAlign="start center">
+		<h1>Mail Message List</h1>
+		<span class="space"></span>
+		<div dflex fxLayout="column" fxFlexAlign="center center" class="justify-content-center">
+			<button mat-raised-button (click)="load(0)" color="primary">
+				<mat-icon matListIcon>refresh</mat-icon>
+			</button>
+		</div>
+	</div>
+	<span class="fill-remaining-space"></span>
+	<div fxLayout="row" fxLayoutAlign="center center">
+		<mat-progress-spinner
+				*ngIf=isLoadingCsv
+				class="space"
+				[diameter]="'35'"
+				[color]="'primary'"
+				[mode]="'indeterminate'">
+		</mat-progress-spinner>
+<!--		<button mat-raised-button (click)="downloadCSV()" color="primary">-->
+<!--			Download as CSV-->
+<!--			<mat-icon matListIcon>arrow_downward</mat-icon>-->
+<!--		</button>-->
+	</div>
+</div>
+
+<div class="mat-elevation-z8">
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+	<div fxLayout="column" [hidden]="isLoading">
+		<table mat-table [dataSource]="mailMessages" matSort matSortActive="Created" matSortDirection="desc" (matSortChange)="sortData($event)">
+
+			<ng-container matColumnDef="sender">
+				<th mat-header-cell *matHeaderCellDef> Sender</th>
+				<td mat-cell *matCellDef="let mailmessage">{{mailmessage.sender}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="recipient">
+				<th mat-header-cell *matHeaderCellDef> Recipient</th>
+				<td mat-cell *matCellDef="let mailmessage">{{mailmessage.recipient}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="object">
+				<th mat-header-cell *matHeaderCellDef> Object</th>
+				<td mat-cell *matCellDef="let mailmessage">{{mailmessage.object}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="created">
+				<th mat-header-cell mat-sort-header="Created" *matHeaderCellDef> Created</th>
+				<td mat-cell *matCellDef="let mailmessage">{{mailmessage.created | date: 'dd MMMM yyyy HH:mm'}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="delete">
+				<th mat-header-cell *matHeaderCellDef> Delete</th>
+				<td mat-cell *matCellDef="let post">
+					<button mat-raised-button type="button" color="warn"
+							(click)="$event.stopPropagation();delete(post)">
+						<mat-icon>delete</mat-icon>
+					</button>
+				</td>
+			</ng-container>
+
+			<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+			<tr mat-row *matRowDef="let post; columns: columns;" (click)="selectRow(post)" class="table-row"></tr>
+		</table>
+		<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+		<mat-error>{{error}}</mat-error>
+	</div>
+</div>
+

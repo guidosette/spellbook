@@ -1,0 +1,12 @@
+.space-h {
+	margin-right: 10px;
+}
+
+.space-v {
+	margin-bottom: 10px;
+}
+
+.isError {
+	color: red;
+	max-width: 100%;
+}
