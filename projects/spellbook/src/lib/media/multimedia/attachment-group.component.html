@@ -1,0 +1,59 @@
+<mat-expansion-panel (opened)="panelOpenState = true"
+		(closed)="panelOpenState = false" [ngClass]="{'attachment-group-opened': panelOpenState}">
+	<mat-expansion-panel-header>
+		<mat-panel-title>
+			<div fxLayout="row" fxLayoutAlign="start center">
+				{{attachmentGroup.name}} ({{attachmentGroup.attachments.length}})
+				<mat-icon fxLayoutAlign="center" matListIcon>{{getImageForType(attachmentGroup.type)}}</mat-icon>
+			</div>
+		</mat-panel-title>
+		<mat-panel-description>
+			{{attachmentGroup.description}}
+		</mat-panel-description>
+		<mat-panel-description>
+		</mat-panel-description>
+	</mat-expansion-panel-header>
+	<div class="mainWarapper">
+		<div class="container example-list" [dragula]="group" [(dragulaModel)]='attachmentGroup.attachments'>
+			<div *ngFor="let attachment of attachmentGroup.attachments" (click)="onItemClick(attachment)" class="example-box">
+				<!--ORDER-->
+				<span class="displayOrder">{{attachment?.displayOrder}}</span><br/>
+
+				<div class="example-handle handle">
+					<svg width="24px" fill="currentColor" viewBox="0 0 24 24" class="handle">
+						<path class="handle" d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+						<path class="handle" d="M0 0h24v24H0z" fill="none"></path>
+					</svg>
+				</div>
+
+				<!-- Delete button -->
+				<mat-icon (click)="deleteAttachment(attachment); $event.stopPropagation();" class="deleteButton">
+					clear
+				</mat-icon>
+				<!-- Gallery preview -->
+				<div *ngIf="attachment?.type === 'gallery'"
+						[ngStyle]="{background: utils.formatBackgroundUrl(attachment.resourceThumbUrl ? attachment.resourceThumbUrl : attachment.resourceUrl)}"
+						class="tile-img-content"></div>
+				<!-- Video icon -->
+				<mat-icon color="accent" *ngIf="attachment?.type === 'video'" fxLayoutAlign="center"
+						matListIcon>videocam
+				</mat-icon>   <!-- TODO: Video preview -->
+				<!-- Other attachment icon -->
+				<mat-icon color="accent" *ngIf="attachment?.type === 'attachments'" fxLayoutAlign="center"
+						matListIcon>{{getIconForAttachmentName(attachment?.name)}}</mat-icon>
+
+				<div class="att-footer" [matTooltipPosition]="'below'" matTooltip="{{attachment.name}}" [matTooltipShowDelay]="500">
+					<span class="tile-title">{{attachment.name}}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div fxLayoutAlign="start center" fxFlexFill class="buttons">
+		<button *ngIf="canAdd()" mat-raised-button type="button" color="primary" (click)="addAttachment()">
+			ADD
+			<mat-icon mat-raised-button>add_circle</mat-icon>
+		</button>
+		<span *ngIf="!canAdd()">Max items reached!</span>
+	</div>
+</mat-expansion-panel>
+

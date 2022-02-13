@@ -1,0 +1,38 @@
+<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+	<mat-card fxFlexAlign="center" class="login">
+		<mat-card-title>
+			Login
+		</mat-card-title>
+		<form [formGroup]="loginForm" autocomplete="off" novalidate
+				(ngSubmit)="doLogin(loginForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<mat-form-field appearance="outline">
+					<mat-label>Username</mat-label>
+					<input matInput type="text" placeholder="Username" formControlName="username" id="username">
+					<mat-error *ngIf="hasError('username', 'required')">Username is required</mat-error>
+					<mat-error *ngIf="hasError('username', 'maxLength')">Username is too long</mat-error>
+				</mat-form-field>
+				<mat-form-field appearance="outline">
+					<mat-label>Password</mat-label>
+					<input matInput type="password" placeholder="Password" formControlName="password" id="password">
+					<mat-error *ngIf="hasError('password', 'required')">Password is required</mat-error>
+					<mat-error *ngIf="hasError('password', 'minLength')">Password must be at least 8 characters long
+					</mat-error>
+				</mat-form-field>
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!loginForm.valid">
+					Login
+				</button>
+				<button mat-raised-button type="button" color="warn" (click)="loginGoogle()">
+					Google
+					<mat-icon mat-raised-button>account_circle</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

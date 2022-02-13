@@ -1,0 +1,149 @@
+<div class="header" fxLayout="row" fxFlexAlign="space-between">
+	<h1>{{getCategoryName()}}</h1>
+	<span class="space"></span>
+	<div *ngIf="!create" dflex fxLayout="column" fxFlexAlign="center center" class="justify-content-center">
+		<button mat-raised-button (click)="load(0)" color="primary">
+			<mat-icon matListIcon>refresh</mat-icon>
+		</button>
+	</div>
+	<span class="fill-remaining-space"></span>
+	<div fxLayout="column" fxLayoutAlign="center center">
+		<button *ngIf="!create" mat-raised-button (click)="toggleMode()" color="primary">
+			Create new content
+			<mat-icon matListIcon>fiber_new</mat-icon>
+		</button>
+		<button *ngIf="create" mat-raised-button (click)="toggleMode()" color="primary">
+			Content list
+			<mat-icon matListIcon>list</mat-icon>
+		</button>
+	</div>
+</div>
+<div class="mat-elevation-z8" *ngIf="!create">
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="start center" *ngIf="!localeHidden">
+		<mat-form-field>
+			<mat-select placeholder="Filter by language" [(value)]="languageSelected">
+				<mat-option *ngFor="let l of allLanguages" [value]="l">
+					{{l}}
+				</mat-option>
+			</mat-select>
+		</mat-form-field>
+	</div>
+
+	<div fxLayout="column" [hidden]="isLoading">
+		<table mat-table [dataSource]="posts" matSort matSortActive="{{definition.listOrderField()}}"
+				matSortDirection="{{definition.listOrder()}}"
+				(matSortChange)="sortData($event)">
+
+			<ng-container matColumnDef="cover" *ngIf="definition.isColumnField('cover')">
+				<th mat-header-cell *matHeaderCellDef> {{definition.field('cover').label}}</th>
+				<td mat-cell *matCellDef="let content">
+					<div fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
+						<div [ngStyle]="{background: content?.Cover ? utils.formatBackgroundUrl(content.Cover) : 'none'}"
+								class="cover_image">
+						</div>
+					</div>
+				</td>
+			</ng-container>
+
+			<ng-container matColumnDef="slug" *ngIf="definition.isColumnField('slug')">
+				<th mat-sort-header="Slug" mat-header-cell *matHeaderCellDef> {{definition.field('slug').label}}</th>
+				<td mat-cell *matCellDef="let content">{{content.slug}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="title" *ngIf="definition.isColumnField('title')">
+				<th mat-sort-header="Title" mat-header-cell *matHeaderCellDef> {{definition.field('title').label}}</th>
+				<td mat-cell *matCellDef="let content">{{content.title}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="locale" *ngIf="definition.isColumnField('locale')">
+				<th mat-header-cell *matHeaderCellDef> {{definition.field('locale').label}}</th>
+				<td mat-cell *matCellDef="let content" (click)="$event.stopPropagation()">
+
+					<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+						<mat-icon>flag</mat-icon>
+						{{content.locale}}
+						<mat-select fxLayoutAlign="right" placeholder="Choose">
+							<mat-option [value]="'file'" (click)="clickTranslate(content)">Translate</mat-option>
+						</mat-select>
+					</div>
+				</td>
+			</ng-container>
+
+			<ng-container matColumnDef="code" *ngIf="definition.isColumnField('code')">
+				<th mat-header-cell *matHeaderCellDef> {{definition.field('code').label}}</th>
+				<td mat-cell *matCellDef="let content">{{content.code}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="created" *ngIf="definition.isColumnField('created')">
+				<th mat-header-cell mat-sort-header="Created"
+						*matHeaderCellDef> {{definition.field('created').label}}</th>
+				<td mat-cell *matCellDef="let content">{{content.created | date: 'dd MMMM yyyy HH:mm'}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="published" *ngIf="definition.isColumnField('published')">
+				<th mat-header-cell mat-sort-header="Published"
+						*matHeaderCellDef> {{definition.field('published').label}}</th>
+				<ng-container *matCellDef="let content">
+					<td *ngIf="content.isPublished" mat-cell>{{content.published | date: 'dd MMMM yyyy HH:mm'}}</td>
+					<td *ngIf="!content.isPublished" mat-cell> -</td>
+				</ng-container>
+			</ng-container>
+
+			<ng-container matColumnDef="startDate" *ngIf="definition.isColumnField('startDate')">
+				<th mat-header-cell mat-sort-header="StartDate"
+						*matHeaderCellDef> {{definition.field('startDate').label}}</th>
+				<ng-container *matCellDef="let content">
+					<td *ngIf="content.hasStartDate">{{content.startDate | date: 'dd MMMM yyyy HH:mm'}}</td>
+					<td *ngIf="!content.hasStartDate" mat-cell> -</td>
+				</ng-container>
+			</ng-container>
+
+			<ng-container matColumnDef="endDate" *ngIf="definition.isColumnField('endDate')">
+				<th mat-header-cell mat-sort-header="EndDate"
+						*matHeaderCellDef> {{definition.field('endDate').label}}</th>
+				<ng-container *matCellDef="let content">
+					<td *ngIf="content.hasEndDate">{{content.endDate | date: 'dd MMMM yyyy HH:mm'}}</td>
+					<td *ngIf="!content.hasEndDate" mat-cell> -</td>
+				</ng-container>
+			</ng-container>
+
+
+			<ng-container matColumnDef="order" *ngIf="definition.isColumnField('order')">
+				<th mat-header-cell mat-sort-header="Order" *matHeaderCellDef> {{definition.field('order').label}}</th>
+				<td mat-cell *matCellDef="let content">{{content.order}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="isPublished" *ngIf="definition.isColumnField('isPublished')">
+				<th mat-header-cell *matHeaderCellDef> {{definition.field('isPublished').label}}</th>
+				<td mat-cell *matCellDef="let content">
+					<mat-icon
+							[color]="content.isPublished ? 'primary' : 'warn'">{{content.isPublished ? 'check_circle' : 'block'}}</mat-icon>
+				</td>
+			</ng-container>
+
+			<ng-container matColumnDef="delete">
+				<th mat-header-cell *matHeaderCellDef> {{definition.field('delete').label}}</th>
+				<td mat-cell *matCellDef="let content">
+					<button mat-raised-button type="button" color="warn"
+							(click)="$event.stopPropagation();delete(content)">
+						<mat-icon>delete</mat-icon>
+					</button>
+				</td>
+			</ng-container>
+
+			<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+			<tr mat-row *matRowDef="let content; columns: columns;" (click)="selectRow(content)" class="table-row"></tr>
+		</table>
+		<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+		<mat-error>{{error}}</mat-error>
+	</div>
+
+</div>
+<div *ngIf="create">
+	<splbk-create-update-post></splbk-create-update-post>
+</div>

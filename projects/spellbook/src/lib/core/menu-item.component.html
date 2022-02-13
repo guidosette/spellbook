@@ -1,0 +1,17 @@
+<div *ngIf="!item.url" mat-list-item fxLayout="column"
+                       fxLayoutAlign="center left" (click)="$event.stopPropagation();">
+	<div class="mainMenu">
+		<mat-icon matListIcon *ngIf="item.icon">{{item.icon}}</mat-icon>
+		<span>{{ item.displayName }}</span>
+	</div>
+	<splbk-menu-item [item]="nest" [level]="level+1" [isChild]="true" *ngFor="let nest of item.children" [ngStyle]="setMyStyles()"
+	                                                                                   class="children"></splbk-menu-item>
+</div>
+<a *ngIf="item.url" mat-list-item fxLayout="column"
+                    fxLayoutAlign="center left" [routerLink]="item.url"
+                    routerLinkActive="active" [queryParams]="item.queryParams" (click)="$event.stopPropagation();">
+	<mat-icon matListIcon *ngIf="item.icon">{{item.icon}}</mat-icon>
+	{{ item.displayName }}
+	<splbk-menu-item [item]="nest" [level]="level+1" [isChild]="true" *ngFor="let nest of item.children" [ngStyle]="setMyStyles()"
+	                                                                                   class="children"></splbk-menu-item>
+</a>

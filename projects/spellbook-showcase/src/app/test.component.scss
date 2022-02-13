@@ -1,0 +1,72 @@
+$break: 991px;
+
+*:not(.material-icons) {
+  font-family: 'Roboto', sans-serif;
+}
+
+div.main {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 64px;
+}
+
+.space {
+  margin-left: 10px;
+}
+
+.mat-drawer-container {
+  height: calc(100vh - 64px);
+}
+
+/**
+* Editor styles
+*/
+
+.ck-editor__editable {
+  min-height: 300px;
+  border: 1px solid rgba(0, 0, 0, 0.37) !important;
+  box-shadow: aqua;
+  margin-bottom: 20px;
+}
+
+input .mat-form-field-autofill-control {
+  background-color: #61652e !important;
+  background-image: none !important;
+  color: rgb(0, 0, 0) !important;
+}
+
+splbk-multimedia-group {
+  margin-bottom: 20px;
+}
+
+mat-toolbar {
+  a {
+	text-decoration: none;
+	color: white;
+  }
+}
+
+.mat-drawer-content {
+  height: 90% !important;
+}
+
+mat-sidenav-content {
+  padding: 40px;
+}
+
+.fill-remaining-space {
+  /* This fills the remaining space, by using flexbox.
+     Every toolbar row uses a flexbox row layout. */
+  flex: 1 1 auto;
+}
+
+@media screen and (max-width: $break) {
+  mat-sidenav-content {
+	padding: 5px;
+  }
+}
+

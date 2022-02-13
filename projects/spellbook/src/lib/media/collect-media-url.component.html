@@ -1,0 +1,39 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			<div fxLayout="row" fxLayoutAlign="start center">
+				Link to URL: {{this.type ? this.type.name : 'Any'}}
+				<mat-icon class="space-h" fxLayoutAlign="center" matListIcon>link</mat-icon>
+			</div>
+		</mat-card-title>
+		<form [formGroup]="attachmentForm" autocomplete="off" novalidate
+				(ngSubmit)="submit(attachmentForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<mat-form-field>
+					<input matInput type="url" placeholder="Url" formControlName="url" id="url">
+					<mat-error *ngIf="hasError('url', 'required')">Url is required</mat-error>
+					<mat-error *ngIf="hasError('url', 'minLength')">Url is too short</mat-error>
+					<!--          <input type="hidden" formControlName="resourceUrl" id="url">-->
+				</mat-form-field>
+				<span class="url-error-span" *ngIf="errorMalformedUrl">Url is malformed</span>
+				<span class="url-error-span" *ngIf="errorWrongUrl">Unable to retrieve item: wrong url</span>
+				<span class="url-error-span" *ngIf="errorWrongMime">The provided URL points to a resource of a wrong tipe for the current attachment group</span>
+				<div [ngStyle]="{background: utils.formatBackgroundUrl(attachmentForm.controls.url.value)}" class="preview-img"></div>
+				<div fxLayout="row" fxLayoutAlign="start center">
+
+					<mat-spinner *ngIf="isLoading"></mat-spinner>
+				</div>
+			</mat-card-content>
+			<mat-card-actions>
+				<button mat-raised-button type="submit" color="primary" [disabled]="!attachmentForm.valid">
+					Ok
+					<mat-icon mat-raised-button>done</mat-icon>
+				</button>
+				<button mat-raised-button type="button" color="secondary" (click)="close()">
+					Cancel
+					<mat-icon mat-raised-button>cancel</mat-icon>
+				</button>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

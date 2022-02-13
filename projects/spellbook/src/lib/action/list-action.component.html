@@ -1,0 +1,83 @@
+<div class="header" fxLayout="row" fxFlexAlign="space-between">
+	<h1>Action List:</h1>
+	<span class="space"></span>
+	<div dflex fxLayout="column" fxFlexAlign="center center" class="justify-content-center">
+		<button mat-raised-button (click)="load(0)" color="primary">
+			<mat-icon matListIcon>refresh</mat-icon>
+		</button>
+	</div>
+</div>
+<div class="mat-elevation-z8">
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+
+	<div fxLayout="column" [hidden]="isLoading">
+		<table mat-table [dataSource]="actions" matSort matSortActive="Created" matSortDirection="asc"
+				(matSortChange)="sortData($event)">
+
+			<ng-container matColumnDef="name">
+				<th mat-header-cell mat-sort-header="Name" *matHeaderCellDef> Name</th>
+				<td mat-cell *matCellDef="let action">{{action.name}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="endpoint">
+				<th mat-header-cell mat-sort-header="Endpoint" *matHeaderCellDef> Endpoint</th>
+				<td mat-cell *matCellDef="let action">{{action.endpoint}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="method">
+				<th mat-header-cell mat-sort-header="Method" *matHeaderCellDef> Method</th>
+				<td mat-cell *matCellDef="let action">{{action.method}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="type">
+				<th mat-header-cell mat-sort-header="Type" *matHeaderCellDef> Type</th>
+				<td mat-cell *matCellDef="let action">{{action.type}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="created">
+				<th mat-header-cell *matHeaderCellDef> Created</th>
+				<td mat-cell *matCellDef="let action">
+					<mat-icon
+							[color]="action.isTaskCreated() ? 'primary' : 'warn'">{{action.isTaskCreated() ? 'check_circle' : 'block'}}</mat-icon>
+				</td>
+			</ng-container>
+
+			<ng-container matColumnDef="status">
+				<th mat-header-cell mat-sort-header="Status" *matHeaderCellDef> Status</th>
+				<td mat-cell *matCellDef="let action">{{action.status}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="count">
+				<th mat-header-cell *matHeaderCellDef> Success/Total</th>
+				<td mat-cell *matCellDef="let action">{{action.task?.responseCount - action.task?.dispatchCount}} / {{action.task?.responseCount}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="message">
+				<th mat-header-cell mat-sort-header="Message" *matHeaderCellDef> Message</th>
+				<td mat-cell *matCellDef="let action">{{action.task?.message}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="action">
+				<th mat-header-cell *matHeaderCellDef> Action</th>
+				<td mat-cell *matCellDef="let action">
+					<button mat-raised-button type="button" color="warn"
+							(click)="$event.stopPropagation();runAction(action)"
+							[disabled]="action.isRun() || isLoadingTask">
+						<mat-icon *ngIf="action.isRun()">stop</mat-icon>
+						<mat-icon *ngIf="!action.isRun()">play_circle_outline</mat-icon>
+					</button>
+				</td>
+			</ng-container>
+
+			<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+			<tr mat-row *matRowDef="let action; columns: columns;" (click)="selectRow(action)" class="table-row"></tr>
+		</table>
+		<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+		<mat-error>{{error}}</mat-error>
+	</div>
+
+</div>

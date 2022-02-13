@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>
+	<mat-icon color="accent" matListIcon>{{getIconForAttachmentName(attachment?.name)}}</mat-icon>
+	{{item.name}}
+</h2>
+<mat-dialog-content>
+	<div *ngIf="attachment?.type === 'gallery'" [ngStyle]="{background: utils.formatBackgroundUrl(item.resourceUrl)}"
+			class="preview-img" [ngClass]="{'cursor-pointer': showImageFullScreen}"
+			(click)="showImageFullscreen()"></div>
+	<video *ngIf="attachment?.type === 'video'" class="preview-video" controls>
+		<source [src]="item.resourceUrl">
+		Your browser does not support the video tag.
+	</video>
+	<a *ngIf="attachment?.type !== 'gallery' && attachment?.type !== 'video'" [href]="item.resourceUrl"
+			class="preview-attach" (click)="showImageFullscreen()">
+		<mat-icon>cloud_download</mat-icon>
+		Download file
+	</a>
+	<div class="form-container">
+		<div fxLayout="column" fxLayoutAlign="start center" fxFlexFill>
+			<mat-form-field>
+				<input matInput placeholder="Title" [(ngModel)]="item.name" [disabled]="false"/>
+			</mat-form-field>
+			<mat-form-field *ngIf="attachment?.type === 'gallery'">
+				<input matInput placeholder="Alternative text" [(ngModel)]="item.altText"/>
+			</mat-form-field>
+			<mat-form-field>
+				<textarea matInput placeholder="Description" [(ngModel)]="item.description"></textarea>
+			</mat-form-field>
+		</div>
+
+		<div class="form-left">
+			<mat-form-field [hidden]="true">
+				<input matInput placeholder="ID" [(ngModel)]="item.id" [disabled]="true"/>
+			</mat-form-field>
+			<br/>
+			<mat-form-field [hidden]="true">
+				<input matInput placeholder="Parent" [(ngModel)]="item.parentKey" [disabled]="true"/>
+			</mat-form-field>
+			<br/>
+		</div>
+		<div class="form-right">
+			<mat-form-field [hidden]="true">
+				<input matInput placeholder="Group" [(ngModel)]="item.group" [disabled]="true"/>
+			</mat-form-field>
+		</div>
+	</div>
+</mat-dialog-content>
+<mat-dialog-actions fxLayout="row" fxLayoutAlign="space-evenly center" fxFlexFill>
+	<button mat-raised-button type="button" color="primary" (click)="save()">
+		<div *ngIf="!noCreateAttachment" fxLayout="row" fxLayoutAlign="center center">Save
+			<mat-icon mat-raised-button>save</mat-icon>
+		</div>
+		<div *ngIf="noCreateAttachment" fxLayout="row" fxLayoutAlign="center center">Select
+			<mat-icon mat-raised-button>done</mat-icon>
+		</div>
+	</button>
+	<button *ngIf="item.id" mat-raised-button type="button" color="warn" (click)="delete()">
+		Delete
+		<mat-icon mat-raised-button>delete</mat-icon>
+	</button>
+	<button mat-raised-button type="button" color="secondary" (click)="closeDialog()">
+		Cancel
+		<mat-icon mat-raised-button>cancel</mat-icon>
+	</button>
+
+</mat-dialog-actions>
