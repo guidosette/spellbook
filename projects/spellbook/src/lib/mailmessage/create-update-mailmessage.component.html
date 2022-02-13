@@ -1,0 +1,38 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			{{action}} Mail Message: {{mailMessage.object}}
+		</mat-card-title>
+		<form [formGroup]="postForm" autocomplete="off" novalidate>
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+
+				<mat-form-field>
+					<input [readonly]="true" matInput type="text" placeholder="Sender" formControlName="sender" id="sender">
+					<mat-error *ngIf="hasError('sender', 'required')">Sender is required</mat-error>
+					<mat-error *ngIf="hasError('sender', 'minLength')">Sender is too short</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<input [readonly]="true" matInput type="text" placeholder="Recipient" formControlName="recipient" id="recipient">
+					<mat-error *ngIf="hasError('recipient', 'required')">Recipient is required</mat-error>
+					<mat-error *ngIf="hasError('recipient', 'minLength')">Recipient is too short</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<input [readonly]="true" matInput type="text" placeholder="Object" formControlName="object" id="object">
+					<mat-error *ngIf="hasError('object', 'required')">Object is required</mat-error>
+					<mat-error *ngIf="hasError('object', 'minLength')">Object is too short</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<textarea [readonly]="true" matInput placeholder="Body" formControlName="body"
+							id="body"></textarea>
+				</mat-form-field>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

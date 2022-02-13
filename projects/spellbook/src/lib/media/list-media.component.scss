@@ -1,0 +1,105 @@
+%tile-img-shared {
+	-webkit-filter: brightness(50%);
+	-webkit-transition: all 300ms ease;
+	-moz-transition: all 300ms ease;
+	-o-transition: all 300ms ease;
+	-ms-transition: all 300ms ease;
+	transition: all 300ms ease;
+	cursor: pointer;
+}
+
+.tile-img {
+	@extend %tile-img-shared;
+	-webkit-filter: brightness(100%);
+}
+
+.tile-img:hover {
+	@extend %tile-img-shared;
+}
+
+.tile-img-content {
+	width: 100%;
+	height: 100%;
+	background-size: cover !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+}
+
+%tile-text {
+	max-width: calc(100%);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.tile-title {
+	@extend %tile-text;
+	font-size: 100%;
+	font-weight: bold;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tile-content {
+	@extend %tile-text;
+	margin-top: 10px;
+	font-size: 80%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.fab-container {
+	position: relative;
+	height: 100%;
+}
+
+%secondary-fab {
+	position: absolute;
+	right: 57px;
+}
+
+.primary_fab {
+	position: absolute;
+	right: 50px;
+	bottom: 50px;
+}
+
+.secondary_fab_1 {
+	@extend %secondary-fab;
+	bottom: 120px;
+}
+
+.secondary_fab_2 {
+	@extend %secondary-fab;
+	bottom: 170px;
+}
+
+.secondary_fab_3 {
+	@extend %secondary-fab;
+	bottom: 220px;
+}
+
+.filters-button-reset {
+	cursor: pointer;
+}
+
+.filters-button-reset:hover {
+	color: #f00;
+}
+
+.example-loading-shade {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 56px;
+	right: 0;
+	background: rgba(0, 0, 0, 0.15);
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.grid{
+	min-height: 90%;
+}

@@ -1,0 +1,73 @@
+<div class="header" fxLayout="column" fxFlexAlign="start center">
+	<div fxLayout="row" fxFlexAlign="space-between">
+		<h1 *ngIf="!create">Place List:</h1>
+		<h1 *ngIf="create">New Place:</h1>
+		<span class="space"></span>
+		<div *ngIf="!create" dflex fxLayout="column" fxFlexAlign="center center" class="justify-content-center">
+			<button mat-raised-button (click)="load(0)" color="primary">
+				<mat-icon matListIcon>refresh</mat-icon>
+			</button>
+		</div>
+		<span class="fill-remaining-space"></span>
+		<div fxLayout="column" fxLayoutAlign="center center">
+			<button *ngIf="!create" mat-raised-button (click)="toggleMode()" color="primary">
+				Create new place
+				<mat-icon matListIcon>fiber_new</mat-icon>
+			</button>
+			<button *ngIf="create" mat-raised-button (click)="toggleMode()" color="primary">
+				Place list
+				<mat-icon matListIcon>list</mat-icon>
+			</button>
+		</div>
+	</div>
+	<splbk-search-selector *ngIf="!create" [fields]="['Name', 'City', 'PostalCode']"
+			(filtered)="this.searchFilter = $event; load(0);"></splbk-search-selector>
+</div>
+
+<div class="mat-elevation-z8" *ngIf="!create">
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+
+	<div fxLayout="column" [hidden]="isLoading">
+		<table mat-table [dataSource]="places" matSort matSortActive="Created" matSortDirection="asc" matSort
+				(matSortChange)="sortData($event)">
+
+			<ng-container matColumnDef="name">
+				<th mat-header-cell mat-sort-header="Name" *matHeaderCellDef> Name</th>
+				<td mat-cell *matCellDef="let place">{{place.name}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="city">
+				<th mat-header-cell mat-sort-header="City" *matHeaderCellDef> City</th>
+				<td mat-cell *matCellDef="let place">{{place.city}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="created">
+				<th mat-header-cell mat-sort-header="Created" *matHeaderCellDef> Created</th>
+				<td mat-cell *matCellDef="let place">{{place.created | date: 'dd MMMM yyyy HH:mm'}}</td>
+			</ng-container>
+
+			<ng-container matColumnDef="delete">
+				<th mat-header-cell *matHeaderCellDef> Delete</th>
+				<td mat-cell *matCellDef="let place">
+					<button mat-raised-button type="button" color="warn"
+							(click)="$event.stopPropagation();delete(place)">
+						<mat-icon>delete</mat-icon>
+					</button>
+				</td>
+			</ng-container>
+
+			<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+			<tr mat-row *matRowDef="let place; columns: columns;" (click)="selectRow(place)" class="table-row"></tr>
+		</table>
+		<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+		<mat-error>{{error}}</mat-error>
+	</div>
+
+</div>
+<div *ngIf="create">
+	<splbk-create-update-place></splbk-create-update-place>
+</div>

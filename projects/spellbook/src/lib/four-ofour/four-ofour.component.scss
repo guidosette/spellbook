@@ -1,0 +1,8 @@
+
+@for $i from 1 through 300{
+  .iconsize-#{$i}{
+	font-size: $i+unquote('px') !important;
+	height: $i+unquote('px') !important;
+	width: $i+unquote('px') !important;
+  };
+}

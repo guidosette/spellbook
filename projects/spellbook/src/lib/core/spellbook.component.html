@@ -1,0 +1,35 @@
+<mat-toolbar color="primary">
+	<!--<mat-icon matListIcon>videogame_asset</mat-icon>-->
+	<h1 *ngIf="screenWidth > screenWidthLimit"></h1>
+	<button mat-raised-button color="primary" class="space" (click)="sidenav.toggle()">
+		<mat-icon matListIcon>menu</mat-icon>
+	</button>
+	<span class="fill-remaining-space"></span>
+	<span>{{spellbook.user?.username}} </span>
+	<button mat-raised-button color="primary" class="space" (click)="logout()">
+		<mat-icon matListIcon>exit_to_app</mat-icon>
+	</button>
+</mat-toolbar>
+<mat-sidenav-container>
+	<mat-sidenav #sidenav [opened]="screenWidth > screenWidthLimit"
+			[mode]="(screenWidth > screenWidthLimit) ? 'side' : 'over'">
+		<mat-nav-list>
+			<splbk-menu-item *ngFor="let item of menu" [item]="item" [level]="1"></splbk-menu-item>
+		</mat-nav-list>
+	</mat-sidenav>
+
+	<mat-sidenav-content>
+		<router-outlet></router-outlet>
+	</mat-sidenav-content>
+</mat-sidenav-container>
+<!-- footer -->
+<footer class="footer">
+	<div fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+		<p fxLayoutAlign="center">
+			Spellbook - Version {{version}} - Developed by <a target="_blank" href="https://www.decodica.com/"><span>Decodica</span></a>
+		</p>
+	</div>
+</footer>
+
+
+

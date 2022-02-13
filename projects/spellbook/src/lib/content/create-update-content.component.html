@@ -1,0 +1,218 @@
+<div fxLayout="row" fxLayoutAlign="end center">
+	<button *ngIf="!content.isNew()" mat-raised-button (click)="back()" color="primary">
+		Content list
+		<mat-icon matListIcon>list</mat-icon>
+	</button>
+</div>
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card *ngIf="postForm" fxFlexAlign="center">
+		<mat-card-title>
+			{{action}} {{getCategoryName()}}: {{content.title}}
+		</mat-card-title>
+		<form [formGroup]="postForm" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(postForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+
+				<mat-form-field [hidden]="definition.field('title').hidden">
+					<input matInput type="text" placeholder="{{definition.isMandatory('title') ? '*' : ''}} {{definition.field('title').label}}" formControlName="title" id="title">
+					<mat-error *ngIf="hasError('title', 'required')">Title is required</mat-error>
+					<mat-error *ngIf="hasError('title', 'minLength')">Title is too short</mat-error>
+				</mat-form-field>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field [hidden]="definition.field('startDate').hidden" *ngIf="definition?.field('startDate')" fxFlex="45">
+						<input matInput formControlName="startDate" id="startDate" placeholder="{{definition.isMandatory('startDate') ? '*' : ''}} {{definition.field('startDate').label}}"
+						       [owlDateTimeTrigger]="dtPickerStart" [owlDateTime]="dtPickerStart">
+						<owl-date-time #dtPickerStart></owl-date-time>
+						<mat-error *ngIf="hasError('startDate', 'required')">Start date is required</mat-error>
+					</mat-form-field>
+
+					<mat-form-field [hidden]="definition.field('endDate').hidden" *ngIf="definition?.field('endDate')" fxFlex="45">
+						<input matInput formControlName="endDate" id="endDate" placeholder="{{definition.isMandatory('endDate') ? '*' : ''}} {{definition.field('endDate').label}}"
+						       [owlDateTimeTrigger]="dtPickerEnd" [owlDateTime]="dtPickerEnd">
+						<owl-date-time #dtPickerEnd></owl-date-time>
+						<mat-error *ngIf="hasError('endDate', 'required')">End date is required</mat-error>
+						<mat-error *ngIf="hasError('endDate', 'rangeDate')">End date value must after start date
+						</mat-error>
+					</mat-form-field>
+				</div>
+
+				<mat-form-field [hidden]="definition.field('subtitle').hidden" *ngIf="definition?.field('subtitle')">
+					<input matInput type="text" placeholder="{{definition.isMandatory('subtitle') ? '*' : ''}} {{definition.field('subtitle').label}}" formControlName="subtitle" id="subtitle">
+					<mat-error *ngIf="hasError('subtitle', 'required')">Subtitle is required</mat-error>
+					<mat-error *ngIf="hasError('subtitle', 'minLength')">Subtitle is too short</mat-error>
+				</mat-form-field>
+
+
+				<mat-accordion *ngIf="translate" fxLayout="column" fxLayoutAlign="start start" fxFlexFill>
+					<div fxLayout="column" fxLayoutAlign="start start" fxFlexFill>
+						<mat-expansion-panel fxFlexFill>
+							<mat-expansion-panel-header>
+								<mat-panel-title>
+									<div fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
+										Language inserted
+										<mat-icon fxLayoutAlign="center" matListIcon>flag</mat-icon>
+									</div>
+								</mat-panel-title>
+								<mat-panel-description>
+								</mat-panel-description>
+							</mat-expansion-panel-header>
+							<div fxLayout="row" fxLayoutAlign="space-evently center" fxFlexFill
+									class="scroll_content">
+								<div *ngFor="let lang of languagesInserted">
+									<mat-card>
+										<mat-card-header>
+											<mat-card-title>{{lang}}</mat-card-title>
+										</mat-card-header>
+										<mat-card-content>
+										</mat-card-content>
+									</mat-card>
+								</div>
+							</div>
+						</mat-expansion-panel>
+					</div>
+				</mat-accordion>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field [hidden]="definition.field('locale').hidden" class="example-full-width" fxFlex="30">
+						<mat-select placeholder="{{definition.isMandatory('locale') ? '*' : ''}} {{definition.field('locale').label}}" formControlName="locale" id="locale">
+							<mat-option *ngFor="let l of languagesNotInserted" [value]="l">
+								{{l}}
+							</mat-option>
+						</mat-select>
+						<mat-error *ngIf="hasError('locale', 'required')">Language is required</mat-error>
+					</mat-form-field>
+				</div>
+
+				<mat-form-field [hidden]="definition.field('topic').hidden" *ngIf="definition?.field('topic')" class="example-full-width">
+					<input type="text" placeholder="{{definition.isMandatory('topic') ? '*' : ''}} {{definition.field('topic').label}}" aria-label="Number" matInput formControlName="topic"
+							id="topic" [matAutocomplete]="autoTopic">
+					<mat-autocomplete autoActiveFirstOption #autoTopic="matAutocomplete">
+						<mat-option *ngFor="let option of filteredOptionsTopics | async" [value]="option">
+							{{option}}
+						</mat-option>
+					</mat-autocomplete>
+				</mat-form-field>
+
+				<mat-form-field [hidden]="definition.field('tags').hidden" class="example-chip-list" *ngIf="definition?.field('tags')">
+					<mat-chip-list #chipList>
+						<mat-chip *ngFor="let tag of tags" [selectable]="true"
+								[removable]="true" (removed)="remove(tag)">
+							{{tag}}
+							<mat-icon matChipRemove *ngIf="true">cancel</mat-icon>
+						</mat-chip>
+						<input placeholder="{{definition.isMandatory('tags') ? '*' : ''}} {{definition.field('tags').label}}"
+								[matChipInputFor]="chipList"
+								[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+								[matChipInputAddOnBlur]="true"
+								(matChipInputTokenEnd)="add($event)">
+					</mat-chip-list>
+				</mat-form-field>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field [hidden]="definition.field('order').hidden" *ngIf="definition?.field('order')" class="example-full-width" fxFlex="30">
+						<input matInput type="number" placeholder="{{definition.isMandatory('order') ? '*' : ''}} {{definition.field('order').label}}" formControlName="order" id="order"
+								default="1">
+						<mat-error *ngIf="hasError('order', 'min')">Order min is 1</mat-error>
+					</mat-form-field>
+				</div>
+
+				<mat-form-field [hidden]="definition.field('description').hidden" *ngIf="definition?.field('description')">
+					<textarea matInput placeholder="{{definition.isMandatory('description') ? '*' : ''}} {{definition?.field('description').label}}" formControlName="description"
+							id="description"></textarea>
+				</mat-form-field>
+
+				<ng-container *ngIf="definition?.field('cover')">
+					<div fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
+						<h3 fxLayoutAlign="center">{{definition.isMandatory('cover') ? '*' : ''}} {{definition.field('cover').label}} </h3>
+						<mat-icon fxLayoutAlign="center" matListIcon>image</mat-icon>
+						<mat-icon (click)="deleteCover()" class="deleteButton">clear</mat-icon>
+					</div>
+					<div fxLayout="row" fxLayoutAlign="left" fxFlexFill class="space-bottom">
+						<button mat-raised-button type="button" color="primary" (click)="onCoverClick()"
+								class="cover_button">
+							Select<br/>image<br/>
+							<mat-icon mat-raised-button>select_all</mat-icon>
+						</button>
+						<div [ngStyle]="{background: content?.cover ? utils.formatBackgroundUrl(content.cover) : 'none'}"
+								class="cover_image"></div>
+						<mat-error *ngIf="errorUpload">errorUpload</mat-error>
+					</div>
+				</ng-container>
+
+				<ng-container *ngIf="definition?.field('body')">
+					<div fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
+						<h3 fxLayoutAlign="left" class="space">{{definition.isMandatory('body') ? '*' : ''}} {{definition.field('body').label}}</h3>
+						<mat-spinner [diameter]="30" *ngIf="ckUploadAdapter?.loadingImage"></mat-spinner>
+					</div>
+
+					<ckeditor #bodyEditor formControlName="body" id="body" [editor]="editor.editor"
+							(ready)="onReadyEditor($event)" [config]="editor.config" fxFlexFill></ckeditor>
+					<mat-error *ngIf="ckUploadAdapter?.errorUploading">{{ckUploadAdapter?.errorUploading}}</mat-error>
+				</ng-container>
+
+
+				<ng-container *ngIf="definition?.field('attachments')">
+					<div fxLayout="row" fxFlexFill>
+						<button mat-raised-button type="button" color="primary" [disabled]="content?.isNew()"
+								(click)="showAttachmentGroupDialog()">
+							Create attachment group
+							<mat-icon mat-raised-button>library_add</mat-icon>
+						</button>
+					</div>
+
+					<mat-accordion fxLayout="column" fxLayoutAlign="center center" fxFlexFill>
+						<div fxLayout="column" fxLayoutAlign="center center" fxFlexFill>
+							<splbk-multimedia-group fxFlexFill *ngFor="let g of content.attachmentGroups;"
+							                        [type]="attachmentParentType"
+									[attachmentGroup]="g" [max]="g.maxItems"></splbk-multimedia-group>
+						</div>
+					</mat-accordion>
+				</ng-container>
+
+				<splbk-slug *ngIf="definition?.field('slug')" [src]="postForm.value.title" [label]="definition?.field('slug').label" [intermediateUrl]="definition.getIntermediateSlugUrl()" formControlName="slug" id="slug"></splbk-slug>
+
+				<mat-form-field [hidden]="definition.field('parent').hidden" *ngIf="definition?.field('parent')">
+					<mat-select placeholder="{{definition.isMandatory('parent') ? '*' : ''}} {{definition.field('parent').label}}" formControlName="parent" id="parent">
+						<mat-option *ngFor="let parent of contentParents" [value]="parent.id">
+							<span *ngIf="parent.locale">({{parent.locale}})</span> {{parent.title}} - {{parent.subtitle}}
+						</mat-option>
+					</mat-select>
+				</mat-form-field>
+
+				<mat-form-field [hidden]="definition.field('code').hidden" *ngIf="definition?.field('code')">
+					<mat-select placeholder="{{definition.isMandatory('code') ? '*' : ''}} {{definition.field('code').label}}" formControlName="code" id="code">
+						<mat-option *ngFor="let c of codes" [value]="c">
+							{{c}}
+						</mat-option>
+					</mat-select>
+					<mat-error *ngIf="hasError('code', 'required')">Code is required</mat-error>
+				</mat-form-field>
+
+				<mat-form-field [hidden]="definition.field('editor').hidden" *ngIf="definition?.field('editor')">
+					<input matInput type="text" placeholder="{{definition.isMandatory('editor') ? '*' : ''}} {{definition.field('editor').label}}" formControlName="editor" id="editor">
+				</mat-form-field>
+
+				<mat-checkbox [hidden]="definition.field('isPublished').hidden" formControlName="isPublished" id="isPublished">{{definition.field('isPublished').label}}</mat-checkbox>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!postForm.valid">
+					{{action}}
+					<mat-icon *ngIf="!content.isNew()" matListIcon>edit</mat-icon>
+					<mat-icon *ngIf="content.isNew()" matListIcon>fiber_new</mat-icon>
+				</button>
+				<button mat-raised-button type="button" color="warn" (click)="delete()"
+						*ngIf="action !== 'Create'">
+					Delete
+					<mat-icon mat-raised-button>delete</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>
+

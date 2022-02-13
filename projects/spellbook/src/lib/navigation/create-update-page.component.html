@@ -1,0 +1,74 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			{{action}} Page: {{page.label}}
+		</mat-card-title>
+		<form [formGroup]="postForm" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(postForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('label') ? '*' : ''}} Label" formControlName="label" id="label">
+					<mat-error *ngIf="hasError('label', 'required')">Label is required</mat-error>
+					<mat-error *ngIf="hasError('label', 'minLength')">Label is too short</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<span matPrefix>{{baseUrl}}/</span>
+					<input matInput type="text" placeholder="{{hasMandatory('url') ? '*' : ''}} Url" formControlName="url" id="url" [readonly]="!canSetUrl">
+					<mat-error *ngIf="hasError('url', 'required')">Url is required</mat-error>
+					<mat-error *ngIf="hasError('url', 'minLength')">Url is too short</mat-error>
+				</mat-form-field>
+
+				<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+					<mat-form-field class="example-full-width" fxFlex="30">
+						<mat-select placeholder="{{hasMandatory('locale') ? '*' : ''}} Language" formControlName="locale" id="locale">
+							<mat-option *ngFor="let l of languages" [value]="l">
+								{{l}}
+							</mat-option>
+						</mat-select>
+						<mat-error *ngIf="hasError('locale', 'required')">Language is required</mat-error>
+					</mat-form-field>
+				</div>
+
+				<mat-form-field>
+					<mat-select placeholder="{{hasMandatory('code') ? '*' : ''}} Code" formControlName="code" id="code">
+						<mat-option *ngFor="let c of codes" [value]="c">
+							{{c}}
+						</mat-option>
+					</mat-select>
+					<mat-error *ngIf="hasError('code', 'required')">Code is required</mat-error>
+				</mat-form-field>
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('title') ? '*' : ''}} Title" formControlName="title" id="title">
+				</mat-form-field>
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="{{hasMandatory('metadesc') ? '*' : ''}} Meta Description" formControlName="metadesc" id="metadesc">
+				</mat-form-field>
+
+				<mat-form-field>
+					<input matInput type="number" placeholder="{{hasMandatory('order') ? '*' : ''}} Order" formControlName="order" id="order">
+				</mat-form-field>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!postForm.valid && action === 'Create'">
+					{{action}}
+					<mat-icon *ngIf="page.id" matListIcon>edit</mat-icon>
+					<mat-icon *ngIf="!page.id" matListIcon>fiber_new</mat-icon>
+				</button>
+				<button mat-raised-button type="button" color="warn" (click)="delete()"
+						*ngIf="action !== 'Create'">
+					Delete
+					<mat-icon mat-raised-button>delete</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>

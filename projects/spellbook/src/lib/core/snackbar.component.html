@@ -1,0 +1,12 @@
+<div fxLayout="column" fxLayoutAlign="space-evenly center">
+	<span [ngClass]="{'isError': snackbarData.isError}">{{snackbarData.message}}</span>
+	<span class="space-v"></span>
+</div>
+<div fxLayout="row" fxLayoutAlign="space-evenly center">
+	<button *ngIf="snackbarData.actionOk" mat-raised-button color="primary" (click)="snackbarData.actionOk()">
+		<mat-icon matListIcon>done</mat-icon>
+	</button>
+	<button *ngIf="snackbarData.actionNo" mat-raised-button color="warn" (click)="snackbarData.actionNo()">
+		<mat-icon matListIcon>cancel</mat-icon>
+	</button>
+</div>

@@ -1,0 +1,101 @@
+$break: 991px;
+
+mat-form-field[hidden] {
+  display: none;
+}
+
+ckeditor {
+  //min-height: 300px !important;
+  border: 1px solid rgba(0, 0, 0, 0.37) !important;
+  margin-bottom: 20px;
+  color: black;
+}
+
+.space-bottom {
+	margin-bottom: 20px;
+}
+
+.ck-editor__editable, .ck-content, .ck.ck-editor__main {
+  //min-height: 300px !important;
+}
+
+.cover_button {
+  width: 100px;
+}
+
+.cover_image {
+  height: 200px;
+  width: 100%;
+  margin-left: 10px;
+  margin-right: 10px;
+  border-style: dotted;
+  border-color: #fff;
+  border-width: 1px;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+.cover_spinner {
+  height: 50px;
+  width: 50px;
+  margin-left: 30px;
+}
+
+//.ck-progress-bar {
+//  width: 100px !important;
+//  height: 20px;
+//  background-color: #33d0ff;
+//}
+
+.space {
+  margin-right: 10px;
+}
+
+mat-accordion {
+  margin-bottom: 20px;
+}
+
+.scroll_content {
+  overflow: auto;
+}
+
+mat-card {
+  width: 70%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+mat-card > * {
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+@media screen and (max-width: $break) {
+  mat-card {
+	width: 90%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+  }
+}
+
+.deleteButton {
+	cursor: pointer;
+	//background: rgba(255, 255, 255, 0.3);
+	right: 5px;
+	top: 5px;
+	z-index: 1;
+	color: #f00;
+}
+
+.deleteButton:hover {
+	color: #f00;
+	background: #fff;
+}
+
+splbk-slug {
+	width: 100%;
+}
