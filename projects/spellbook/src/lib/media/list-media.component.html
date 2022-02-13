@@ -1,0 +1,89 @@
+<div class="fab-container">
+	<div *ngIf="filterableByType || filterableByGroup || filterableByParent">
+		<mat-icon>filter_list</mat-icon>
+		Show only &nbsp;
+		<mat-form-field *ngIf="filterableByType">
+			<mat-label>Type</mat-label>
+			<mat-select [(ngModel)]="filterType" (selectionChange)="refreshData(0)">
+				<mat-option *ngFor="let type of attachmentTypes" [value]="type">
+					{{type.viewValue}}
+				</mat-option>
+			</mat-select>
+		</mat-form-field>
+		&nbsp;
+		<mat-form-field *ngIf="filterableByGroup">
+			<mat-label>Group</mat-label>
+			<mat-select [(ngModel)]="filterGroup" (selectionChange)="refreshData(0)">
+				<mat-option *ngFor="let group of attachmentGroups" [value]="group">
+					{{group.viewValue}}
+				</mat-option>
+			</mat-select>
+		</mat-form-field>
+
+		<mat-form-field *ngIf="filterableByParent">
+			<mat-label>Parent</mat-label>
+			<mat-select [(ngModel)]="filterParent" (selectionChange)="refreshData(0)">
+				<mat-option *ngFor="let parent of attachmentParents" [value]="parent">
+					{{parent.viewValue}}
+				</mat-option>
+			</mat-select>
+		</mat-form-field>
+		&nbsp;
+		<mat-icon (click)="resetFilters()" class="filters-button-reset">clear</mat-icon>
+
+	</div>
+
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+	<mat-grid-list class="grid" cols="6" [hidden]="isLoading">
+		<mat-grid-tile *ngFor="let item of media" [colspan]="colspanGrid" (click)="onItemClick(item)" class="tile-img">
+			<div [ngStyle]="getStyle(item)">
+				<!-- Gallery preview -->
+				<div *ngIf="item?.type === 'gallery'"
+						[ngStyle]="{background: utils.formatBackgroundUrl(item.resourceThumbUrl ? item.resourceThumbUrl : item.resourceUrl)}"
+						class="tile-img-content"></div>
+				<!-- Other attachment icon -->
+				<mat-icon color="accent" *ngIf="item?.type === 'attachments'" fxLayoutAlign="center"
+						matListIcon>{{getIconForAttachmentName(item?.name)}}</mat-icon>
+				<!-- Video icon -->
+				<mat-icon color="accent" *ngIf="item?.type === 'video'" fxLayoutAlign="center"
+						matListIcon>videocam
+				</mat-icon>   <!-- TODO: Video preview -->
+				<mat-grid-tile-footer>
+					<span class="tile-title" [matTooltipPosition]="'below'" matTooltip="{{item.name}}"
+							[matTooltipShowDelay]="500">{{item.name}}</span>
+				</mat-grid-tile-footer>
+			</div>
+		</mat-grid-tile>
+
+
+		<button mat-fab class="mat-fab mat-accent primary_fab" (click)="secondaryFabVisible = !secondaryFabVisible">
+			<mat-icon aria-label="Add media" class="mat-icon notranslate material-icons mat-icon-no-color" role="img"
+					aria-hidden="true">add
+			</mat-icon>
+		</button>
+		<button *ngIf="secondaryFabVisible" mat-fab class="mat-mini-fab mat-accent secondary_fab_1"
+				(click)="addFromLocalFile()">
+			<mat-icon aria-label="Load file" class="mat-icon notranslate material-icons mat-icon-no-color" role="img"
+					aria-hidden="true">cloud_upload
+			</mat-icon>
+		</button>
+		<button *ngIf="secondaryFabVisible" mat-fab class="mat-mini-fab mat-accent secondary_fab_2"
+				(click)="addFromServer()">
+			<mat-icon aria-label="From server" class="mat-icon notranslate material-icons mat-icon-no-color" role="img"
+					aria-hidden="true">list
+			</mat-icon>
+		</button>
+		<button *ngIf="secondaryFabVisible" mat-fab class="mat-mini-fab mat-accent secondary_fab_3" (click)="addFromUrl()">
+			<mat-icon aria-label="From URL" class="mat-icon notranslate material-icons mat-icon-no-color" role="img"
+					aria-hidden="true">link
+			</mat-icon>
+		</button>
+
+
+	</mat-grid-list>
+	<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+
+
+</div>

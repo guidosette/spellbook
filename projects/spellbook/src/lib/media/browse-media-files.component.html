@@ -1,0 +1,23 @@
+<div>
+	<h3>Select media: {{this.selectedType ? this.selectedType.name : 'Any'}}</h3>
+	<div *ngIf="isLoading" fxLayout="row" fxLayoutAlign="center center" class="example-loading-shade">
+		<mat-spinner></mat-spinner>
+	</div>
+	<mat-grid-list cols="4" height="100%">
+		<mat-grid-tile *ngFor="let item of urlFiles; let i = index" (click)="select(item)"
+				[ngClass]="isFileAllowed(item) ? 'tile-img' : 'tile-img-disabled'">
+			<!-- Gallery preview -->
+			<div  *ngIf="item?.attachmentType === 'gallery'" [ngStyle]="{background: utils.formatBackgroundUrl(item.resourceThumbUrl ? item.resourceThumbUrl : item.resourceUrl)}" class="tile-img-content"></div>
+			<!-- Video icon -->
+			<mat-icon color="accent" *ngIf="item?.attachmentType === 'video'" fxLayoutAlign="center"
+					matListIcon>videocam</mat-icon>   <!-- TODO: Video preview -->
+			<!-- Other attachment icon -->
+			<mat-icon color="accent" *ngIf="item?.attachmentType === 'attachments'" fxLayoutAlign="center"
+					matListIcon>{{getIconForAttachmentName(item?.name)}}</mat-icon>
+			<mat-grid-tile-footer>
+				{{item.name}}
+			</mat-grid-tile-footer>
+		</mat-grid-tile>
+	</mat-grid-list>
+	<mat-paginator [pageSizeOptions]="[20, 50, 100]" [length]="currentSize"></mat-paginator>
+</div>

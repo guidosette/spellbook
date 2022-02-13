@@ -1,0 +1,210 @@
+{
+	"users": [
+		{
+			"id": 1,
+			"title": "json-server",
+			"author": "typicode"
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"email": "guido@distudiodesign.com",
+			"password": "luigiluigi",
+			"name": "Guido",
+			"surname": "Fanfani",
+			"id": 2
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"email": "guido@distudiodesign.com",
+			"password": "luigiluigi",
+			"name": "Guido",
+			"surname": "Fanfani",
+			"id": 3
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"email": "guido@distudiodesign.com",
+			"password": "luigiluigi",
+			"name": "Guido Fanfani",
+			"surname": "Fanfani",
+			"id": 4
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"email": "guido@distudiodesign.com",
+			"password": "luigiluigi",
+			"name": "Guido Fanfani",
+			"surname": "Fanfani",
+			"id": 5
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"email": "guido@distudiodesign.com",
+			"password": "luigiluigi",
+			"name": "Guido Fanfani",
+			"surname": "Fanfani",
+			"id": 6
+		},
+		{
+			"token": "[object Object]",
+			"id": 7
+		},
+		{
+			"token": "[object Object]",
+			"id": 8
+		}
+	],
+	"tokens": [
+		{
+			"id": 1,
+			"body": "some comment",
+			"postId": 1
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 2
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 3
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 4
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 5
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 6
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 7
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 8
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 9
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 10
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 11
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 12
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 13
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 14
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 15
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 16
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 17
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 18
+		},
+		{
+			"token": "[object Object]",
+			"id": 19
+		},
+		{
+			"token": "[object Object]",
+			"id": 20
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 21
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 22
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 23
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 24
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 25
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 26
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 27
+		},
+		{
+			"username": "guido.fanfani@distudioapp.com",
+			"password": "luigiluigi",
+			"id": 28
+		}
+	],
+	"profile": {
+		"name": "typicode"
+	},
+	"me": {
+		"username": "guido.fanfani@distudioapp.com",
+		"email": "guido@distudiodesign.com",
+		"password": "luigiluigi",
+		"name": "Guido",
+		"surname": "Fanfani",
+		"id": 2,
+		"permissions": [
+		]
+	}
+}

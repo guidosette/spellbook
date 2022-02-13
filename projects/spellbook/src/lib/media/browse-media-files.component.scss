@@ -1,0 +1,46 @@
+%tile-img-shared {
+	max-width: 100%;
+	height: auto;
+	-webkit-filter: brightness(50%);
+	-webkit-transition: all 300ms ease;
+	-moz-transition: all 300ms ease;
+	-o-transition: all 300ms ease;
+	-ms-transition: all 300ms ease;
+	transition: all 300ms ease;
+	cursor: pointer;
+}
+
+.tile-img {
+	@extend %tile-img-shared;
+	-webkit-filter: brightness(100%);
+}
+
+.tile-img:hover {
+	@extend %tile-img-shared;
+}
+
+.tile-img-content {
+	width: 100%;
+	height: 100%;
+	background-size: cover !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+}
+
+.tile-img-disabled {
+	opacity: 50%;
+	cursor: not-allowed;
+}
+
+.example-loading-shade {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 56px;
+	right: 0;
+	background: rgba(0, 0, 0, 0.15);
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

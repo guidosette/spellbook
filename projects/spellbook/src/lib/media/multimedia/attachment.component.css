@@ -1,0 +1,34 @@
+.space-h {
+	margin-left: 10px;
+}
+
+.space-v {
+	margin-bottom: 10px;
+}
+
+mat-form-field[hidden] {
+	display: none;
+}
+
+.preview_image {
+	max-height: 80px;
+}
+
+mat-card {
+	width: 70%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+mat-card > * {
+	width: 100%;
+}
+
+mat-form-field {
+	width: 100%;
+}
+
+.cover_image {
+	max-height: 150px;
+	max-width: 100%;
+}

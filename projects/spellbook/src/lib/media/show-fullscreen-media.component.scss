@@ -1,0 +1,33 @@
+.fullscreen-image {
+	width: 100%;
+	height: 100%;
+}
+
+.preview-img-fullscreen {
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+}
+
+.height-full {
+	height: 100%;
+}
+
+.width-full {
+	width: 100%;
+}
+
+
+.fill-remaining-space {
+	/* This fills the remaining space, by using flexbox.
+	   Every toolbar row uses a flexbox row layout. */
+	flex: 1 1 auto;
+}
+
+.filters-button-reset {
+	cursor: pointer;
+}
+
+.filters-button-reset:hover {
+	color: #f00;
+}

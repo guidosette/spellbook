@@ -1,0 +1,109 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+	<mat-card fxFlexAlign="center">
+		<mat-card-title>
+			<div fxLayout="row" fxLayoutAlign="start center">
+				{{action}} {{getNameForType(attachment.type)}}
+				<mat-icon class="space-h" fxLayoutAlign="center" matListIcon>{{getImageForType(attachment.type)}}</mat-icon>
+			</div>
+		</mat-card-title>
+		<mat-card-subtitle>
+			<div fxLayout="row" fxLayoutAlign="start center">
+				{{attachment.group}}
+			</div>
+		</mat-card-subtitle>
+		<form [formGroup]="attachmentForm" autocomplete="off" novalidate
+				(ngSubmit)="doCreateUpdate(attachmentForm.value)">
+			<mat-card-content fxLayout="column" fxLayoutAlign="center center">
+				<input type="hidden" formControlName="id" id="id">
+				<input type="hidden" formControlName="type" id="type">
+				<input type="hidden" formControlName="parentKey" id="parentKey">
+				<input type="hidden" formControlName="resourceUrl" id="resourceUrl">
+				<mat-form-field [hidden]="true">
+					<input matInput type="text" placeholder="Name" formControlName="name" id="name">
+					<mat-error *ngIf="hasError('name', 'required')">Name is required</mat-error>
+					<mat-error *ngIf="hasError('name', 'minLength')">Name is too short</mat-error>
+				</mat-form-field>
+
+
+				<div fxLayout="row" fxLayoutAlign="space-evenly center" fxFlexFill class="space-v">
+					<button mat-raised-button type="button" (click)="clickNewFile()">
+						New
+						<mat-icon mat-raised-button>fiber_new</mat-icon>
+					</button>
+					<button mat-raised-button type="button" (click)="clickListFile()">
+						List
+						<mat-icon mat-raised-button>list</mat-icon>
+					</button>
+					<button mat-raised-button type="button" (click)="clickInsertManualUrl()">
+						Url
+						<mat-icon mat-raised-button>video_library</mat-icon>
+					</button>
+				</div>
+
+				<div fxLayout="column" fxLayoutAlign="start" fxFlexFill class="space-v">
+					<div fxLayout="row" fxLayoutAlign="start" fxFlexFill *ngIf="selectedValue==='file'">
+						<input #resource
+								type="file"
+								accept="{{getFileAcceptForType(attachment.type)}}"
+								(change)="processFile(resource)">
+						<input matInput type="text" placeholder="url" formControlName="url" id="url" [readonly]="true"
+								[hidden]="true">
+						<mat-error *ngIf="hasError('url', 'required')">Url is required</mat-error>
+						<mat-error *ngIf="errorUpload">Error upload file</mat-error>
+					</div>
+					<div *ngIf="selectedValue==='select'">
+						<!--<p fxLayoutAlign="left" fxFlexFill>Select</p>-->
+						<mat-select placeholder="Files" formControlName="selectUrl" id="selectUrl">
+							<mat-option *ngFor="let f of urlFiles" [value]="f">
+								<div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
+									<span>{{f.name}}</span>
+									<img src="{{f.resourceUrl}}" class="preview_image" alt="{{f.resourceUrl}}">
+								</div>
+							</mat-option>
+						</mat-select>
+						<mat-error *ngIf="hasError('selectUrl', 'required')">Select url is required</mat-error>
+					</div>
+					<div *ngIf="selectedValue==='manualUrl'">
+						<!--<p fxLayoutAlign="left" fxFlexFill>Select</p>-->
+						<mat-form-field>
+							<input matInput type="text" placeholder="Url" formControlName="manualUrl"
+									id="manualUrl">
+							<mat-error *ngIf="hasError('manualUrl', 'required')">Url is required</mat-error>
+						</mat-form-field>
+					</div>
+				</div>
+
+				<img *ngIf="attachment?.type === 'gallery'" src="{{attachmentForm.controls.resourceUrl.value}}"
+						class="cover_image"
+						alt="{{attachmentForm.controls.resourceUrl.value}}">
+				<div *ngIf="attachment?.type === 'attachments'">{{attachmentForm.controls.name.value}}</div>
+				<div fxLayout="row" fxLayoutAlign="start center">
+
+					<mat-spinner *ngIf="isLoading"></mat-spinner>
+				</div>
+
+				<mat-form-field>
+					<input matInput type="text" placeholder="Description" formControlName="description"
+							id="description">
+					<mat-error *ngIf="hasError('description', 'required')">Description is required</mat-error>
+					<mat-error *ngIf="hasError('description', 'minLength')">Description is too short</mat-error>
+				</mat-form-field>
+
+			</mat-card-content>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<button mat-raised-button type="submit" color="primary"
+						[disabled]="!attachmentForm.valid">{{action}}</button>
+				<button mat-raised-button type="button" color="warn" (click)="delete()"
+						*ngIf="action !== 'Create'">
+					Delete
+					<mat-icon mat-raised-button>delete</mat-icon>
+				</button>
+			</mat-card-actions>
+			<mat-card-actions fxLayout="row" fxLayoutAlign="center center" fxFlexFill>
+				<mat-error *ngIf="responseError">{{responseError.Error}}</mat-error>
+			</mat-card-actions>
+		</form>
+	</mat-card>
+</div>
+
+
